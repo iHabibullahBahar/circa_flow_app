@@ -122,18 +122,17 @@ class AppCachedImage extends StatelessWidget {
   }
 
   Widget _buildDefaultErrorWidget(BuildContext context) {
+    final cs = context.contextTheme.colorScheme;
     return Container(
       width: width,
       height: height,
-      color: context.contextTheme.colorScheme.errorContainer .withValues(alpha: 0.9),
+      color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
       child: Center(
-        child: 
-          HugeIcon(
-            icon: HugeIcons.strokeRoundedImageNotFound02,
-            color: context.contextTheme.colorScheme.error,
-            size: 24,
-          )
-,
+        child: Icon(
+          Icons.image_outlined,
+          color: cs.onSurfaceVariant.withValues(alpha: 0.4),
+          size: 32,
+        ),
       ),
     );
   }

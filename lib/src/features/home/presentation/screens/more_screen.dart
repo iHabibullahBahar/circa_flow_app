@@ -25,6 +25,9 @@ class MoreScreen extends StatelessWidget {
             // --- User Info ---
             Obx(() {
               final user = session.user.value;
+              final isAuthenticated = session.isAuthenticated;
+              final isGuest = !isAuthenticated;
+
               return Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -36,33 +39,36 @@ class MoreScreen extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 24,
-                      backgroundColor: cs.primaryContainer,
-                      child: Text(
-                        (user?.name?.isNotEmpty == true
-                                ? user!.name![0]
-                                : user?.email.isNotEmpty == true
-                                    ? user!.email[0]
-                                    : '?')
-                            .toUpperCase(),
-                        style: tt.titleMedium?.copyWith(
-                          color: cs.onPrimaryContainer,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      backgroundColor: isGuest ? cs.surfaceVariant : cs.primaryContainer,
+                      child: isGuest 
+                        ? Icon(Icons.person_outline_rounded, color: cs.onSurfaceVariant)
+                        : Text(
+                            (user?.name?.isNotEmpty == true
+                                    ? user!.name![0]
+                                    : user?.email.isNotEmpty == true
+                                        ? user!.email[0]
+                                        : 'U') // 'U' for User as fallback
+                                .toUpperCase(),
+                            style: tt.titleMedium?.copyWith(
+                              color: cs.onPrimaryContainer,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (user?.name != null)
-                            Text(
-                              user!.name!,
-                              style: tt.titleSmall
-                                  ?.copyWith(fontWeight: FontWeight.w600),
-                            ),
                           Text(
-                            user?.email ?? '',
+                            isGuest ? 'Guest' : (user?.name ?? 'Member'),
+                            style: tt.titleSmall
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          Text(
+                            isGuest 
+                              ? 'Sign in to access more features' 
+                              : (user?.email ?? ''),
                             style: tt.bodySmall
                                 ?.copyWith(color: cs.onSurfaceVariant),
                           ),
@@ -116,26 +122,51 @@ class MoreScreen extends StatelessWidget {
               );
             }),
 
-            // --- Logout ---
-            Container(
-              decoration: BoxDecoration(
-                color: cs.errorContainer.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: cs.error.withValues(alpha: 0.3)),
-              ),
-              child: ListTile(
-                leading:
-                    Icon(Icons.logout_rounded, color: cs.error, size: 22),
-                title: Text(
-                  'Sign Out',
-                  style: tt.titleSmall?.copyWith(color: cs.error),
-                ),
-                onTap: () => _confirmLogout(context, session),
-                shape: RoundedRectangleBorder(
+            // --- Auth Action ---
+            Obx(() {
+              final isGuest = !session.isAuthenticated;
+              
+              if (isGuest) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: cs.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: cs.primary.withValues(alpha: 0.2)),
+                  ),
+                  child: ListTile(
+                    leading: Icon(Icons.login_rounded, color: cs.primary, size: 22),
+                    title: Text(
+                      'Sign In',
+                      style: tt.titleSmall?.copyWith(color: cs.primary, fontWeight: FontWeight.bold),
+                    ),
+                    onTap: () => Get.offAllNamed<void>(AppRoutes.login),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                );
+              }
+
+              return Container(
+                decoration: BoxDecoration(
+                  color: cs.errorContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: cs.error.withValues(alpha: 0.3)),
                 ),
-              ),
-            ),
+                child: ListTile(
+                  leading:
+                      Icon(Icons.logout_rounded, color: cs.error, size: 22),
+                  title: Text(
+                    'Sign Out',
+                    style: tt.titleSmall?.copyWith(color: cs.error),
+                  ),
+                  onTap: () => _confirmLogout(context, session),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              );
+            }),
           ],
         ),
       ),

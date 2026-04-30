@@ -1,78 +1,9 @@
 import 'package:circa_flow_main/src/imports/imports.dart';
+import '../providers/documents_controller.dart';
 import '../../data/models/document_model.dart';
-import '../../data/repositories/documents_repository.dart';
 
-class DocumentsScreen extends StatefulWidget {
+class DocumentsScreen extends GetView<DocumentsController> {
   const DocumentsScreen({super.key});
-
-  @override
-  State<DocumentsScreen> createState() => _DocumentsScreenState();
-}
-
-class _DocumentsScreenState extends State<DocumentsScreen> {
-  final _repo = DocumentsRepository.instance;
-  final _docs = <DocumentModel>[];
-  bool _isLoading = true;
-  bool _hasError = false;
-  int _currentPage = 1;
-  bool _hasNextPage = false;
-  final _scroll = ScrollController();
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-    _scroll.addListener(_onScroll);
-  }
-
-  @override
-  void dispose() {
-    _scroll.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (_scroll.position.pixels >= _scroll.position.maxScrollExtent - 200 &&
-        _hasNextPage &&
-        !_isLoading) {
-      _loadMore();
-    }
-  }
-
-  Future<void> _load() async {
-    setState(() {
-      _isLoading = true;
-      _hasError = false;
-      _docs.clear();
-      _currentPage = 1;
-    });
-    final result = await _repo.fetchDocuments(page: 1);
-    result.fold(
-      (_) => setState(() {
-        _isLoading = false;
-        _hasError = true;
-      }),
-      (page) => setState(() {
-        _docs.addAll(page.items);
-        _hasNextPage = page.hasNextPage;
-        _isLoading = false;
-      }),
-    );
-  }
-
-  Future<void> _loadMore() async {
-    setState(() => _isLoading = true);
-    final result = await _repo.fetchDocuments(page: _currentPage + 1);
-    result.fold(
-      (_) => setState(() => _isLoading = false),
-      (page) => setState(() {
-        _currentPage++;
-        _docs.addAll(page.items);
-        _hasNextPage = page.hasNextPage;
-        _isLoading = false;
-      }),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,32 +17,46 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
       ),
-      body: _hasError
-          ? _ErrorView(onRetry: _load)
-          : _docs.isEmpty && !_isLoading
-              ? const _EmptyView()
-              : RefreshIndicator(
-                  onRefresh: _load,
-                  color: cs.primary,
-                  child: ListView.separated(
-                    controller: _scroll,
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _docs.length + (_isLoading ? 1 : 0),
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
-                    itemBuilder: (ctx, i) {
-                      if (i >= _docs.length) {
-                        return Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: cs.primary),
-                          ),
-                        );
-                      }
-                      return _DocumentTile(doc: _docs[i]);
-                    },
-                  ),
-                ),
+      body: Obx(() {
+        if (controller.hasError.value) {
+          return _ErrorView(onRetry: controller.refreshData);
+        }
+
+        if (controller.documents.isEmpty && !controller.isLoading.value) {
+          return const _EmptyView();
+        }
+
+        return RefreshIndicator(
+          onRefresh: controller.refreshData,
+          color: cs.primary,
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              if (notification is ScrollEndNotification &&
+                  notification.metrics.extentAfter < 200) {
+                controller.loadMore();
+              }
+              return false;
+            },
+            child: ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: controller.documents.length + (controller.isLoading.value ? 1 : 0),
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (ctx, i) {
+                if (i >= controller.documents.length) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: cs.primary),
+                    ),
+                  );
+                }
+                return _DocumentTile(doc: controller.documents[i]);
+              },
+            ),
+          ),
+        );
+      }),
     );
   }
 }

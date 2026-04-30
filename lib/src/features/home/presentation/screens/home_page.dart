@@ -3,6 +3,9 @@ import 'package:circa_flow_main/src/config/config_controller.dart';
 import 'package:circa_flow_main/src/features/posts/presentation/screens/posts_screen.dart';
 import 'package:circa_flow_main/src/features/events/presentation/screens/events_screen.dart';
 import 'package:circa_flow_main/src/features/documents/presentation/screens/documents_screen.dart';
+import 'package:circa_flow_main/src/features/posts/presentation/providers/posts_controller.dart' as import_posts;
+import 'package:circa_flow_main/src/features/events/presentation/providers/events_controller.dart' as import_events;
+import 'package:circa_flow_main/src/features/documents/presentation/providers/documents_controller.dart' as import_docs;
 import 'package:circa_flow_main/src/features/home/presentation/screens/more_screen.dart';
 
 /// Module-aware home shell. Reads enabled modules from ConfigController and
@@ -35,7 +38,13 @@ class _HomeShellState extends State<HomeShell> {
         ),
         bottomNavigationBar: NavigationBar(
           selectedIndex: safeIndex,
-          onDestinationSelected: (i) => setState(() => _currentIndex = i),
+          onDestinationSelected: (i) {
+            setState(() => _currentIndex = i);
+
+            // Trigger refresh on selection (handles both switch and double-tap)
+            final targetTab = tabs[i];
+            _triggerRefresh(targetTab.label);
+          },
           backgroundColor: cs.surface,
           indicatorColor: cs.primaryContainer,
           destinations: tabs
@@ -50,17 +59,40 @@ class _HomeShellState extends State<HomeShell> {
     });
   }
 
+  void _triggerRefresh(String label) {
+    try {
+      switch (label.toLowerCase()) {
+        case 'posts':
+          if (Get.isRegistered<import_posts.PostsController>()) {
+            Get.find<import_posts.PostsController>().refreshData();
+          }
+          break;
+        case 'events':
+          if (Get.isRegistered<import_events.EventsController>()) {
+            Get.find<import_events.EventsController>().refreshData();
+          }
+          break;
+        case 'documents':
+          if (Get.isRegistered<import_docs.DocumentsController>()) {
+            Get.find<import_docs.DocumentsController>().refreshData();
+          }
+          break;
+      }
+    } catch (e) {
+      debugPrint('Error triggering refresh for $label: $e');
+    }
+  }
+
   List<_TabItem> _buildTabs(ConfigController ctrl) {
     final tabs = <_TabItem>[];
 
-    if (ctrl.isModuleEnabled('posts')) {
-      tabs.add(_TabItem(
-        label: 'Posts',
-        icon: Icons.article_outlined,
-        selectedIcon: Icons.article_rounded,
-        screen: const PostsScreen(),
-      ));
-    }
+    // Posts tab is ALWAYS present (mandatory)
+    tabs.add(_TabItem(
+      label: 'Posts',
+      icon: Icons.article_outlined,
+      selectedIcon: Icons.article_rounded,
+      screen: const PostsScreen(),
+    ));
 
     if (ctrl.isModuleEnabled('events')) {
       tabs.add(_TabItem(

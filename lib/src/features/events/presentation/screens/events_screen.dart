@@ -1,78 +1,9 @@
 import 'package:circa_flow_main/src/imports/imports.dart';
+import '../providers/events_controller.dart';
 import '../../data/models/event_model.dart';
-import '../../data/repositories/events_repository.dart';
 
-class EventsScreen extends StatefulWidget {
+class EventsScreen extends GetView<EventsController> {
   const EventsScreen({super.key});
-
-  @override
-  State<EventsScreen> createState() => _EventsScreenState();
-}
-
-class _EventsScreenState extends State<EventsScreen> {
-  final _repo = EventsRepository.instance;
-  final _events = <EventModel>[];
-  bool _isLoading = true;
-  bool _hasError = false;
-  int _currentPage = 1;
-  bool _hasNextPage = false;
-  final _scroll = ScrollController();
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-    _scroll.addListener(_onScroll);
-  }
-
-  @override
-  void dispose() {
-    _scroll.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (_scroll.position.pixels >= _scroll.position.maxScrollExtent - 200 &&
-        _hasNextPage &&
-        !_isLoading) {
-      _loadMore();
-    }
-  }
-
-  Future<void> _load() async {
-    setState(() {
-      _isLoading = true;
-      _hasError = false;
-      _events.clear();
-      _currentPage = 1;
-    });
-    final result = await _repo.fetchEvents(page: 1);
-    result.fold(
-      (_) => setState(() {
-        _isLoading = false;
-        _hasError = true;
-      }),
-      (page) => setState(() {
-        _events.addAll(page.items);
-        _hasNextPage = page.hasNextPage;
-        _isLoading = false;
-      }),
-    );
-  }
-
-  Future<void> _loadMore() async {
-    setState(() => _isLoading = true);
-    final result = await _repo.fetchEvents(page: _currentPage + 1);
-    result.fold(
-      (_) => setState(() => _isLoading = false),
-      (page) => setState(() {
-        _currentPage++;
-        _events.addAll(page.items);
-        _hasNextPage = page.hasNextPage;
-        _isLoading = false;
-      }),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,32 +17,46 @@ class _EventsScreenState extends State<EventsScreen> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
       ),
-      body: _hasError
-          ? _ErrorView(onRetry: _load)
-          : _events.isEmpty && !_isLoading
-              ? const _EmptyView()
-              : RefreshIndicator(
-                  onRefresh: _load,
-                  color: cs.primary,
-                  child: ListView.separated(
-                    controller: _scroll,
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _events.length + (_isLoading ? 1 : 0),
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (ctx, i) {
-                      if (i >= _events.length) {
-                        return Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: cs.primary),
-                          ),
-                        );
-                      }
-                      return _EventCard(event: _events[i]);
-                    },
-                  ),
-                ),
+      body: Obx(() {
+        if (controller.hasError.value) {
+          return _ErrorView(onRetry: controller.refreshData);
+        }
+
+        if (controller.events.isEmpty && !controller.isLoading.value) {
+          return const _EmptyView();
+        }
+
+        return RefreshIndicator(
+          onRefresh: controller.refreshData,
+          color: cs.primary,
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              if (notification is ScrollEndNotification &&
+                  notification.metrics.extentAfter < 200) {
+                controller.loadMore();
+              }
+              return false;
+            },
+            child: ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: controller.events.length + (controller.isLoading.value ? 1 : 0),
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (ctx, i) {
+                if (i >= controller.events.length) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: cs.primary),
+                    ),
+                  );
+                }
+                return _EventCard(event: controller.events[i]);
+              },
+            ),
+          ),
+        );
+      }),
     );
   }
 }
@@ -122,8 +67,6 @@ class _EventCard extends StatelessWidget {
   final EventModel event;
   const _EventCard({required this.event});
 
-  /// The redirect URL is stored in location_url (labelled "Redirect URL" in
-  /// the admin form). A non-empty value means the card is tappable.
   String? get _redirectUrl {
     final url = event.locationUrl;
     return (url != null && url.isNotEmpty) ? url : null;
@@ -144,122 +87,161 @@ class _EventCard extends StatelessWidget {
     final tt = context.contextTheme.textTheme;
     final hasLink = _redirectUrl != null;
 
-    return GestureDetector(
+    return InkWell(
       onTap: hasLink ? _onTap : null,
-      child: Card(
-        elevation: 0,
-        color: cs.surfaceContainerLow,
-        shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: cs.surface,
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-            color: hasLink
-                ? cs.primary.withValues(alpha: 0.3)
-                : cs.outlineVariant,
-          ),
+          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (event.coverImage != null)
-              ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(16)),
-                child: AppCachedImage(
-                  imageUrl: event.coverImage!,
-                  height: 160,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
+            // --- Image Section with Date Badge ---
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  child: AppCachedImage(
+                    imageUrl: event.coverImage ?? '',
+                    height: 180,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
                 ),
-              ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Date badge
-                  if (event.startsAt != null)
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                if (event.startsAt != null)
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: cs.primaryContainer,
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 4,
+                          ),
+                        ],
                       ),
-                      child: Row(
+                      child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.event_rounded,
-                              size: 13, color: cs.onPrimaryContainer),
-                          const SizedBox(width: 4),
                           Text(
-                            event.formattedDate,
+                            _getDay(event.startsAt!),
+                            style: tt.titleMedium?.copyWith(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w900,
+                              height: 1,
+                            ),
+                          ),
+                          Text(
+                            _getMonth(event.startsAt!).toUpperCase(),
                             style: tt.labelSmall?.copyWith(
-                              color: cs.onPrimaryContainer,
-                              fontWeight: FontWeight.w600,
+                              color: Colors.red[700],
+                              fontWeight: FontWeight.w800,
+                              fontSize: 9.sp,
                             ),
                           ),
                         ],
                       ),
                     ),
-
-                  // Title row with optional link icon
+                  ),
+              ],
+            ),
+            
+            // --- Content Section ---
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: Text(
                           event.title,
-                          style: tt.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold),
+                          style: tt.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: cs.onSurface,
+                            fontSize: 18.sp,
+                            letterSpacing: -0.5,
+                          ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (hasLink) ...[
-                        const SizedBox(width: 8),
-                        Icon(Icons.open_in_new_rounded,
-                            size: 16, color: cs.primary),
-                      ],
                     ],
                   ),
-
                   if (event.description != null) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     Text(
                       event.description!,
-                      style: tt.bodySmall
-                          ?.copyWith(color: cs.onSurfaceVariant),
+                      style: tt.bodyMedium?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        height: 1.4,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
-
-                  // Location row — only show when it's an actual place name,
-                  // not the redirect URL that's stored in location_url
-                  if (event.location != null) ...[
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Icon(
-                          event.isOnline
-                              ? Icons.videocam_outlined
-                              : Icons.place_outlined,
-                          size: 14,
-                          color: cs.onSurfaceVariant,
+                  const SizedBox(height: 16),
+                  
+                  // --- Location & Action ---
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Icon(
+                              event.isOnline ? Icons.videocam_rounded : Icons.location_on_rounded,
+                              size: 16,
+                              color: cs.primary,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                event.isOnline ? 'Online' : (event.location ?? 'TBA'),
+                                style: tt.labelLarge?.copyWith(
+                                  color: cs.onSurfaceVariant,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 4),
-                        Expanded(
+                      ),
+                      if (hasLink) ...[
+                        const SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: cs.primary,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
                           child: Text(
-                            event.isOnline ? 'Online event' : event.location!,
-                            style: tt.labelSmall
-                                ?.copyWith(color: cs.onSurfaceVariant),
-                            overflow: TextOverflow.ellipsis,
+                            'Details',
+                            style: tt.labelMedium?.copyWith(
+                              color: cs.onPrimary,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],
-                    ),
-                  ],
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -267,6 +249,28 @@ class _EventCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _getDay(String iso) {
+    try {
+      final dt = DateTime.parse(iso).toLocal();
+      return dt.day.toString();
+    } catch (_) {
+      return '';
+    }
+  }
+
+  String _getMonth(String iso) {
+    try {
+      final dt = DateTime.parse(iso).toLocal();
+      final months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      ];
+      return months[dt.month - 1];
+    } catch (_) {
+      return '';
+    }
   }
 }
 

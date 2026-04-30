@@ -34,109 +34,221 @@ class LoginScreen extends HookWidget {
       final logoUrl = configCtrl.logoUrl;
 
       return Scaffold(
+        backgroundColor: cs.surface,
         body: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding:
-                  EdgeInsets.symmetric(horizontal: AppSpacing.lg.w),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
               child: Form(
                 key: formKey,
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: AppSpacing.xxxl.h),
-
-                    // --- Branding ---
+                    const SizedBox(height: 40),
+                    
+                    // --- Logo ---
                     if (logoUrl != null)
-                      AppCachedImage(
-                        imageUrl: logoUrl,
-                        width: 72,
-                        height: 72,
+                      Center(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: cs.onSurface.withValues(alpha: 0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: AppCachedImage(
+                              imageUrl: logoUrl,
+                              width: 64,
+                              height: 64,
+                            ),
+                          ),
+                        ),
                       )
                     else
-                      Icon(
-                        Icons.circle_rounded,
-                        size: 64,
-                        color: cs.primary,
+                      Center(
+                        child: Icon(Icons.circle_rounded, size: 64, color: cs.primary),
                       ),
-                    SizedBox(height: AppSpacing.md.h),
+                      
+                    const SizedBox(height: 24),
+
+                    // --- Header ---
+                    Center(
+                      child: Text(
+                        'Get started with $orgName',
+                        textAlign: TextAlign.center,
+                        style: tt.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: cs.onSurface,
+                          fontSize: 28.sp,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 48),
+
+                    // --- Email Input ---
                     Text(
-                      orgName,
-                      style: tt.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
+                      'Email or Phone',
+                      style: tt.bodySmall?.copyWith(
                         color: cs.onSurface,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    SizedBox(height: AppSpacing.sm.h),
-                    Text(
-                      'Sign in to your account',
-                      textAlign: TextAlign.center,
-                      style: tt.bodyMedium
-                          ?.copyWith(color: cs.onSurfaceVariant),
-                    ),
-                    SizedBox(height: AppSpacing.xxxl.h),
-
-                    // --- Identifier field (email or phone) ---
-                    AppTextField(
+                    const SizedBox(height: 8),
+                    _UberTextField(
                       controller: identifierController,
-                      enabled: !isLoading,
-                      label: 'Email or Phone',
-                      prefixIcon: const Icon(Icons.person_outline_rounded),
+                      hintText: 'Enter your email',
                       keyboardType: TextInputType.emailAddress,
-                      validator: (v) {
-                        if (AppUtils.isBlank(v)) {
-                          return 'Please enter your email or phone';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: AppSpacing.md.h),
-
-                    // --- Password field ---
-                    AppTextField(
-                      controller: passwordController,
                       enabled: !isLoading,
-                      label: 'auth.password'.t(),
+                      validator: (v) => AppUtils.isBlank(v) ? 'Enter your email' : null,
+                    ),
+                    
+                    const SizedBox(height: 20),
+
+                    // --- Password Input ---
+                    Text(
+                      'Password',
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _UberTextField(
+                      controller: passwordController,
+                      hintText: 'Enter your password',
                       obscureText: obscurePassword.value,
-                      prefixIcon: const Icon(Icons.lock_outline_rounded),
-                      suffixIcon: IconButton(
+                      enabled: !isLoading,
+                      suffix: IconButton(
                         icon: Icon(
                           obscurePassword.value
                               ? Icons.visibility_off_outlined
                               : Icons.visibility_outlined,
+                          size: 20,
+                          color: cs.onSurfaceVariant,
                         ),
-                        onPressed: () =>
-                            obscurePassword.value = !obscurePassword.value,
+                        onPressed: () => obscurePassword.value = !obscurePassword.value,
                       ),
                       validator: (v) {
-                        if (AppUtils.isBlank(v)) {
-                          return 'auth.password_required'.t();
-                        }
-                        if (v!.length < 6) {
-                          return 'auth.password_too_short'.t();
-                        }
+                        if (AppUtils.isBlank(v)) return 'Enter your password';
+                        if (v!.length < 6) return 'Password too short';
                         return null;
                       },
                     ),
-                    SizedBox(height: AppSpacing.lg.h),
+                    
+                    const SizedBox(height: 24),
 
-                    // --- Sign In Button ---
-                    AppButton(
-                      label: 'Sign In',
-                      isLoading: isLoading,
-                      onPressed: isLoading ? null : handleLogin,
-                      isFullWidth: true,
+                    // --- Primary Button ---
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: isLoading ? null : handleLogin,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: cs.primary,
+                          foregroundColor: cs.onPrimary,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          disabledBackgroundColor: cs.outlineVariant,
+                        ),
+                        child: isLoading
+                            ? SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: cs.onPrimary,
+                                ),
+                              )
+                            : Text(
+                                'Continue',
+                                style: tt.titleMedium?.copyWith(
+                                  color: cs.onPrimary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18.sp,
+                                ),
+                              ),
+                      ),
                     ),
-                    SizedBox(height: AppSpacing.xxxl.h),
 
-                    // --- Contact support note ---
-                    Text(
-                      'Don\'t have an account? Contact your organisation admin.',
-                      textAlign: TextAlign.center,
-                      style: tt.bodySmall
-                          ?.copyWith(color: cs.onSurfaceVariant),
+                    const SizedBox(height: 24),
+                    
+                    // --- Divider ---
+                    Row(
+                      children: [
+                        Expanded(child: Divider(color: cs.outlineVariant)),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'or',
+                            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                          ),
+                        ),
+                        Expanded(child: Divider(color: cs.outlineVariant)),
+                      ],
                     ),
-                    SizedBox(height: AppSpacing.xl.h),
+                    
+                    const SizedBox(height: 24),
+
+                    // --- Secondary Buttons (Guest / Signup) ---
+                    if (configCtrl.allowGuestAccess)
+                      _UberSecondaryButton(
+                        label: 'Continue as Guest',
+                        icon: Icons.person_outline_rounded,
+                        onPressed: () => Get.offAllNamed<void>(AppRoutes.home),
+                      ),
+                    
+                    if (configCtrl.allowRegistration) ...[
+                      const SizedBox(height: 12),
+                      _UberSecondaryButton(
+                        label: 'Create an account',
+                        icon: Icons.add_circle_outline_rounded,
+                        onPressed: () => Get.toNamed<void>(AppRoutes.signup),
+                      ),
+                    ],
+                    
+                    const SizedBox(height: 48),
+
+                    // --- Bottom Links ---
+                    Center(
+                      child: Column(
+                        children: [
+                          TextButton(
+                            onPressed: () => Get.toNamed<void>(AppRoutes.forgotPassword),
+                            child: Text(
+                              'Find my account / Forgot Password',
+                              style: tt.bodyMedium?.copyWith(
+                                color: cs.onSurface,
+                                fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              'By proceeding, you consent to the terms of service and privacy policy of $orgName.',
+                              textAlign: TextAlign.center,
+                              style: tt.labelSmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                                height: 1.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
@@ -145,5 +257,113 @@ class LoginScreen extends HookWidget {
         ),
       );
     });
+  }
+}
+
+// ── Components ───────────────────────────────────────────────────────────────
+
+class _UberTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hintText;
+  final bool obscureText;
+  final TextInputType? keyboardType;
+  final bool enabled;
+  final Widget? suffix;
+  final String? Function(String?)? validator;
+
+  const _UberTextField({
+    required this.controller,
+    required this.hintText,
+    this.obscureText = false,
+    this.keyboardType,
+    this.enabled = true,
+    this.suffix,
+    this.validator,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      enabled: enabled,
+      validator: validator,
+      style: context.contextTheme.textTheme.bodyLarge?.copyWith(
+        color: context.contextTheme.colorScheme.onSurface,
+        fontWeight: FontWeight.w500,
+      ),
+      decoration: InputDecoration(
+        hintText: hintText,
+        hintStyle: TextStyle(color: context.contextTheme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
+        filled: true,
+        fillColor: context.contextTheme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: context.contextTheme.colorScheme.primary, width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: context.contextTheme.colorScheme.error, width: 1),
+        ),
+        suffixIcon: suffix,
+      ),
+    );
+  }
+}
+
+class _UberSecondaryButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const _UberSecondaryButton({
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.contextTheme.colorScheme;
+    final tt = context.contextTheme.textTheme;
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: cs.surfaceContainerHighest.withValues(alpha: 0.3),
+          side: BorderSide.none,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          foregroundColor: cs.onSurface,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 20),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: tt.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: cs.onSurface,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

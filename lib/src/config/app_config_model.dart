@@ -61,7 +61,8 @@ class ModulesConfig {
     this.notifications = false,
   });
 
-  factory ModulesConfig.fromJson(Map<String, dynamic> json) {
+  factory ModulesConfig.fromJson(dynamic json) {
+    if (json is! Map) return ModulesConfig.fallback();
     bool flag(String key) => json[key] == true;
     return ModulesConfig(
       posts: flag('posts'),
@@ -103,7 +104,7 @@ class CustomLink {
 
   factory CustomLink.fromJson(Map<String, dynamic> json) {
     return CustomLink(
-      id: (json['id'] as num).toInt(),
+      id: (json['id'] as num?)?.toInt() ?? 0,
       title: (json['title'] as String?) ?? '',
       url: (json['url'] as String?) ?? '',
       icon: json['icon'] as String?,
@@ -119,31 +120,38 @@ class AppConfigModel {
   final BrandingConfig branding;
   final ModulesConfig modules;
   final List<CustomLink> customLinks;
+  final bool allowRegistration;
+  final bool allowGuestAccess;
 
   const AppConfigModel({
     required this.organization,
     required this.branding,
     required this.modules,
     required this.customLinks,
+    this.allowRegistration = false,
+    this.allowGuestAccess = false,
   });
 
   factory AppConfigModel.fromJson(Map<String, dynamic> json) {
     // Backend wraps the payload in a "data" envelope.
     final data = (json['data'] as Map<String, dynamic>?) ?? json;
 
-    final linksJson = data['custom_links'] as List<dynamic>? ?? [];
+    final rawLinks = data['custom_links'];
+    final List<dynamic> linksJson = (rawLinks is List) ? rawLinks : [];
 
     return AppConfigModel(
       organization: OrganizationConfig.fromJson(
           (data['organization'] as Map<String, dynamic>?) ?? {}),
       branding: BrandingConfig.fromJson(
           (data['branding'] as Map<String, dynamic>?) ?? {}),
-      modules: ModulesConfig.fromJson(
-          (data['modules'] as Map<String, dynamic>?) ?? {}),
+      modules: ModulesConfig.fromJson(data['modules']),
       customLinks: linksJson
-          .map((e) => CustomLink.fromJson(e as Map<String, dynamic>))
+          .whereType<Map<String, dynamic>>()
+          .map((e) => CustomLink.fromJson(e))
           .toList()
         ..sort((a, b) => a.order.compareTo(b.order)),
+      allowRegistration: data['allow_registration'] == true,
+      allowGuestAccess: data['allow_guest_access'] == true,
     );
   }
 
@@ -153,6 +161,8 @@ class AppConfigModel {
         branding: BrandingConfig.fallback(),
         modules: ModulesConfig.fallback(),
         customLinks: const [],
+        allowRegistration: false,
+        allowGuestAccess: false,
       );
 
   Map<String, dynamic> toJson() => {

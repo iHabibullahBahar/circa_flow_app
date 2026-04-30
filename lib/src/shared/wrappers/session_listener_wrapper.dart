@@ -51,7 +51,7 @@ class _SessionListenerWrapperState extends State<SessionListenerWrapper> {
 
       // If session is already resolved (e.g. no token found immediately)
       if (session.status.value != SessionStatus.unknown) {
-        _resolveNavigation(session.status.value);
+        _resolveNavigation(session.status.value, isInitial: true);
       }
     });
 
@@ -66,21 +66,36 @@ class _SessionListenerWrapperState extends State<SessionListenerWrapper> {
       });
 
       if (session.status.value != SessionStatus.unknown) {
-        _resolveNavigation(session.status.value);
+        _resolveNavigation(session.status.value, isInitial: true);
       }
     }
   }
 
-  void _resolveNavigation(SessionStatus status) {
-    if (_navigated) return;
-    _navigated = true;
+  void _resolveNavigation(SessionStatus status, {bool isInitial = false}) {
+    // Only set _navigated = true on the very first resolution (from Splash)
+    if (isInitial) {
+      if (_navigated) return;
+      _navigated = true;
+      FlutterNativeSplash.remove();
+    }
 
-    FlutterNativeSplash.remove();
-
+    final configCtrl = Get.find<ConfigController>();
+    
     if (status == SessionStatus.authenticated) {
-      Get.offAllNamed<void>(AppRoutes.home);
-    } else {
-      Get.offAllNamed<void>(AppRoutes.onboarding);
+      // If we just authenticated, and we weren't already on a home-path, go home
+      // In many cases, we are already navigating manually from LoginController,
+      // but this is a safety net.
+      if (isInitial) Get.offAllNamed<void>(AppRoutes.home);
+    } else if (status == SessionStatus.unauthenticated) {
+      if (!configCtrl.allowGuestAccess) {
+        // If guest access is NOT allowed, always kick to onboarding/login
+        Get.offAllNamed<void>(AppRoutes.onboarding);
+      } else {
+        // Guest access is allowed. 
+        // On initial load, we go home. On subsequent logouts, we stay where we are 
+        // (as the UI will reactively show Guest view) or we can optionally go home.
+        if (isInitial) Get.offAllNamed<void>(AppRoutes.home);
+      }
     }
   }
 

@@ -6,6 +6,8 @@ const String zConfigEndpoint = '/config';
 
 // Auth
 const String zLoginEndpoint = '/auth/login';
+const String zRegisterEndpoint = '/auth/register';
+const String zForgotPasswordEndpoint = '/auth/forgot-password';
 const String zLogoutEndpoint = '/auth/logout';
 const String zMeEndpoint = '/me'; // POST /api/v1/me
 

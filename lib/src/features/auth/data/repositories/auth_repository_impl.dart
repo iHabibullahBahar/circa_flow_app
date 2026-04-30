@@ -65,6 +65,39 @@ class AuthRepositoryImpl implements AuthRepository {
     });
   }
 
+  @override
+  FutureEither<AppUser> register({
+    required String name,
+    required String email,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    final result = await _authService.register(
+      name: name,
+      email: email,
+      password: password,
+      passwordConfirmation: passwordConfirmation,
+    );
+
+    return result.flatMap((payload) {
+      if (payload == null) {
+        return left(const ServerFailure('Registration failed'));
+      }
+      final memberData = (payload['member'] as Map<String, dynamic>?) ??
+          (payload['data']?['member'] as Map<String, dynamic>?);
+
+      if (memberData == null) {
+        return left(const ServerFailure('Member data missing after registration'));
+      }
+      return right(_memberFromPayload(memberData));
+    });
+  }
+
+  @override
+  FutureEither<String> sendPasswordResetLink({required String email}) {
+    return _authService.sendPasswordResetLink(email: email);
+  }
+
   /// Maps a member JSON map (from MemberResource) to an [AppUser].
   AppUser _memberFromPayload(Map<String, dynamic> m) {
     return AppUser(

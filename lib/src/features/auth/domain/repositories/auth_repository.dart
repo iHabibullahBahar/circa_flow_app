@@ -16,4 +16,15 @@ abstract class AuthRepository {
 
   /// Check if the user is currently authenticated by calling POST /me.
   FutureEither<AppUser?> checkAuthState();
+
+  /// Register a new member in the organization.
+  FutureEither<AppUser> register({
+    required String name,
+    required String email,
+    required String password,
+    required String passwordConfirmation,
+  });
+
+  /// Send a password reset link to the user's email.
+  FutureEither<String> sendPasswordResetLink({required String email});
 }

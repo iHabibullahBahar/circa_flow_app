@@ -4,6 +4,9 @@ import 'package:circa_flow_main/src/features/auth/domain/repositories/auth_repos
 import 'package:circa_flow_main/src/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:circa_flow_main/src/features/auth/presentation/providers/auth_controller.dart';
 import 'package:circa_flow_main/src/features/auth/presentation/providers/session_controller.dart';
+import 'package:circa_flow_main/src/features/posts/presentation/providers/posts_controller.dart';
+import 'package:circa_flow_main/src/features/events/presentation/providers/events_controller.dart';
+import 'package:circa_flow_main/src/features/documents/presentation/providers/documents_controller.dart';
 
 /// AppBindings is passed to GetMaterialApp as a fallback safety net.
 /// In normal operation, controllers are already registered in main() before
@@ -33,5 +36,10 @@ class AppBindings implements Bindings {
         fenix: true,
       );
     }
+
+    // Module controllers
+    Get.lazyPut(() => PostsController(), fenix: true);
+    Get.lazyPut(() => EventsController(), fenix: true);
+    Get.lazyPut(() => DocumentsController(), fenix: true);
   }
 }

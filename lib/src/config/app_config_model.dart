@@ -120,6 +120,7 @@ class AppConfigModel {
   final BrandingConfig branding;
   final ModulesConfig modules;
   final List<CustomLink> customLinks;
+  final List<CustomLink> customButtons;
   final bool allowRegistration;
   final bool allowGuestAccess;
 
@@ -128,6 +129,7 @@ class AppConfigModel {
     required this.branding,
     required this.modules,
     required this.customLinks,
+    required this.customButtons,
     this.allowRegistration = false,
     this.allowGuestAccess = false,
   });
@@ -139,6 +141,9 @@ class AppConfigModel {
     final rawLinks = data['custom_links'];
     final List<dynamic> linksJson = (rawLinks is List) ? rawLinks : [];
 
+    final rawBtns = data['custom_buttons'];
+    final List<dynamic> btnsJson = (rawBtns is List) ? rawBtns : [];
+
     return AppConfigModel(
       organization: OrganizationConfig.fromJson(
           (data['organization'] as Map<String, dynamic>?) ?? {}),
@@ -146,6 +151,11 @@ class AppConfigModel {
           (data['branding'] as Map<String, dynamic>?) ?? {}),
       modules: ModulesConfig.fromJson(data['modules']),
       customLinks: linksJson
+          .whereType<Map<String, dynamic>>()
+          .map((e) => CustomLink.fromJson(e))
+          .toList()
+        ..sort((a, b) => a.order.compareTo(b.order)),
+      customButtons: btnsJson
           .whereType<Map<String, dynamic>>()
           .map((e) => CustomLink.fromJson(e))
           .toList()
@@ -161,6 +171,7 @@ class AppConfigModel {
         branding: BrandingConfig.fallback(),
         modules: ModulesConfig.fallback(),
         customLinks: const [],
+        customButtons: const [],
         allowRegistration: false,
         allowGuestAccess: false,
       );
@@ -184,6 +195,14 @@ class AppConfigModel {
             'notifications': modules.notifications,
           },
           'custom_links': customLinks.map((l) => {
+                'id': l.id,
+                'title': l.title,
+                'url': l.url,
+                'icon': l.icon,
+                'type': l.type,
+                'order': l.order,
+              }).toList(),
+          'custom_buttons': customButtons.map((l) => {
                 'id': l.id,
                 'title': l.title,
                 'url': l.url,

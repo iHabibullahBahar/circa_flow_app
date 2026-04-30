@@ -20,6 +20,7 @@ class ConfigController extends GetxController {
   String get orgName => config.value.organization.name;
   String? get logoUrl => config.value.branding.logoUrl;
   List<CustomLink> get customLinks => config.value.customLinks;
+  List<CustomLink> get customButtons => config.value.customButtons;
   bool get allowRegistration => config.value.allowRegistration;
   bool get allowGuestAccess => config.value.allowGuestAccess;
 

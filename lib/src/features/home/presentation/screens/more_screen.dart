@@ -81,17 +81,68 @@ class MoreScreen extends StatelessWidget {
             }),
             const SizedBox(height: 24),
 
-            // --- Custom Links ---
+            // --- Useful Links (Expandable) ---
             Obx(() {
               final links = configCtrl.customLinks;
               if (links.isEmpty) return const SizedBox.shrink();
+              
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Text(
-                      'Links',
+                      'Information',
+                      style: tt.labelMedium?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: cs.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: cs.outlineVariant),
+                    ),
+                    child: Theme(
+                      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                      child: ExpansionTile(
+                        leading: Icon(Icons.link_rounded, color: cs.primary),
+                        title: Text(
+                          'Useful Links',
+                          style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        children: links
+                            .asMap()
+                            .entries
+                            .map((entry) => _buildLinkTile(
+                                  context,
+                                  entry.value,
+                                  showDivider: entry.key < links.length - 1,
+                                  isNested: true,
+                                ))
+                            .toList(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              );
+            }),
+
+            // --- Custom Buttons (Distinct) ---
+            Obx(() {
+              final buttons = configCtrl.customButtons;
+              if (buttons.isEmpty) return const SizedBox.shrink();
+              
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      'Services',
                       style: tt.labelMedium?.copyWith(
                         color: cs.onSurfaceVariant,
                         letterSpacing: 0.5,
@@ -105,14 +156,13 @@ class MoreScreen extends StatelessWidget {
                       border: Border.all(color: cs.outlineVariant),
                     ),
                     child: Column(
-                      children: links
+                      children: buttons
                           .asMap()
                           .entries
                           .map((entry) => _buildLinkTile(
                                 context,
                                 entry.value,
-                                showDivider:
-                                    entry.key < links.length - 1,
+                                showDivider: entry.key < buttons.length - 1,
                               ))
                           .toList(),
                     ),
@@ -174,7 +224,7 @@ class MoreScreen extends StatelessWidget {
   }
 
   Widget _buildLinkTile(BuildContext context, CustomLink link,
-      {required bool showDivider}) {
+      {required bool showDivider, bool isNested = false}) {
     final cs = context.contextTheme.colorScheme;
     final tt = context.contextTheme.textTheme;
 
@@ -182,7 +232,7 @@ class MoreScreen extends StatelessWidget {
       children: [
         ListTile(
           contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              EdgeInsets.only(left: isNested ? 48 : 16, right: 16),
           leading: Icon(
             _iconFromName(link.icon),
             color: cs.primary,

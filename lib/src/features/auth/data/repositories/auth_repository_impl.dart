@@ -9,71 +9,34 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Stream<AppUser?> get onAuthStateChanged {
-    return _authService.authStateChanges.map((userData) {
-      if (userData == null) return null;
-      return AppUser(
-        id: userData['id'] ?? '',
-        email: userData['email'] ?? '',
-        name: userData['name'],
-        photoUrl: userData['photoUrl'],
-      );
+    return _authService.authStateChanges.map((payload) {
+      if (payload == null) return null;
+      return _memberFromPayload(payload);
     });
   }
 
   @override
   FutureEither<AppUser> login({
-    required String email, 
+    required String identifier,
     required String password,
   }) async {
-    final result = await _authService.login(email: email, password: password);
-    
-    return result.flatMap((userData) {
-      if (userData == null) {
-        return left(const ServerFailure('Login failed: User record not found'));
+    final result =
+        await _authService.login(identifier: identifier, password: password);
+
+    return result.flatMap((payload) {
+      if (payload == null) {
+        return left(const ServerFailure('Login failed: empty response'));
       }
+      // Backend ApiResponse::success wraps in { data: { token, member } }
+      // AuthService.login() already unwraps 'data', so payload = { token, member }
+      final memberData = (payload['member'] as Map<String, dynamic>?) ??
+          (payload['data']?['member'] as Map<String, dynamic>?);
 
-      final data = userData['user'] ?? userData;
-      final user = AppUser(
-        id: data['id'].toString(), 
-        email: data['email'] ?? email, 
-        name: data['name'],
-      );
-      
-      return right(user);
-    });
-  }
-
-  @override
-  FutureEither<AppUser> signUp({
-    required String name, 
-    required String email, 
-    required String password,
-  }) async {
-    final result = await _authService.signUp(
-      name: name,
-      email: email,
-      password: password,
-    );
-
-    return result.flatMap((userData) {
-      if (userData == null) {
-        return left(const ServerFailure('Sign up failed: User record corrupted'));
+      if (memberData == null) {
+        return left(const ServerFailure('Login failed: member data missing'));
       }
-
-      final data = userData['user'] ?? userData;
-      final user = AppUser(
-        id: data['id'].toString(), 
-        email: data['email'] ?? email, 
-        name: name,
-      );
-      
-      return right(user);
+      return right(_memberFromPayload(memberData));
     });
-  }
-
-  @override
-  FutureEither<void> forgotPassword({required String email}) {
-    return _authService.forgotPassword(email: email);
   }
 
   @override
@@ -83,17 +46,33 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   FutureEither<AppUser?> checkAuthState() async {
-    final result = await _authService.getCurrentUser();
-    
-    return result.map((userData) {
-      if (userData == null) return null;
+    // Fast path — no point hitting the network if no token is stored.
+    final tokenResult =
+        await SecureStorageService.instance.read('auth_token');
+    bool hasToken = false;
+    tokenResult.fold((_) {}, (t) => hasToken = t != null);
 
-      return AppUser(
-        id: userData['id'], 
-        email: userData['email'] ?? '', 
-        name: userData['name'],
-        photoUrl: userData['photoUrl'],
-      );
+    if (!hasToken) return right(null);
+
+    final result = await _authService.getCurrentUser();
+
+    return result.map((data) {
+      if (data == null) return null;
+      // POST /me → ApiResponse::success(MemberResource) →
+      // { data: { id, name, email, phone, is_active, ... } }
+      final memberData = (data['data'] as Map<String, dynamic>?) ?? data;
+      return _memberFromPayload(memberData);
     });
+  }
+
+  /// Maps a member JSON map (from MemberResource) to an [AppUser].
+  AppUser _memberFromPayload(Map<String, dynamic> m) {
+    return AppUser(
+      id: m['id']?.toString() ?? '',
+      email: (m['email'] as String?) ?? '',
+      name: m['name'] as String?,
+      phone: m['phone'] as String?,
+      isActive: (m['is_active'] as bool?) ?? true,
+    );
   }
 }

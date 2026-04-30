@@ -5,28 +5,15 @@ abstract class AuthRepository {
   /// Stream of auth state changes. Emits AppUser when authenticated, null when not.
   Stream<AppUser?> get onAuthStateChanged;
 
-  /// Sign in with email and password
+  /// Sign in with identifier (email or phone) and password.
   FutureEither<AppUser> login({
-    required String email,
+    required String identifier,
     required String password,
   });
 
-  /// Sign up with email, password, and optional name
-  FutureEither<AppUser> signUp({
-    required String name,
-    required String email,
-    required String password,
-  });
-
-  /// Send a password reset email
-  FutureEither<void> forgotPassword({
-    required String email,
-  });
-
-  /// Sign out the current user
+  /// Sign out the current user — revokes the Sanctum token on the server.
   FutureEither<void> logout();
-  
-  /// Check if the user is currently authenticated natively
+
+  /// Check if the user is currently authenticated by calling POST /me.
   FutureEither<AppUser?> checkAuthState();
 }
-

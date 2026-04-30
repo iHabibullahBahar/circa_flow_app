@@ -59,6 +59,9 @@ dependencies:
   # Media
   image_picker: ^1.2.1
 
+  # WebView for custom links
+  webview_flutter: ^4.10.0
+
   # Utilities
   path_provider: ^2.1.4
   url_launcher: ^6.3.1

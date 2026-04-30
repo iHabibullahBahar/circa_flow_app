@@ -8,3 +8,4 @@ export '../theme/theme_constants.dart';
 export 'wrappers/wrappers.dart';
 export 'app_assets.dart';
 export 'hooks/hooks.dart';
+export 'models/paginated_result.dart';

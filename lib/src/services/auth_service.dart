@@ -10,72 +10,51 @@ class AuthService {
 
   final ApiService _api = ApiService.instance;
 
-  // Custom Backend doesn't have a built-in auth state stream, so we manage our own
+  /// Broadcast stream for auth state changes. Emits user map on login, null on logout.
   final StreamController<Map<String, dynamic>?> _authStateController =
       StreamController<Map<String, dynamic>?>.broadcast();
 
-  /// Stream of auth state changes. Emits the current user map or null.
-  Stream<Map<String, dynamic>?> get authStateChanges => _authStateController.stream;
+  Stream<Map<String, dynamic>?> get authStateChanges =>
+      _authStateController.stream;
 
+  /// Login using email/phone (identifier) and password.
+  /// Backend expects: { identifier, password, device_name? }
   FutureEither<Map<String, dynamic>?> login({
-    required String email,
+    required String identifier,
     required String password,
+    String? deviceName,
   }) async {
     final result = await _api.post<Map<String, dynamic>>(zLoginEndpoint, data: {
-      'email': email,
+      'identifier': identifier,
       'password': password,
+      if (deviceName != null) 'device_name': deviceName,
     });
 
     return result.map((data) {
-      // Save token if present
-      final token = data['token'] ?? data['access_token'];
+      // Backend wraps in { data: { token, member } }
+      final payload = (data['data'] as Map<String, dynamic>?) ?? data;
+      final token = payload['token'] as String?;
       if (token != null) {
-        SecureStorageService.instance.write('auth_token', token.toString());
+        SecureStorageService.instance.write('auth_token', token);
       }
-
-      _authStateController.add(data);
-      return data;
+      _authStateController.add(payload);
+      return payload;
     });
   }
 
-  FutureEither<Map<String, dynamic>?> signUp({
-    required String name,
-    required String email,
-    required String password,
-  }) async {
-    final result = await _api.post<Map<String, dynamic>>(zSignupEndpoint, data: {
-      'name': name,
-      'email': email,
-      'password': password,
-    });
-
-    return result.map((data) {
-      // Save token if present
-      final token = data['token'] ?? data['access_token'];
-      if (token != null) {
-        SecureStorageService.instance.write('auth_token', token.toString());
-      }
-
-      _authStateController.add(data);
-      return data;
-    });
-  }
-
-  FutureEither<void> forgotPassword({required String email}) async {
-    return _api.post<void>(zForgotPasswordEndpoint, data: {'email': email});
-  }
-
+  /// Logout — revokes the current Sanctum token on the server.
   FutureEither<void> logout() async {
     final result = await _api.post<void>(zLogoutEndpoint);
-    
     return result.map((_) {
       SecureStorageService.instance.delete('auth_token');
       _authStateController.add(null);
     });
   }
 
+  /// Returns the current member from the server using the stored token.
+  /// Backend route: POST /api/v1/me
   FutureEither<Map<String, dynamic>?> getCurrentUser() async {
-    return _api.get<Map<String, dynamic>>(zMeEndpoint);
+    return _api.post<Map<String, dynamic>>(zMeEndpoint);
   }
 
   void dispose() {

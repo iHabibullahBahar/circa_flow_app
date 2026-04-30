@@ -1,33 +1,40 @@
 import 'package:circa_flow_main/src/imports/imports.dart';
+import 'package:circa_flow_main/src/config/config_controller.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final current = _buildMaterialApp(context);
-    return ScreenUtilWrapper(child: current);
+    return ScreenUtilWrapper(child: _buildMaterialApp(context));
   }
 
   Widget _buildMaterialApp(BuildContext context) {
-    return GetMaterialApp(
-      initialBinding: AppBindings(),
-      title: 'Circa Flow Main',
-      debugShowCheckedModeBanner: false,
-      theme: buildLightTheme(primaryColorHex: '#1447e6'),
-      darkTheme: buildDarkTheme(primaryColorHex: '#1447e6'),
-      themeMode: ThemeMode.system,
-      initialRoute: AppRoutes.onboarding,
-      getPages: AppRouter.getPages,
-      localizationsDelegates: context.localizationDelegates,
-      supportedLocales: context.supportedLocales,
-      locale: context.locale,
-      builder: (context, child) {
-        Widget current = child!;
-        current = SkeletonWrapper(child: current);
-        current = SessionListenerWrapper(child: current);
-        return current;
-      },
-    );
+    final configCtrl = Get.find<ConfigController>();
+
+    return Obx(() {
+      // Theme rebuilds reactively whenever config changes (e.g. after fetch)
+      final primaryHex = configCtrl.primaryColor;
+
+      return GetMaterialApp(
+        initialBinding: AppBindings(),
+        title: configCtrl.orgName,
+        debugShowCheckedModeBanner: false,
+        theme: buildLightTheme(primaryColorHex: primaryHex),
+        darkTheme: buildDarkTheme(primaryColorHex: primaryHex),
+        themeMode: ThemeMode.system,
+        initialRoute: AppRoutes.splash,
+        getPages: AppRouter.getPages,
+        localizationsDelegates: context.localizationDelegates,
+        supportedLocales: context.supportedLocales,
+        locale: context.locale,
+        builder: (context, child) {
+          Widget current = child!;
+          current = SkeletonWrapper(child: current);
+          current = SessionListenerWrapper(child: current);
+          return current;
+        },
+      );
+    });
   }
 }

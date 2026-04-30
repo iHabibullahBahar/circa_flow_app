@@ -1,13 +1,19 @@
-// API Endpoints
-// We use the 'z' prefix for easy identification and autocomplete.
+// API Endpoints — all routes are POST per the backend definition.
+// Prefix: the base URL already includes /api/v1
+
+// Config
+const String zConfigEndpoint = '/config';
 
 // Auth
 const String zLoginEndpoint = '/auth/login';
-const String zSignupEndpoint = '/auth/signup';
 const String zLogoutEndpoint = '/auth/logout';
-const String zMeEndpoint = '/auth/me';
-const String zForgotPasswordEndpoint = '/auth/forgot-password';
+const String zMeEndpoint = '/me'; // POST /api/v1/me
 
-// Example for future features
-// const String zPostsEndpoint = '/posts';
-// const String zProfileEndpoint = '/profile';
+// Modules
+const String zPostsEndpoint = '/posts';
+const String zEventsEndpoint = '/events';
+const String zDocumentsEndpoint = '/documents';
+
+// Devices (notifications)
+const String zDevicesRegisterEndpoint = '/devices';
+const String zDevicesDeregisterEndpoint = '/devices/deregister';

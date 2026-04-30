@@ -1,9 +1,16 @@
 import 'package:circa_flow_main/src/imports/core_imports.dart';
 import 'package:circa_flow_main/src/imports/packages_imports.dart';
-
+import 'package:circa_flow_main/src/config/config_controller.dart';
 import 'package:circa_flow_main/src/features/auth/presentation/providers/session_controller.dart';
 
-
+/// Listens to both [ConfigController] and [SessionController] changes and
+/// triggers navigation only after config is ready + session state is known.
+///
+/// Flow:
+///   1. App starts on /splash
+///   2. ConfigController fetches config (loading → ready/error)
+///   3. Once config is ready, SessionController resolves auth state
+///   4. This wrapper navigates to home or onboarding accordingly
 class SessionListenerWrapper extends StatefulWidget {
   final Widget child;
   const SessionListenerWrapper({super.key, required this.child});
@@ -13,34 +20,77 @@ class SessionListenerWrapper extends StatefulWidget {
 }
 
 class _SessionListenerWrapperState extends State<SessionListenerWrapper> {
-  Worker? _worker;
+  Worker? _configWorker;
+  Worker? _sessionWorker;
+  bool _navigated = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final session = Get.find<SessionController>();
-      _worker = ever(session.status, (status) {
-        if (status != SessionStatus.unknown) {
-          FlutterNativeSplash.remove();
-          if (status == SessionStatus.authenticated) {
-            Get.offAllNamed<void>(AppRoutes.home);
-          } else if (status == SessionStatus.unauthenticated) {
-            Get.offAllNamed<void>(AppRoutes.onboarding);
-          }
-        }
-      }, condition: () => session.status.value != SessionStatus.unknown);
+      _setupListeners();
     });
+  }
+
+  void _setupListeners() {
+    final configCtrl = Get.find<ConfigController>();
+    final session = Get.find<SessionController>();
+
+    // Step 1: Wait for config to finish loading
+    _configWorker = ever(configCtrl.status, (status) {
+      if (status == ConfigStatus.loading) return; // still loading
+
+      // Config is ready (or failed with fallback) — now watch session
+      _configWorker?.dispose();
+      _configWorker = null;
+
+      _sessionWorker = ever(session.status, (sessionStatus) {
+        if (sessionStatus == SessionStatus.unknown) return;
+        _resolveNavigation(sessionStatus);
+      });
+
+      // If session is already resolved (e.g. no token found immediately)
+      if (session.status.value != SessionStatus.unknown) {
+        _resolveNavigation(session.status.value);
+      }
+    });
+
+    // If config is already done (fast cache hit) handle immediately
+    if (configCtrl.status.value != ConfigStatus.loading) {
+      _configWorker?.dispose();
+      _configWorker = null;
+
+      _sessionWorker = ever(session.status, (sessionStatus) {
+        if (sessionStatus == SessionStatus.unknown) return;
+        _resolveNavigation(sessionStatus);
+      });
+
+      if (session.status.value != SessionStatus.unknown) {
+        _resolveNavigation(session.status.value);
+      }
+    }
+  }
+
+  void _resolveNavigation(SessionStatus status) {
+    if (_navigated) return;
+    _navigated = true;
+
+    FlutterNativeSplash.remove();
+
+    if (status == SessionStatus.authenticated) {
+      Get.offAllNamed<void>(AppRoutes.home);
+    } else {
+      Get.offAllNamed<void>(AppRoutes.onboarding);
+    }
   }
 
   @override
   void dispose() {
-    _worker?.dispose();
+    _configWorker?.dispose();
+    _sessionWorker?.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
-    return widget.child;
-  }
+  Widget build(BuildContext context) => widget.child;
 }

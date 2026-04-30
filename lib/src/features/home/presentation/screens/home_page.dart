@@ -1,56 +1,107 @@
-import 'package:circa_flow_main/src/imports/core_imports.dart';
-import 'package:circa_flow_main/src/imports/packages_imports.dart';
+import 'package:circa_flow_main/src/imports/imports.dart';
+import 'package:circa_flow_main/src/config/config_controller.dart';
+import 'package:circa_flow_main/src/features/posts/presentation/screens/posts_screen.dart';
+import 'package:circa_flow_main/src/features/events/presentation/screens/events_screen.dart';
+import 'package:circa_flow_main/src/features/documents/presentation/screens/documents_screen.dart';
+import 'package:circa_flow_main/src/features/home/presentation/screens/more_screen.dart';
 
-import 'package:circa_flow_main/src/features/auth/presentation/providers/session_controller.dart';
+/// Module-aware home shell. Reads enabled modules from ConfigController and
+/// only shows tabs for modules that are enabled. The "More" tab is always shown.
+class HomeShell extends StatefulWidget {
+  const HomeShell({super.key});
 
+  @override
+  State<HomeShell> createState() => _HomeShellState();
+}
 
-class HomePage extends HookWidget {
-  const HomePage({super.key});
+class _HomeShellState extends State<HomeShell> {
+  int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.contextTheme;
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
+    final configCtrl = Get.find<ConfigController>();
+    final cs = context.contextTheme.colorScheme;
 
-    final session = Get.find<SessionController>();
-    final user = session.user.value;
+    return Obx(() {
+      final tabs = _buildTabs(configCtrl);
 
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
-      appBar: AppTopBar(
-        title: 'home.home_title'.t(),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.all(AppSpacing.xl.w),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              HugeIcon(
-                icon: HugeIcons.strokeRoundedHome01,
-                size: 60.sp,
-                color: colorScheme.primary,
-              ),
-              SizedBox(height: AppSpacing.lg.h),
-              Obx(() => Text(
-                user?.name ?? user?.email ?? ('home.welcome_home'.t()),
-                textAlign: TextAlign.center,
-                style: textTheme.headlineMedium?.copyWith(
-                  color: colorScheme.onSurface,
-                  fontWeight: FontWeight.bold,
-                ),
-              )),
-              SizedBox(height: AppSpacing.xl.h),
-              AppButton(
-                label: 'auth.logout'.t(),
-                onPressed: () => Get.offAllNamed<void>(AppRoutes.login),
-              ),
-            ],
-          ),
+      // Clamp index in case module count changes
+      final safeIndex = _currentIndex.clamp(0, tabs.length - 1);
+
+      return Scaffold(
+        body: IndexedStack(
+          index: safeIndex,
+          children: tabs.map((t) => t.screen).toList(),
         ),
-      ),
-    );
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: safeIndex,
+          onDestinationSelected: (i) => setState(() => _currentIndex = i),
+          backgroundColor: cs.surface,
+          indicatorColor: cs.primaryContainer,
+          destinations: tabs
+              .map((t) => NavigationDestination(
+                    icon: Icon(t.icon),
+                    selectedIcon: Icon(t.selectedIcon, color: cs.primary),
+                    label: t.label,
+                  ))
+              .toList(),
+        ),
+      );
+    });
   }
+
+  List<_TabItem> _buildTabs(ConfigController ctrl) {
+    final tabs = <_TabItem>[];
+
+    if (ctrl.isModuleEnabled('posts')) {
+      tabs.add(_TabItem(
+        label: 'Posts',
+        icon: Icons.article_outlined,
+        selectedIcon: Icons.article_rounded,
+        screen: const PostsScreen(),
+      ));
+    }
+
+    if (ctrl.isModuleEnabled('events')) {
+      tabs.add(_TabItem(
+        label: 'Events',
+        icon: Icons.event_outlined,
+        selectedIcon: Icons.event_rounded,
+        screen: const EventsScreen(),
+      ));
+    }
+
+    if (ctrl.isModuleEnabled('documents')) {
+      tabs.add(_TabItem(
+        label: 'Documents',
+        icon: Icons.folder_outlined,
+        selectedIcon: Icons.folder_rounded,
+        screen: const DocumentsScreen(),
+      ));
+    }
+
+    // "More" tab is ALWAYS present
+    tabs.add(_TabItem(
+      label: 'More',
+      icon: Icons.more_horiz_rounded,
+      selectedIcon: Icons.more_horiz_rounded,
+      screen: const MoreScreen(),
+    ));
+
+    return tabs;
+  }
+}
+
+class _TabItem {
+  final String label;
+  final IconData icon;
+  final IconData selectedIcon;
+  final Widget screen;
+
+  const _TabItem({
+    required this.label,
+    required this.icon,
+    required this.selectedIcon,
+    required this.screen,
+  });
 }

@@ -1,14 +1,14 @@
 import 'dart:async';
 import '../utils/utils.dart';
-import '../config/app_config.dart';
-import 'package:dio/dio.dart';
+import '../config/api_endpoints.dart';
 import 'secure_storage_service.dart';
+import 'api_service.dart';
 
 class AuthService {
   AuthService._();
   static final AuthService instance = AuthService._();
 
-  Dio get _dio => AppConfig.dio;
+  final ApiService _api = ApiService.instance;
 
   // Custom Backend doesn't have a built-in auth state stream, so we manage our own
   final StreamController<Map<String, dynamic>?> _authStateController =
@@ -21,22 +21,21 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    return runTask(() async {
-      final response = await _dio.post<Map<String, dynamic>>('/auth/login', data: {
-        'email': email,
-        'password': password,
-      });
-      final data = response.data as Map<String, dynamic>;
-      
+    final result = await _api.post<Map<String, dynamic>>(zLoginEndpoint, data: {
+      'email': email,
+      'password': password,
+    });
+
+    return result.map((data) {
       // Save token if present
       final token = data['token'] ?? data['access_token'];
       if (token != null) {
-        await SecureStorageService.instance.write('auth_token', token.toString());
+        SecureStorageService.instance.write('auth_token', token.toString());
       }
 
       _authStateController.add(data);
       return data;
-    }, requiresNetwork: true);
+    });
   }
 
   FutureEither<Map<String, dynamic>?> signUp({
@@ -44,44 +43,39 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    return runTask(() async {
-      final response = await _dio.post<Map<String, dynamic>>('/auth/signup', data: {
-        'name': name,
-        'email': email,
-        'password': password,
-      });
-      final data = response.data as Map<String, dynamic>;
+    final result = await _api.post<Map<String, dynamic>>(zSignupEndpoint, data: {
+      'name': name,
+      'email': email,
+      'password': password,
+    });
 
+    return result.map((data) {
       // Save token if present
       final token = data['token'] ?? data['access_token'];
       if (token != null) {
-        await SecureStorageService.instance.write('auth_token', token.toString());
+        SecureStorageService.instance.write('auth_token', token.toString());
       }
 
       _authStateController.add(data);
       return data;
-    }, requiresNetwork: true);
+    });
   }
 
   FutureEither<void> forgotPassword({required String email}) async {
-    return runTask(() async {
-      await _dio.post<void>('/auth/forgot-password', data: {'email': email});
-    }, requiresNetwork: true);
+    return _api.post<void>(zForgotPasswordEndpoint, data: {'email': email});
   }
 
   FutureEither<void> logout() async {
-    return runTask(() async {
-      await _dio.post<void>('/auth/logout');
-      await SecureStorageService.instance.delete('auth_token');
+    final result = await _api.post<void>(zLogoutEndpoint);
+    
+    return result.map((_) {
+      SecureStorageService.instance.delete('auth_token');
       _authStateController.add(null);
-    }, requiresNetwork: true);
+    });
   }
 
   FutureEither<Map<String, dynamic>?> getCurrentUser() async {
-    return runTask(() async {
-      final response = await _dio.get<Map<String, dynamic>>('/auth/me');
-      return response.data as Map<String, dynamic>;
-    });
+    return _api.get<Map<String, dynamic>>(zMeEndpoint);
   }
 
   void dispose() {

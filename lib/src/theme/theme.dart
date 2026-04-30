@@ -219,7 +219,23 @@ ThemeData _buildTheme(
           color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
     ),
 
-    // Navigation Bar Theme
+    // Bottom Navigation Bar Theme
+    bottomNavigationBarTheme: BottomNavigationBarThemeData(
+      backgroundColor: colorScheme.surface,
+      selectedItemColor: colorScheme.primary,
+      unselectedItemColor: colorScheme.onSurfaceVariant,
+      elevation: 8,
+      type: BottomNavigationBarType.fixed,
+      selectedLabelStyle: textTheme.labelSmall?.copyWith(
+        fontWeight: FontWeight.bold,
+        fontSize: 11,
+      ),
+      unselectedLabelStyle: textTheme.labelSmall?.copyWith(
+        fontSize: 11,
+      ),
+    ),
+
+    // Navigation Bar Theme (Keep for compatibility if used elsewhere)
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: colorScheme.surface,
       indicatorColor: colorScheme.secondaryContainer,

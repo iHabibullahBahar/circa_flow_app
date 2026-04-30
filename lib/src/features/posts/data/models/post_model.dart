@@ -6,6 +6,7 @@ class PostModel {
   final String? body;
   final String? coverImage;
   final List<String> images;
+  final List<PostLink> links;
   final String? publishedAt;
 
   const PostModel({
@@ -15,6 +16,7 @@ class PostModel {
     this.body,
     this.coverImage,
     this.images = const [],
+    this.links = const [],
     this.publishedAt,
   });
 
@@ -28,6 +30,24 @@ class PostModel {
                 ?.map((e) => e.toString())
                 .toList() ??
             [],
+        links: (j['links'] as List<dynamic>?)
+                ?.whereType<Map<String, dynamic>>()
+                .map(PostLink.fromJson)
+                .toList() ??
+            [],
         publishedAt: j['published_at'] as String?,
+      );
+}
+
+/// A single link attached to a Post or Event.
+class PostLink {
+  final String url;
+  final String label;
+
+  const PostLink({required this.url, required this.label});
+
+  factory PostLink.fromJson(Map<String, dynamic> j) => PostLink(
+        url: (j['url'] as String?) ?? '',
+        label: (j['label'] as String?) ?? 'Link',
       );
 }

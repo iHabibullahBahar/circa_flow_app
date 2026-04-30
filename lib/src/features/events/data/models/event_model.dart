@@ -1,4 +1,7 @@
 /// Data model for an Event, typed against EventResource from the backend.
+import 'package:circa_flow_main/src/features/posts/data/models/post_model.dart'
+    show PostLink;
+
 class EventModel {
   final int id;
   final String title;
@@ -13,6 +16,7 @@ class EventModel {
   final String? organizer;
   final int? capacity;
   final String? timezone;
+  final List<PostLink> links;
 
   const EventModel({
     required this.id,
@@ -28,6 +32,7 @@ class EventModel {
     this.organizer,
     this.capacity,
     this.timezone,
+    this.links = const [],
   });
 
   factory EventModel.fromJson(Map<String, dynamic> j) => EventModel(
@@ -44,6 +49,11 @@ class EventModel {
         organizer: j['organizer'] as String?,
         capacity: (j['capacity'] as num?)?.toInt(),
         timezone: j['timezone'] as String?,
+        links: (j['links'] as List<dynamic>?)
+                ?.whereType<Map<String, dynamic>>()
+                .map(PostLink.fromJson)
+                .toList() ??
+            [],
       );
 
   String get formattedDate {

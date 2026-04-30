@@ -122,108 +122,149 @@ class _EventCard extends StatelessWidget {
   final EventModel event;
   const _EventCard({required this.event});
 
+  /// The redirect URL is stored in location_url (labelled "Redirect URL" in
+  /// the admin form). A non-empty value means the card is tappable.
+  String? get _redirectUrl {
+    final url = event.locationUrl;
+    return (url != null && url.isNotEmpty) ? url : null;
+  }
+
+  void _onTap() {
+    final url = _redirectUrl;
+    if (url == null) return;
+    Get.toNamed<void>(
+      AppRoutes.webview,
+      arguments: WebViewArgs(url: url, title: event.title),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = context.contextTheme.colorScheme;
     final tt = context.contextTheme.textTheme;
+    final hasLink = _redirectUrl != null;
 
-    return Card(
-      elevation: 0,
-      color: cs.surfaceContainerLow,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: cs.outlineVariant),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (event.coverImage != null)
-            ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(16)),
-              child: AppCachedImage(
-                imageUrl: event.coverImage!,
-                height: 160,
-                width: double.infinity,
-                fit: BoxFit.cover,
+    return GestureDetector(
+      onTap: hasLink ? _onTap : null,
+      child: Card(
+        elevation: 0,
+        color: cs.surfaceContainerLow,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: hasLink
+                ? cs.primary.withValues(alpha: 0.3)
+                : cs.outlineVariant,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (event.coverImage != null)
+              ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(16)),
+                child: AppCachedImage(
+                  imageUrl: event.coverImage!,
+                  height: 160,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
               ),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (event.startsAt != null)
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: cs.primaryContainer,
-                      borderRadius: BorderRadius.circular(8),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Date badge
+                  if (event.startsAt != null)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: cs.primaryContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.event_rounded,
+                              size: 13, color: cs.onPrimaryContainer),
+                          const SizedBox(width: 4),
+                          Text(
+                            event.formattedDate,
+                            style: tt.labelSmall?.copyWith(
+                              color: cs.onPrimaryContainer,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+
+                  // Title row with optional link icon
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          event.title,
+                          style: tt.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (hasLink) ...[
+                        const SizedBox(width: 8),
+                        Icon(Icons.open_in_new_rounded,
+                            size: 16, color: cs.primary),
+                      ],
+                    ],
+                  ),
+
+                  if (event.description != null) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      event.description!,
+                      style: tt.bodySmall
+                          ?.copyWith(color: cs.onSurfaceVariant),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+
+                  // Location row — only show when it's an actual place name,
+                  // not the redirect URL that's stored in location_url
+                  if (event.location != null) ...[
+                    const SizedBox(height: 10),
+                    Row(
                       children: [
-                        Icon(Icons.event_rounded,
-                            size: 13, color: cs.onPrimaryContainer),
+                        Icon(
+                          event.isOnline
+                              ? Icons.videocam_outlined
+                              : Icons.place_outlined,
+                          size: 14,
+                          color: cs.onSurfaceVariant,
+                        ),
                         const SizedBox(width: 4),
-                        Text(
-                          event.formattedDate,
-                          style: tt.labelSmall?.copyWith(
-                            color: cs.onPrimaryContainer,
-                            fontWeight: FontWeight.w600,
+                        Expanded(
+                          child: Text(
+                            event.isOnline ? 'Online event' : event.location!,
+                            style: tt.labelSmall
+                                ?.copyWith(color: cs.onSurfaceVariant),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                Text(
-                  event.title,
-                  style: tt.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (event.description != null) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    event.description!,
-                    style: tt.bodySmall
-                        ?.copyWith(color: cs.onSurfaceVariant),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  ],
                 ],
-                if (event.location != null || event.isOnline) ...[
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Icon(
-                        event.isOnline
-                            ? Icons.videocam_outlined
-                            : Icons.place_outlined,
-                        size: 14,
-                        color: cs.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          event.isOnline
-                              ? 'Online event'
-                              : event.location!,
-                          style: tt.labelSmall
-                              ?.copyWith(color: cs.onSurfaceVariant),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

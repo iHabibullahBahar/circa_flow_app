@@ -122,73 +122,104 @@ class _PostCard extends StatelessWidget {
   final PostModel post;
   const _PostCard({required this.post});
 
+  /// The single redirect URL set in the admin panel (stored as links[0].url).
+  String? get _redirectUrl =>
+      post.links.isNotEmpty ? post.links.first.url : null;
+
+  void _onTap() {
+    final url = _redirectUrl;
+    if (url == null || url.isEmpty) return;
+    Get.toNamed<void>(
+      AppRoutes.webview,
+      arguments: WebViewArgs(url: url, title: post.title),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = context.contextTheme.colorScheme;
     final tt = context.contextTheme.textTheme;
+    final hasLink = _redirectUrl != null && _redirectUrl!.isNotEmpty;
 
-    return Card(
-      elevation: 0,
-      color: cs.surfaceContainerLow,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: cs.outlineVariant),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (post.coverImage != null)
-            ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(16)),
-              child: AppCachedImage(
-                imageUrl: post.coverImage!,
-                height: 180,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  post.title,
-                  style: tt.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+    return GestureDetector(
+      onTap: hasLink ? _onTap : null,
+      child: Card(
+        elevation: 0,
+        color: cs.surfaceContainerLow,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: hasLink ? cs.primary.withValues(alpha: 0.3) : cs.outlineVariant,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (post.coverImage != null)
+              ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(16)),
+                child: AppCachedImage(
+                  imageUrl: post.coverImage!,
+                  height: 180,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
                 ),
-                if (post.body != null) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    post.body!,
-                    style: tt.bodySmall
-                        ?.copyWith(color: cs.onSurfaceVariant),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-                if (post.publishedAt != null) ...[
-                  const SizedBox(height: 10),
+              ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.schedule_rounded,
-                          size: 12, color: cs.onSurfaceVariant),
-                      const SizedBox(width: 4),
-                      Text(
-                        _formatDate(post.publishedAt!),
-                        style: tt.labelSmall
-                            ?.copyWith(color: cs.onSurfaceVariant),
+                      Expanded(
+                        child: Text(
+                          post.title,
+                          style: tt.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
+                      if (hasLink) ...[
+                        const SizedBox(width: 8),
+                        Icon(Icons.open_in_new_rounded,
+                            size: 16, color: cs.primary),
+                      ],
                     ],
                   ),
+                  if (post.body != null) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      post.body!,
+                      style: tt.bodySmall
+                          ?.copyWith(color: cs.onSurfaceVariant),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  if (post.publishedAt != null) ...[
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Icon(Icons.schedule_rounded,
+                            size: 12, color: cs.onSurfaceVariant),
+                        const SizedBox(width: 4),
+                        Text(
+                          _formatDate(post.publishedAt!),
+                          style: tt.labelSmall
+                              ?.copyWith(color: cs.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

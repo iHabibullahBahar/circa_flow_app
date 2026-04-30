@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:circa_flow_main/src/imports/imports.dart';
 import 'package:circa_flow_main/src/config/config_controller.dart';
 import 'package:circa_flow_main/src/features/home/presentation/providers/dashboard_controller.dart';
@@ -69,12 +70,28 @@ class DashboardScreen extends StatelessWidget {
                 ),
               ),
 
-              // --- Hero Carousel / Featured ---
+              // --- Banners Carousel ---
               SliverToBoxAdapter(
                 child: Obx(() {
-                  if (dashCtrl.featuredPosts.isEmpty) return const SizedBox.shrink();
-                  final post = dashCtrl.featuredPosts.first;
-                  return _FeaturedHeroCard(post: post);
+                  final banners = configCtrl.config.value.banners;
+                  if (banners.isEmpty) return const SizedBox.shrink();
+                  return _DashboardBanners(banners: banners);
+                }),
+              ),
+
+              // --- Latest Posts Section ---
+              SliverToBoxAdapter(
+                child: Obx(() {
+                  final posts = dashCtrl.featuredPosts;
+                  if (posts.isEmpty) return const SizedBox.shrink();
+                  
+                  return _DashboardSection(
+                    title: 'Latest Posts',
+                    onViewAll: () => Get.find<HomeShellController>().changeTabByLabel('Posts'),
+                    child: Column(
+                      children: posts.take(2).map((p) => _PostListTile(post: p)).toList(),
+                    ),
+                  );
                 }),
               ),
 
@@ -168,122 +185,86 @@ class DashboardScreen extends StatelessWidget {
   }
 }
 
-class _FeaturedHeroCard extends StatelessWidget {
+class _PostListTile extends StatelessWidget {
   final PostModel post;
-  const _FeaturedHeroCard({required this.post});
+  const _PostListTile({required this.post});
 
   @override
   Widget build(BuildContext context) {
     final cs = context.contextTheme.colorScheme;
     final tt = context.contextTheme.textTheme;
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: AspectRatio(
-        aspectRatio: 1.2,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                AppCachedImage(
-                  imageUrl: post.coverImage ?? '',
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.8)),
+      ),
+      child: Row(
+        children: [
+          if (post.coverImage != null)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                width: 80,
+                height: 80,
+                child: AppCachedImage(
+                  imageUrl: post.coverImage!,
                   fit: BoxFit.cover,
                 ),
-                // Gradient Overlay
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withValues(alpha: 0.1),
-                        Colors.black.withValues(alpha: 0.8),
-                      ],
-                    ),
+              ),
+            )
+          else
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: cs.surfaceVariant,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.article_rounded, color: cs.onSurfaceVariant),
+            ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  post.title,
+                  style: tt.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14.sp,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                // Content
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.campaign_rounded, color: Colors.amber, size: 20),
-                          const SizedBox(width: 8),
-                          Text(
-                            'LATEST UPDATE',
-                            style: tt.labelSmall?.copyWith(
-                              color: Colors.amber,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.0,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        post.title,
-                        style: tt.headlineSmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 22.sp,
-                          height: 1.1,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        post.body ?? '',
-                        style: tt.bodyMedium?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.8),
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'TODAY AT 08:30', // Dummy time for now to match style
-                        style: tt.labelSmall?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.5),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(4, (i) => Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 2),
-                          width: i == 0 ? 16 : 6,
-                          height: 6,
-                          decoration: BoxDecoration(
-                            color: i == 0 ? Colors.white : Colors.white.withValues(alpha: 0.3),
-                            borderRadius: BorderRadius.circular(3),
-                          ),
-                        )),
-                      ),
-                    ],
+                const SizedBox(height: 4),
+                Text(
+                  post.body ?? '',
+                  style: tt.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(Icons.schedule_rounded, size: 12, color: cs.primary),
+                    const SizedBox(width: 4),
+                    Text(
+                      post.formattedDate,
+                      style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-        ),
+          Icon(Icons.chevron_right_rounded, color: cs.onSurfaceVariant),
+        ],
       ),
     );
   }
@@ -348,47 +329,255 @@ class _EventListTile extends StatelessWidget {
     final cs = context.contextTheme.colorScheme;
     final tt = context.contextTheme.textTheme;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.8)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: cs.surfaceVariant,
-              borderRadius: BorderRadius.circular(12),
+    return InkWell(
+      onTap: () => Get.toNamed<void>(AppRoutes.eventDetail, arguments: event),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-            child: Icon(Icons.event_note_rounded, color: cs.onSurfaceVariant),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  event.title,
-                  style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+          ],
+        ),
+        child: IntrinsicHeight(
+          child: Row(
+            children: [
+              // Date Section (Vertical Badge)
+              Container(
+                width: 60,
+                decoration: BoxDecoration(
+                  color: cs.primaryContainer.withValues(alpha: 0.15),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    bottomLeft: Radius.circular(16),
+                  ),
                 ),
-                Text(
-                  '${event.formattedDate} • ${event.location ?? "TBA"}',
-                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _getDay(event.startsAt),
+                      style: tt.headlineSmall?.copyWith(
+                        color: cs.primary,
+                        fontWeight: FontWeight.w900,
+                        height: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _getMon(event.startsAt).toUpperCase(),
+                      style: tt.labelMedium?.copyWith(
+                        color: cs.primary,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              // Info Section
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        event.title,
+                        style: tt.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.2,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(Icons.schedule_rounded, size: 12, color: cs.onSurfaceVariant),
+                          const SizedBox(width: 4),
+                          Text(
+                            '10:30 AM',
+                            style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+                          ),
+                          const SizedBox(width: 12),
+                          Icon(Icons.location_on_rounded, size: 12, color: cs.onSurfaceVariant),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              event.location ?? "TBA",
+                              style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Image Section
+              if (event.coverImage != null)
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: SizedBox(
+                      width: 70,
+                      height: 70,
+                      child: AppCachedImage(
+                        imageUrl: event.coverImage!,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+              const SizedBox(width: 8),
+            ],
           ),
-          Icon(Icons.chevron_right_rounded, color: cs.onSurfaceVariant),
-        ],
+        ),
       ),
     );
+  }
+
+  String _getDay(String? date) {
+    if (date == null) return '';
+    try {
+      return DateTime.parse(date).day.toString();
+    } catch (_) {
+      return '';
+    }
+  }
+
+  String _getMon(String? date) {
+    if (date == null) return '';
+    try {
+      final months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      ];
+      return months[DateTime.parse(date).month - 1];
+    } catch (_) {
+      return '';
+    }
+  }
+}
+class _DashboardBanners extends StatefulWidget {
+  final List<BannerConfig> banners;
+  const _DashboardBanners({required this.banners});
+
+  @override
+  State<_DashboardBanners> createState() => _DashboardBannersState();
+}
+
+class _DashboardBannersState extends State<_DashboardBanners> {
+  late final PageController _controller;
+  int _currentPage = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = PageController(viewportFraction: 0.9);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.banners.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      children: [
+        SizedBox(
+          height: 180.h,
+          child: PageView.builder(
+            controller: _controller,
+            itemCount: widget.banners.length,
+            onPageChanged: (index) => setState(() => _currentPage = index),
+            itemBuilder: (context, index) {
+              final banner = widget.banners[index];
+              return AnimatedScale(
+                scale: _currentPage == index ? 1.0 : 0.95,
+                duration: const Duration(milliseconds: 300),
+                child: GestureDetector(
+                  onTap: () => _handleAction(banner),
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          AppCachedImage(
+                            imageUrl: banner.imageUrl,
+                            fit: BoxFit.cover,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        if (widget.banners.length > 1)
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: AnimatedSmoothIndicator(
+              activeIndex: _currentPage,
+              count: widget.banners.length,
+              effect: ExpandingDotsEffect(
+                dotHeight: 6,
+                dotWidth: 6,
+                activeDotColor: context.contextTheme.colorScheme.primary,
+                dotColor: context.contextTheme.colorScheme.outlineVariant,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  void _handleAction(BannerConfig banner) {
+    if (banner.actionType == 'none' || banner.actionValue == null) return;
+
+    switch (banner.actionType) {
+      case 'link':
+        Get.toNamed('/webview', arguments: {
+          'url': banner.actionValue,
+          'title': banner.title ?? 'Link',
+        });
+        break;
+      case 'event':
+        Get.find<HomeShellController>().changeTabByLabel('Events');
+        break;
+      case 'document':
+        Get.find<HomeShellController>().changeTabByLabel('Documents');
+        break;
+    }
   }
 }

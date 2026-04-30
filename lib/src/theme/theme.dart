@@ -224,13 +224,14 @@ ThemeData _buildTheme(
       backgroundColor: colorScheme.surface,
       selectedItemColor: colorScheme.primary,
       unselectedItemColor: colorScheme.onSurfaceVariant,
-      elevation: 8,
+      elevation: 0,
       type: BottomNavigationBarType.fixed,
       selectedLabelStyle: textTheme.labelSmall?.copyWith(
         fontWeight: FontWeight.bold,
         fontSize: 11,
       ),
       unselectedLabelStyle: textTheme.labelSmall?.copyWith(
+        fontWeight: FontWeight.w500,
         fontSize: 11,
       ),
     ),
@@ -402,6 +403,12 @@ ThemeData buildLightTheme({required String primaryColorHex}) {
   ).copyWith(
     primary: seed,
     onPrimary: _onColor(seed),
+    surface: Colors.white,
+    surfaceContainer: Colors.white,
+    surfaceContainerHigh: Colors.white,
+    surfaceContainerHighest: Colors.white,
+    surfaceContainerLow: Colors.white,
+    surfaceContainerLowest: Colors.white,
   );
   return _buildTheme(colorScheme, AppPalettes.light);
 }

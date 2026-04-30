@@ -58,7 +58,7 @@ class ConfigController extends GetxController {
       (freshConfig) {
         config.value = freshConfig;
         status.value = ConfigStatus.ready;
-        AppLogger.info('✅ Config loaded from network: ${freshConfig.organization.name}');
+        AppLogger.info('✅ Config loaded from network: ${freshConfig.organization.name} (Color: ${freshConfig.branding.primaryColor})');
       },
     );
   }

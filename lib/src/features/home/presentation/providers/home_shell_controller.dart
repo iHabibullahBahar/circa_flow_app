@@ -65,8 +65,8 @@ class HomeShellController extends GetxController {
     // More
     items.add(TabItem(
       label: 'More',
-      icon: Icons.more_horiz_rounded,
-      selectedIcon: Icons.more_horiz_rounded,
+      icon: Icons.menu_rounded,
+      selectedIcon: Icons.menu_rounded,
       screen: const MoreScreen(),
     ));
 

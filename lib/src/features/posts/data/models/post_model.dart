@@ -37,6 +37,16 @@ class PostModel {
             [],
         publishedAt: j['published_at'] as String?,
       );
+
+  String get formattedDate {
+    if (publishedAt == null) return '';
+    try {
+      final dt = DateTime.parse(publishedAt!).toLocal();
+      return '${dt.day}/${dt.month}/${dt.year}';
+    } catch (_) {
+      return publishedAt ?? '';
+    }
+  }
 }
 
 /// A single link attached to a Post or Event.

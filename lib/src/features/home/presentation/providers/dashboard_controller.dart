@@ -15,13 +15,16 @@ class DashboardController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    refreshData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      refreshData();
+    });
   }
 
   Future<void> refreshData() async {
     isLoading.value = true;
     try {
       await Future.wait([
+        Get.find<ConfigController>().loadConfig(),
         postsCtrl.refreshData(),
         eventsCtrl.refreshData(),
       ]);

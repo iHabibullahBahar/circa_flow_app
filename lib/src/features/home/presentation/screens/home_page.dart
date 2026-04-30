@@ -21,22 +21,41 @@ class HomeShell extends StatelessWidget {
           index: safeIndex,
           children: tabs.map((t) => t.screen).toList(),
         ),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: safeIndex,
-          onTap: controller.changeTab,
-          backgroundColor: cs.surface,
-          selectedItemColor: cs.primary,
-          unselectedItemColor: cs.onSurfaceVariant,
-          type: BottomNavigationBarType.fixed,
-          showSelectedLabels: true,
-          showUnselectedLabels: true,
-          items: tabs
-              .map((t) => BottomNavigationBarItem(
-                    icon: Icon(t.icon),
-                    activeIcon: Icon(t.selectedIcon),
-                    label: t.label,
-                  ))
-              .toList(),
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(
+                color: cs.outlineVariant.withValues(alpha: 0.5),
+                width: 0.5,
+              ),
+            ),
+          ),
+          child: BottomNavigationBar(
+            currentIndex: safeIndex,
+            onTap: controller.changeTab,
+            backgroundColor: cs.surface,
+            selectedItemColor: cs.primary,
+            unselectedItemColor: cs.onSurfaceVariant,
+            type: BottomNavigationBarType.fixed,
+            elevation: 0,
+            selectedFontSize: 11,
+            unselectedFontSize: 11,
+            selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
+            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
+            items: tabs
+                .map((t) => BottomNavigationBarItem(
+                      icon: Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Icon(t.icon, size: 24),
+                      ),
+                      activeIcon: Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Icon(t.selectedIcon, size: 24),
+                      ),
+                      label: t.label,
+                    ))
+                .toList(),
+          ),
         ),
       );
     });

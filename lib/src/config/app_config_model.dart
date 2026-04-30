@@ -114,6 +114,35 @@ class CustomLink {
   }
 }
 
+class BannerConfig {
+  final int id;
+  final String imageUrl;
+  final String? title;
+  final String? subtitle;
+  final String actionType;
+  final String? actionValue;
+
+  const BannerConfig({
+    required this.id,
+    required this.imageUrl,
+    this.title,
+    this.subtitle,
+    this.actionType = 'none',
+    this.actionValue,
+  });
+
+  factory BannerConfig.fromJson(Map<String, dynamic> json) {
+    return BannerConfig(
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      imageUrl: (json['image_url'] as String?) ?? '',
+      title: json['title'] as String?,
+      subtitle: json['subtitle'] as String?,
+      actionType: (json['action_type'] as String?) ?? 'none',
+      actionValue: json['action_value'] as String?,
+    );
+  }
+}
+
 /// The root config model returned by POST /api/v1/config.
 class AppConfigModel {
   final OrganizationConfig organization;
@@ -121,6 +150,7 @@ class AppConfigModel {
   final ModulesConfig modules;
   final List<CustomLink> customLinks;
   final List<CustomLink> customButtons;
+  final List<BannerConfig> banners;
   final bool allowRegistration;
   final bool allowGuestAccess;
 
@@ -130,6 +160,7 @@ class AppConfigModel {
     required this.modules,
     required this.customLinks,
     required this.customButtons,
+    required this.banners,
     this.allowRegistration = false,
     this.allowGuestAccess = false,
   });
@@ -160,6 +191,11 @@ class AppConfigModel {
           .map((e) => CustomLink.fromJson(e))
           .toList()
         ..sort((a, b) => a.order.compareTo(b.order)),
+      banners: (data['banners'] as List?)
+              ?.whereType<Map<String, dynamic>>()
+              .map((e) => BannerConfig.fromJson(e))
+              .toList() ??
+          [],
       allowRegistration: data['allow_registration'] == true,
       allowGuestAccess: data['allow_guest_access'] == true,
     );
@@ -172,6 +208,7 @@ class AppConfigModel {
         modules: ModulesConfig.fallback(),
         customLinks: const [],
         customButtons: const [],
+        banners: const [],
         allowRegistration: false,
         allowGuestAccess: false,
       );

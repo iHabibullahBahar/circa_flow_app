@@ -73,12 +73,7 @@ class _EventCard extends StatelessWidget {
   }
 
   void _onTap() {
-    final url = _redirectUrl;
-    if (url == null) return;
-    Get.toNamed<void>(
-      AppRoutes.webview,
-      arguments: WebViewArgs(url: url, title: event.title),
-    );
+    Get.toNamed<void>(AppRoutes.eventDetail, arguments: event);
   }
 
   @override

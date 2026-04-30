@@ -74,7 +74,7 @@ class _DocumentTile extends StatelessWidget {
 
     return Card(
       elevation: 0,
-      color: cs.surfaceContainerLow,
+      color: cs.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: cs.outlineVariant),

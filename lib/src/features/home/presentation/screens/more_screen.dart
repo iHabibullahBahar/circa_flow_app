@@ -31,9 +31,9 @@ class MoreScreen extends StatelessWidget {
               return Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: cs.surfaceContainerLow,
+                  color: cs.surface,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: cs.outlineVariant),
+                  border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.8)),
                 ),
                 child: Row(
                   children: [
@@ -101,9 +101,9 @@ class MoreScreen extends StatelessWidget {
                   ),
                   Container(
                     decoration: BoxDecoration(
-                      color: cs.surfaceContainerLow,
+                      color: cs.surface,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: cs.outlineVariant),
+                      border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.8)),
                     ),
                     child: Theme(
                       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -151,9 +151,9 @@ class MoreScreen extends StatelessWidget {
                   ),
                   Container(
                     decoration: BoxDecoration(
-                      color: cs.surfaceContainerLow,
+                      color: cs.surface,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: cs.outlineVariant),
+                      border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.8)),
                     ),
                     child: Column(
                       children: buttons
@@ -179,9 +179,9 @@ class MoreScreen extends StatelessWidget {
               if (isGuest) {
                 return Container(
                   decoration: BoxDecoration(
-                    color: cs.primary.withValues(alpha: 0.1),
+                    color: cs.surface,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: cs.primary.withValues(alpha: 0.2)),
+                    border: Border.all(color: cs.primary.withValues(alpha: 0.5)),
                   ),
                   child: ListTile(
                     leading: Icon(Icons.login_rounded, color: cs.primary, size: 22),
@@ -235,12 +235,12 @@ class MoreScreen extends StatelessWidget {
               EdgeInsets.only(left: isNested ? 48 : 16, right: 16),
           leading: Icon(
             _iconFromName(link.icon),
-            color: cs.primary,
+            color: cs.onSurfaceVariant,
             size: 22,
           ),
           title: Text(
             link.title,
-            style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w500),
+            style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600),
           ),
           trailing:
               Icon(Icons.chevron_right_rounded, color: cs.onSurfaceVariant),

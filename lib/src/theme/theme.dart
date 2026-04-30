@@ -189,7 +189,7 @@ ThemeData _buildTheme(
         side: BorderSide(color: colorScheme.outlineVariant, width: 1),
         borderRadius: BorderRadius.circular(16),
       ),
-      color: colorScheme.surfaceContainerLow,
+      color: colorScheme.surface,
     ),
 
     // Input Decoration Theme

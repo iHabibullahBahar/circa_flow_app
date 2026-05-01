@@ -71,18 +71,10 @@ class ForgotPasswordScreen extends HookWidget {
                   ),
                   const SizedBox(height: 40),
 
-                  // --- Email Input ---
-                  Text(
-                    'Email Address',
-                    style: tt.bodySmall?.copyWith(
-                      color: cs.onSurface,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _UberTextField(
+                  AppTextField(
+                    label: 'Email Address',
                     controller: emailController,
-                    hintText: 'name@example.com',
+                    hint: 'name@example.com',
                     keyboardType: TextInputType.emailAddress,
                     enabled: !isLoading,
                     validator: (v) {
@@ -111,56 +103,4 @@ class ForgotPasswordScreen extends HookWidget {
   }
 }
 
-class _UberTextField extends StatelessWidget {
-  final TextEditingController controller;
-  final String hintText;
-  final TextInputType? keyboardType;
-  final bool enabled;
-  final String? Function(String?)? validator;
 
-  const _UberTextField({
-    required this.controller,
-    required this.hintText,
-    this.keyboardType,
-    this.enabled = true,
-    this.validator,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = context.contextTheme.colorScheme;
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      enabled: enabled,
-      validator: validator,
-      style: context.contextTheme.textTheme.bodyLarge?.copyWith(
-        color: cs.onSurface,
-        fontWeight: FontWeight.w500,
-      ),
-      decoration: InputDecoration(
-        hintText: hintText,
-        hintStyle: TextStyle(color: cs.onSurfaceVariant.withValues(alpha: 0.5)),
-        filled: true,
-        fillColor: context.appColors.placeholder.withValues(alpha: 0.3),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: context.appColors.border),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: context.appColors.border),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: cs.primary, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: cs.error, width: 1),
-        ),
-      ),
-    );
-  }
-}

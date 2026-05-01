@@ -63,7 +63,7 @@ class SignupScreen extends HookWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 24),
-                  
+
                   Text(
                     'Create an account',
                     style: tt.headlineSmall?.copyWith(
@@ -74,63 +74,44 @@ class SignupScreen extends HookWidget {
                   ),
                   const SizedBox(height: 32),
 
-                  // --- Name Input ---
-                  Text(
-                    'Full Name',
-                    style: tt.bodySmall?.copyWith(
-                      color: cs.onSurface,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _UberTextField(
+                  AppTextField(
+                    label: 'Full Name',
                     controller: nameController,
-                    hintText: 'John Doe',
+                    hint: 'John Doe',
                     keyboardType: TextInputType.name,
                     enabled: !isLoading,
-                    validator: (v) => AppUtils.isBlank(v) ? 'Please enter your name' : null,
+                    autofillHints: const [AutofillHints.name],
+                    validator: (v) =>
+                        AppUtils.isBlank(v) ? 'Please enter your name' : null,
                   ),
-                  
+
                   const SizedBox(height: 20),
 
-                  // --- Email Input ---
-                  Text(
-                    'Email Address',
-                    style: tt.bodySmall?.copyWith(
-                      color: cs.onSurface,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _UberTextField(
+                  AppTextField(
+                    label: 'Email Address',
                     controller: emailController,
-                    hintText: 'name@example.com',
+                    hint: 'name@gmail.com',
                     keyboardType: TextInputType.emailAddress,
                     enabled: !isLoading,
+                    autofillHints: const [AutofillHints.email],
                     validator: (v) {
                       if (AppUtils.isBlank(v)) return 'Please enter your email';
-                      if (!GetUtils.isEmail(v!)) return 'Please enter a valid email';
+                      if (!GetUtils.isEmail(v!))
+                        return 'Please enter a valid email';
                       return null;
                     },
                   ),
-                  
+
                   const SizedBox(height: 20),
 
-                  // --- Password Input ---
-                  Text(
-                    'Password',
-                    style: tt.bodySmall?.copyWith(
-                      color: cs.onSurface,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _UberTextField(
+                  AppTextField(
+                    label: 'Password',
                     controller: passwordController,
-                    hintText: 'Minimum 8 characters',
+                    hint: 'Minimum 8 characters',
                     obscureText: obscurePassword.value,
                     enabled: !isLoading,
-                    suffix: IconButton(
+                    autofillHints: const [AutofillHints.newPassword],
+                    suffixIcon: IconButton(
                       icon: Icon(
                         obscurePassword.value
                             ? Icons.visibility_off_outlined
@@ -138,7 +119,8 @@ class SignupScreen extends HookWidget {
                         size: 20,
                         color: cs.onSurfaceVariant,
                       ),
-                      onPressed: () => obscurePassword.value = !obscurePassword.value,
+                      onPressed: () =>
+                          obscurePassword.value = !obscurePassword.value,
                     ),
                     validator: (v) {
                       if (AppUtils.isBlank(v)) return 'Please enter a password';
@@ -146,24 +128,16 @@ class SignupScreen extends HookWidget {
                       return null;
                     },
                   ),
-                  
+
                   const SizedBox(height: 20),
 
-                  // --- Confirm Password Input ---
-                  Text(
-                    'Confirm Password',
-                    style: tt.bodySmall?.copyWith(
-                      color: cs.onSurface,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _UberTextField(
+                  AppTextField(
+                    label: 'Confirm Password',
                     controller: confirmPasswordController,
-                    hintText: 'Re-type your password',
+                    hint: 'Re-type your password',
                     obscureText: obscureConfirmPassword.value,
                     enabled: !isLoading,
-                    suffix: IconButton(
+                    suffixIcon: IconButton(
                       icon: Icon(
                         obscureConfirmPassword.value
                             ? Icons.visibility_off_outlined
@@ -171,14 +145,16 @@ class SignupScreen extends HookWidget {
                         size: 20,
                         color: cs.onSurfaceVariant,
                       ),
-                      onPressed: () => obscureConfirmPassword.value = !obscureConfirmPassword.value,
+                      onPressed: () => obscureConfirmPassword.value =
+                          !obscureConfirmPassword.value,
                     ),
                     validator: (v) {
-                      if (v != passwordController.text) return 'Passwords do not match';
+                      if (v != passwordController.text)
+                        return 'Passwords do not match';
                       return null;
                     },
                   ),
-                  
+
                   const SizedBox(height: 32),
 
                   // --- Action Button ---
@@ -188,7 +164,7 @@ class SignupScreen extends HookWidget {
                     isLoading: isLoading,
                     isFullWidth: true,
                   ),
-                  
+
                   const SizedBox(height: 40),
                 ],
               ),
@@ -197,65 +173,5 @@ class SignupScreen extends HookWidget {
         ),
       );
     });
-  }
-}
-
-class _UberTextField extends StatelessWidget {
-  final TextEditingController controller;
-  final String hintText;
-  final bool obscureText;
-  final TextInputType? keyboardType;
-  final bool enabled;
-  final Widget? suffix;
-  final String? Function(String?)? validator;
-
-  const _UberTextField({
-    required this.controller,
-    required this.hintText,
-    this.obscureText = false,
-    this.keyboardType,
-    this.enabled = true,
-    this.suffix,
-    this.validator,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = context.contextTheme.colorScheme;
-    return TextFormField(
-      controller: controller,
-      obscureText: obscureText,
-      keyboardType: keyboardType,
-      enabled: enabled,
-      validator: validator,
-      style: context.contextTheme.textTheme.bodyLarge?.copyWith(
-        color: cs.onSurface,
-        fontWeight: FontWeight.w500,
-      ),
-      decoration: InputDecoration(
-        hintText: hintText,
-        hintStyle: TextStyle(color: cs.onSurfaceVariant.withValues(alpha: 0.5)),
-        filled: true,
-        fillColor: context.appColors.placeholder.withValues(alpha: 0.3),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: context.appColors.border),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: context.appColors.border),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: cs.primary, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: cs.error, width: 1),
-        ),
-        suffixIcon: suffix,
-      ),
-    );
   }
 }

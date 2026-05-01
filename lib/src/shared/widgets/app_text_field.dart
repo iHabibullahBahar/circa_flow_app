@@ -1,18 +1,8 @@
-import '../../imports/core_imports.dart';
+import '../../imports/imports.dart';
 
-
-/// A themed text form field wrapping [TextFormField].
-///
-/// Usage:
-/// ```dart
-/// AppTextField(
-///   label: 'Email',
-///   hint: 'you@example.com',
-///   controller: _emailController,
-///   keyboardType: TextInputType.emailAddress,
-///   validator: (v) => v!.isEmpty ? 'Required' : null,
-/// )
-/// ```
+/// A robust, themed text field component designed for general use throughout the app.
+/// It supports an optional top label, prefix/suffix icons, and consistent styling
+/// that adheres to the application's theme and color scheme.
 class AppTextField extends StatelessWidget {
   const AppTextField({
     super.key,
@@ -34,6 +24,11 @@ class AppTextField extends StatelessWidget {
     this.suffixIcon,
     this.initialValue,
     this.autofocus = false,
+    this.autocorrect = true,
+    this.enableSuggestions = true,
+    this.textCapitalization = TextCapitalization.none,
+    this.autofillHints,
+    this.height = 50.0,
   });
 
   final String? label;
@@ -54,36 +49,88 @@ class AppTextField extends StatelessWidget {
   final Widget? suffixIcon;
   final String? initialValue;
   final bool autofocus;
+  final bool autocorrect;
+  final bool enableSuggestions;
+  final TextCapitalization textCapitalization;
+  final Iterable<String>? autofillHints;
+  final double? height;
 
   @override
   Widget build(BuildContext context) {
     final cs = context.contextTheme.colorScheme;
     final tt = context.contextTheme.textTheme;
 
-    return TextFormField(
-      controller: controller,
-      initialValue: initialValue,
-      validator: validator,
-      onChanged: onChanged,
-      onFieldSubmitted: onFieldSubmitted,
-      focusNode: focusNode,
-      keyboardType: keyboardType,
-      textInputAction: textInputAction,
-      obscureText: obscureText,
-      readOnly: readOnly,
-      enabled: enabled,
-      maxLines: obscureText ? 1 : maxLines,
-      minLines: minLines,
-      autofocus: autofocus,
-      style: tt.bodyLarge?.copyWith(color: cs.onSurface),
-      cursorColor: cs.primary,
-      decoration: InputDecoration(
-        isDense: true,
-        labelText: label,
-        hintText: hint,
-        prefixIcon: prefixIcon,
-        suffixIcon: suffixIcon,
-      ),
+    // Calculate vertical padding to achieve the target height
+    // Using .h to match the responsive scaling used in AppButton
+    final double targetHeight = height ?? 50.0;
+    final double verticalPadding = (targetHeight.h - 22.0) / 2;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (label != null) ...[
+          Text(
+            label!,
+            style: tt.bodySmall?.copyWith(
+              color: cs.onSurface,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+        TextFormField(
+          controller: controller,
+          initialValue: initialValue,
+          validator: validator,
+          onChanged: onChanged,
+          onFieldSubmitted: onFieldSubmitted,
+          focusNode: focusNode,
+          keyboardType: keyboardType,
+          textInputAction: textInputAction,
+          obscureText: obscureText,
+          readOnly: readOnly,
+          enabled: enabled,
+          maxLines: obscureText ? 1 : maxLines,
+          minLines: minLines,
+          autofocus: autofocus,
+          autocorrect: autocorrect,
+          enableSuggestions: enableSuggestions,
+          textCapitalization: textCapitalization,
+          autofillHints: autofillHints,
+          enableInteractiveSelection: true,
+          onTapOutside: (event) => FocusScope.of(context).unfocus(),
+          contextMenuBuilder: (context, editableTextState) {
+            return AdaptiveTextSelectionToolbar.buttonItems(
+              anchors: editableTextState.contextMenuAnchors,
+              buttonItems: editableTextState.contextMenuButtonItems,
+            );
+          },
+          style: tt.bodyMedium?.copyWith(
+            color: cs.onSurface,
+            fontWeight: FontWeight.w500,
+          ),
+          cursorColor: cs.primary,
+          decoration: InputDecoration(
+            isDense: true,
+            hintText: hint,
+            prefixIcon: prefixIcon,
+            prefixIconConstraints: BoxConstraints(
+              maxHeight: targetHeight.h,
+              minWidth: 44,
+            ),
+            suffixIcon: suffixIcon,
+            suffixIconConstraints: BoxConstraints(
+              maxHeight: targetHeight.h,
+              minWidth: 44,
+            ),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: verticalPadding > 0 ? verticalPadding : 0,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

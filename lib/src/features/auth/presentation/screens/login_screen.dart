@@ -98,37 +98,25 @@ class LoginScreen extends HookWidget {
                       ),
                     ),
                     const SizedBox(height: 48),
-                    Text(
-                      'Email',
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurface,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _UberTextField(
+                    AppTextField(
+                      label: 'Email',
                       controller: identifierController,
-                      hintText: 'Enter your email',
+                      hint: 'Enter your email',
                       keyboardType: TextInputType.emailAddress,
                       enabled: !isLoading,
+                      autofillHints: const [AutofillHints.email, AutofillHints.username],
                       validator: (v) =>
                           AppUtils.isBlank(v) ? 'Enter your email' : null,
                     ),
                     const SizedBox(height: 20),
-                    Text(
-                      'Password',
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurface,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _UberTextField(
+                    AppTextField(
+                      label: 'Password',
                       controller: passwordController,
-                      hintText: 'Enter your password',
+                      hint: 'Enter your password',
                       obscureText: obscurePassword.value,
                       enabled: !isLoading,
-                      suffix: IconButton(
+                      autofillHints: const [AutofillHints.password],
+                      suffixIcon: IconButton(
                         icon: Icon(
                           obscurePassword.value
                               ? Icons.visibility_off_outlined
@@ -219,69 +207,5 @@ class LoginScreen extends HookWidget {
         ),
       );
     });
-  }
-}
-
-class _UberTextField extends StatelessWidget {
-  final TextEditingController controller;
-  final String hintText;
-  final bool obscureText;
-  final TextInputType? keyboardType;
-  final bool enabled;
-  final Widget? suffix;
-  final String? Function(String?)? validator;
-
-  const _UberTextField({
-    required this.controller,
-    required this.hintText,
-    this.obscureText = false,
-    this.keyboardType,
-    this.enabled = true,
-    this.suffix,
-    this.validator,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      obscureText: obscureText,
-      keyboardType: keyboardType,
-      enabled: enabled,
-      validator: validator,
-      style: context.contextTheme.textTheme.bodyLarge?.copyWith(
-        color: context.contextTheme.colorScheme.onSurface,
-        fontWeight: FontWeight.w500,
-      ),
-      decoration: InputDecoration(
-        hintText: hintText,
-        hintStyle: TextStyle(
-            color: context.contextTheme.colorScheme.onSurfaceVariant
-                .withValues(alpha: 0.5)),
-        filled: true,
-        fillColor: context.appColors.placeholder.withValues(alpha: 0.3),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: context.appColors.border),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: context.appColors.border),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(
-              color: context.contextTheme.colorScheme.primary, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(
-              color: context.contextTheme.colorScheme.error, width: 1),
-        ),
-        suffixIcon: suffix,
-      ),
-    );
   }
 }

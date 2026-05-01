@@ -78,6 +78,7 @@ dependencies:
 
   flutter_native_splash: ^2.4.7
   app_links: ^6.4.1
+  package_info_plus: ^9.0.1
 
 dev_dependencies:
   flutter_test:

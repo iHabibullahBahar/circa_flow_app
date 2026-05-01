@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 
 import 'text_theme.dart';
 import 'color_schemes.dart';
+import 'app_borders.dart';
 
 Color _colorFromHex(String hex) {
   final cleaned = hex.replaceFirst('#', '');
@@ -205,19 +206,19 @@ ThemeData _buildTheme(
       filled: true,
       fillColor: customColors.placeholder.withValues(alpha: 0.3),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppBorders.button,
         borderSide: BorderSide(color: customColors.border),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppBorders.button,
         borderSide: BorderSide(color: customColors.border),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppBorders.button,
         borderSide: BorderSide(color: colorScheme.primary, width: 2),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppBorders.button,
         borderSide: BorderSide(color: colorScheme.error),
       ),
       floatingLabelStyle: TextStyle(color: colorScheme.primary),

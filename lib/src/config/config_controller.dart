@@ -1,4 +1,6 @@
 import 'package:get/get.dart';
+import 'package:fpdart/fpdart.dart';
+import '../utils/failure.dart';
 
 import '../config/app_config_model.dart';
 import '../services/config_service.dart';
@@ -29,7 +31,18 @@ class ConfigController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _loadInitialCache();
     loadConfig();
+  }
+
+  /// Quickly loads cached config from disk so the UI (like Splash) can show 
+  /// branded colors immediately while the fresh config is being fetched.
+  Future<void> _loadInitialCache() async {
+    final cached = await ConfigService.instance.loadCachedConfig();
+    // Only update if we haven't already received fresh network data
+    if (cached != null && status.value == ConfigStatus.loading) {
+      config.value = cached;
+    }
   }
 
   /// Tries to fetch fresh config from the backend.
@@ -38,7 +51,13 @@ class ConfigController extends GetxController {
   Future<void> loadConfig() async {
     status.value = ConfigStatus.loading;
 
-    final result = await ConfigService.instance.fetchRemoteConfig();
+    // Ensure splash screen is visible for at least 2 seconds for branding
+    final results = await Future.wait([
+      ConfigService.instance.fetchRemoteConfig(),
+      Future<void>.delayed(const Duration(seconds: 2)),
+    ]);
+
+    final result = results[0] as Either<Failure, AppConfigModel>;
 
     result.fold(
       (failure) async {

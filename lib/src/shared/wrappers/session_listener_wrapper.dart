@@ -75,7 +75,6 @@ class _SessionListenerWrapperState extends State<SessionListenerWrapper> {
     // Only set _navigated = true on the very first resolution (from Splash)
     if (!_navigated) {
       _navigated = true;
-      FlutterNativeSplash.remove();
     } else {
       // If we already navigated once, we only care about re-navigating 
       // if we lose auth and need to be kicked out.

@@ -28,7 +28,7 @@ class AppTextField extends StatelessWidget {
     this.enableSuggestions = true,
     this.textCapitalization = TextCapitalization.none,
     this.autofillHints,
-    this.height = 50.0,
+    this.height,
   });
 
   final String? label;
@@ -61,8 +61,9 @@ class AppTextField extends StatelessWidget {
     final tt = context.contextTheme.textTheme;
 
     // Calculate vertical padding to achieve the target height
-    // Using .h to match the responsive scaling used in AppButton
-    final double targetHeight = height ?? 50.0;
+    // Calculate vertical padding to achieve the target height
+    // Standard text height is approx 20-22px. 
+    final double targetHeight = height ?? AppLayout.controlHeight;
     final double verticalPadding = (targetHeight.h - 22.0) / 2;
 
     return Column(
@@ -79,54 +80,57 @@ class AppTextField extends StatelessWidget {
           ),
           const SizedBox(height: 8),
         ],
-        TextFormField(
-          controller: controller,
-          initialValue: initialValue,
-          validator: validator,
-          onChanged: onChanged,
-          onFieldSubmitted: onFieldSubmitted,
-          focusNode: focusNode,
-          keyboardType: keyboardType,
-          textInputAction: textInputAction,
-          obscureText: obscureText,
-          readOnly: readOnly,
-          enabled: enabled,
-          maxLines: obscureText ? 1 : maxLines,
-          minLines: minLines,
-          autofocus: autofocus,
-          autocorrect: autocorrect,
-          enableSuggestions: enableSuggestions,
-          textCapitalization: textCapitalization,
-          autofillHints: autofillHints,
-          enableInteractiveSelection: true,
-          onTapOutside: (event) => FocusScope.of(context).unfocus(),
-          contextMenuBuilder: (context, editableTextState) {
-            return AdaptiveTextSelectionToolbar.buttonItems(
-              anchors: editableTextState.contextMenuAnchors,
-              buttonItems: editableTextState.contextMenuButtonItems,
-            );
-          },
-          style: tt.bodyMedium?.copyWith(
-            color: cs.onSurface,
-            fontWeight: FontWeight.w500,
-          ),
-          cursorColor: cs.primary,
-          decoration: InputDecoration(
-            isDense: true,
-            hintText: hint,
-            prefixIcon: prefixIcon,
-            prefixIconConstraints: BoxConstraints(
-              maxHeight: targetHeight.h,
-              minWidth: 44,
+        SizedBox(
+          height: targetHeight.h,
+          child: TextFormField(
+            controller: controller,
+            initialValue: initialValue,
+            validator: validator,
+            onChanged: onChanged,
+            onFieldSubmitted: onFieldSubmitted,
+            focusNode: focusNode,
+            keyboardType: keyboardType,
+            textInputAction: textInputAction,
+            obscureText: obscureText,
+            readOnly: readOnly,
+            enabled: enabled,
+            maxLines: obscureText ? 1 : maxLines,
+            minLines: minLines,
+            autofocus: autofocus,
+            autocorrect: autocorrect,
+            enableSuggestions: enableSuggestions,
+            textCapitalization: textCapitalization,
+            autofillHints: autofillHints,
+            enableInteractiveSelection: true,
+            onTapOutside: (event) => FocusScope.of(context).unfocus(),
+            contextMenuBuilder: (context, editableTextState) {
+              return AdaptiveTextSelectionToolbar.buttonItems(
+                anchors: editableTextState.contextMenuAnchors,
+                buttonItems: editableTextState.contextMenuButtonItems,
+              );
+            },
+            style: tt.bodyMedium?.copyWith(
+              color: cs.onSurface,
+              fontWeight: FontWeight.w500,
             ),
-            suffixIcon: suffixIcon,
-            suffixIconConstraints: BoxConstraints(
-              maxHeight: targetHeight.h,
-              minWidth: 44,
-            ),
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: verticalPadding > 0 ? verticalPadding : 0,
+            cursorColor: cs.primary,
+            decoration: InputDecoration(
+              isDense: true,
+              hintText: hint,
+              prefixIcon: prefixIcon,
+              prefixIconConstraints: BoxConstraints(
+                maxHeight: targetHeight.h,
+                minWidth: 44,
+              ),
+              suffixIcon: suffixIcon,
+              suffixIconConstraints: BoxConstraints(
+                maxHeight: targetHeight.h,
+                minWidth: 44,
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: verticalPadding > 0 ? verticalPadding : 0, 
+              ),
             ),
           ),
         ),

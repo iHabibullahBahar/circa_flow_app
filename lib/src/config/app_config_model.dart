@@ -283,6 +283,8 @@ class AppConfigModel {
                 'type': l.type,
                 'order': l.order,
               }).toList(),
+          'allow_registration': allowRegistration,
+          'allow_guest_access': allowGuestAccess,
         }
       };
 }

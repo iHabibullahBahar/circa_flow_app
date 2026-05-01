@@ -45,12 +45,16 @@ class SessionController extends GetxController {
       } else {
         user.value = null;
         OneSignal.User.removeTag("org_id");
+        OneSignal.logout();
         status.value = SessionStatus.unauthenticated;
       }
     });
   }
 
   void _updateOneSignalTag(AppUser u) {
+    if (u.id.isNotEmpty) {
+      OneSignal.login(u.id);
+    }
     if (u.organizationId != null) {
       OneSignal.User.addTagWithKey("org_id", u.organizationId.toString());
     }
@@ -60,6 +64,7 @@ class SessionController extends GetxController {
     await _repository.logout();
     user.value = null;
     OneSignal.User.removeTag("org_id");
+    OneSignal.logout();
     status.value = SessionStatus.unauthenticated;
   }
 

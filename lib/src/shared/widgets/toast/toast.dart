@@ -78,7 +78,7 @@ class ToastBar {
       createdAt: DateTime.now(),
     );
     info.entry = OverlayEntry(
-      builder: (_) => RawToast(
+      builder: (overlayContext) => RawToast(
         key: info.key,
         animationDuration: animationDuration,
         toastPosition: position,
@@ -88,7 +88,7 @@ class ToastBar {
         getscaleFactor: () => calculateScaleFactor(_toastBars, this),
         snackbarDuration: toastDuration,
         onRemove: remove,
-        child: builder.call(context),
+        child: builder.call(overlayContext),
       ),
     );
 

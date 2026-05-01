@@ -95,36 +95,11 @@ class ForgotPasswordScreen extends HookWidget {
                   const SizedBox(height: 32),
 
                   // --- Action Button ---
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: isLoading ? null : handleSendLink,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: cs.primary,
-                        foregroundColor: cs.onPrimary,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: isLoading
-                          ? SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: cs.onPrimary,
-                              ),
-                            )
-                          : Text(
-                              'Next',
-                              style: tt.titleMedium?.copyWith(
-                                color: cs.onPrimary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                    ),
+                  AppButton(
+                    label: 'Next',
+                    onPressed: handleSendLink,
+                    isLoading: isLoading,
+                    isFullWidth: true,
                   ),
                 ],
               ),

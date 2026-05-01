@@ -249,7 +249,11 @@ class _ErrorView extends StatelessWidget {
           Text('Could not load posts',
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
           const SizedBox(height: 16),
-          FilledButton.tonal(onPressed: onRetry, child: const Text('Retry')),
+          AppButton(
+            label: 'Retry',
+            onPressed: onRetry,
+            variant: ButtonVariant.secondary,
+          ),
         ],
       ),
     );

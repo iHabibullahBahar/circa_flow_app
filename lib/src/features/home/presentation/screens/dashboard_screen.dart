@@ -292,7 +292,6 @@ class _DashboardSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = context.contextTheme.colorScheme;
     final tt = context.contextTheme.textTheme;
 
     return Padding(
@@ -311,13 +310,11 @@ class _DashboardSection extends StatelessWidget {
                 ),
               ),
               if (onViewAll != null)
-                TextButton(
+                AppButton(
+                  label: 'View all',
                   onPressed: onViewAll,
-                  style: TextButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    foregroundColor: cs.primary,
-                  ),
-                  child: const Text('View all'),
+                  variant: ButtonVariant.ghost,
+                  height: ButtonSize.small,
                 ),
             ],
           ),

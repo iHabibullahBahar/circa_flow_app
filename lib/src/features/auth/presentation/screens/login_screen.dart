@@ -142,72 +142,47 @@ class LoginScreen extends HookWidget {
                     
                     const SizedBox(height: 24),
 
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: isLoading ? null : handleLogin,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: cs.primary,
-                          foregroundColor: cs.onPrimary,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          disabledBackgroundColor: cs.outlineVariant,
-                        ),
-                        child: isLoading
-                            ? SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: cs.onPrimary,
-                                ),
-                              )
-                            : Text(
-                                'Continue',
-                                style: tt.titleMedium?.copyWith(
-                                  color: cs.onPrimary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18.sp,
-                                ),
-                              ),
-                      ),
+                    AppButton(
+                      label: 'Continue',
+                      onPressed: handleLogin,
+                      isLoading: isLoading,
+                      isFullWidth: true,
                     ),
 
-                    const SizedBox(height: 24),
-                    
-                    Row(
-                      children: [
-                        Expanded(child: Divider(color: cs.outlineVariant)),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Text(
-                            'or',
-                            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    if (configCtrl.allowGuestAccess || configCtrl.allowRegistration) ...[
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(child: Divider(color: cs.outlineVariant)),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              'or',
+                              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                            ),
                           ),
+                          Expanded(child: Divider(color: cs.outlineVariant)),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      if (configCtrl.allowGuestAccess)
+                        AppButton(
+                          label: 'Continue as Guest',
+                          prefixIcon: Icon(Icons.person_outline_rounded, size: 20, color: cs.onSurface),
+                          onPressed: () => Get.offAllNamed<void>(AppRoutes.home),
+                          variant: ButtonVariant.outline,
+                          isFullWidth: true,
                         ),
-                        Expanded(child: Divider(color: cs.outlineVariant)),
+                      if (configCtrl.allowRegistration) ...[
+                        if (configCtrl.allowGuestAccess) const SizedBox(height: 12),
+                        AppButton(
+                          label: 'Create an account',
+                          prefixIcon: Icon(Icons.add_circle_outline_rounded, size: 20, color: cs.onSurface),
+                          onPressed: () => Get.toNamed<void>(AppRoutes.signup),
+                          variant: ButtonVariant.outline,
+                          isFullWidth: true,
+                        ),
                       ],
-                    ),
-                    
-                    const SizedBox(height: 24),
-
-                    if (configCtrl.allowGuestAccess)
-                      _UberSecondaryButton(
-                        label: 'Continue as Guest',
-                        icon: Icons.person_outline_rounded,
-                        onPressed: () => Get.offAllNamed<void>(AppRoutes.home),
-                      ),
-                    
-                    if (configCtrl.allowRegistration) ...[
-                      const SizedBox(height: 12),
-                      _UberSecondaryButton(
-                        label: 'Create an account',
-                        icon: Icons.add_circle_outline_rounded,
-                        onPressed: () => Get.toNamed<void>(AppRoutes.signup),
-                      ),
                     ],
                     
                     const SizedBox(height: 48),
@@ -215,16 +190,10 @@ class LoginScreen extends HookWidget {
                     Center(
                       child: Column(
                         children: [
-                          TextButton(
+                          AppButton(
+                            label: 'Find my account / Forgot Password',
                             onPressed: () => Get.toNamed<void>(AppRoutes.forgotPassword),
-                            child: Text(
-                              'Find my account / Forgot Password',
-                              style: tt.bodyMedium?.copyWith(
-                                color: cs.onSurface,
-                                fontWeight: FontWeight.w600,
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
+                            variant: ButtonVariant.ghost,
                           ),
                           const SizedBox(height: 12),
                           Padding(
@@ -312,49 +281,3 @@ class _UberTextField extends StatelessWidget {
   }
 }
 
-class _UberSecondaryButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final VoidCallback onPressed;
-
-  const _UberSecondaryButton({
-    required this.label,
-    required this.icon,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = context.contextTheme.colorScheme;
-    final tt = context.contextTheme.textTheme;
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          backgroundColor: context.appColors.placeholder.withValues(alpha: 0.3),
-          side: BorderSide(color: context.appColors.border),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          foregroundColor: cs.onSurface,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 20),
-            const SizedBox(width: 12),
-            Text(
-              label,
-              style: tt.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: cs.onSurface,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

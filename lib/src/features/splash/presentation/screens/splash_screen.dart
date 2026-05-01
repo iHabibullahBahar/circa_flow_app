@@ -56,9 +56,10 @@ class SplashScreen extends StatelessWidget {
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 const SizedBox(height: 16),
-                FilledButton.tonal(
+                AppButton(
+                  label: 'Retry',
                   onPressed: configCtrl.loadConfig,
-                  child: const Text('Retry'),
+                  variant: ButtonVariant.secondary,
                 ),
               ] else
                 SizedBox(

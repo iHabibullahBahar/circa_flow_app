@@ -182,36 +182,11 @@ class SignupScreen extends HookWidget {
                   const SizedBox(height: 32),
 
                   // --- Action Button ---
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: isLoading ? null : handleSignup,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: cs.primary,
-                        foregroundColor: cs.onPrimary,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: isLoading
-                          ? SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: cs.onPrimary,
-                              ),
-                            )
-                          : Text(
-                              'Create Account',
-                              style: tt.titleMedium?.copyWith(
-                                color: cs.onPrimary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                    ),
+                  AppButton(
+                    label: 'Create Account',
+                    onPressed: handleSignup,
+                    isLoading: isLoading,
+                    isFullWidth: true,
                   ),
                   
                   const SizedBox(height: 40),

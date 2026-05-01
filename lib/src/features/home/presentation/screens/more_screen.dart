@@ -284,20 +284,18 @@ class MoreScreen extends StatelessWidget {
         title: const Text('Sign Out'),
         content: const Text('Are you sure you want to sign out?'),
         actions: [
-          TextButton(
+          AppButton(
+            label: 'Cancel',
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            variant: ButtonVariant.ghost,
           ),
-          TextButton(
+          AppButton(
+            label: 'Sign Out',
             onPressed: () {
               Navigator.of(ctx).pop();
               session.logout();
             },
-            child: Text(
-              'Sign Out',
-              style: TextStyle(
-                  color: Theme.of(context).colorScheme.error),
-            ),
+            variant: ButtonVariant.danger,
           ),
         ],
       ),

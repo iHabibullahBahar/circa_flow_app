@@ -2,6 +2,7 @@ import 'package:circa_flow_main/src/imports/core_imports.dart';
 import 'package:circa_flow_main/src/imports/packages_imports.dart';
 import 'package:circa_flow_main/src/config/config_controller.dart';
 import 'package:circa_flow_main/src/features/auth/presentation/providers/session_controller.dart';
+import 'package:circa_flow_main/src/services/deep_link_service.dart';
 
 /// Listens to both [ConfigController] and [SessionController] changes and
 /// triggers navigation only after config is ready + session state is known.
@@ -75,6 +76,8 @@ class _SessionListenerWrapperState extends State<SessionListenerWrapper> {
     // Only set _navigated = true on the very first resolution (from Splash)
     if (!_navigated) {
       _navigated = true;
+      // Initialize deep link service once the app is fully ready to navigate
+      Get.find<DeepLinkService>().init();
     } else {
       // If we already navigated once, we only care about re-navigating 
       // if we lose auth and need to be kicked out.

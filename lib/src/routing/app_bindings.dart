@@ -7,6 +7,7 @@ import 'package:circa_flow_main/src/features/auth/presentation/providers/session
 import 'package:circa_flow_main/src/features/posts/presentation/providers/posts_controller.dart';
 import 'package:circa_flow_main/src/features/events/presentation/providers/events_controller.dart';
 import 'package:circa_flow_main/src/features/documents/presentation/providers/documents_controller.dart';
+import 'package:circa_flow_main/src/services/deep_link_service.dart';
 
 /// AppBindings is passed to GetMaterialApp as a fallback safety net.
 /// In normal operation, controllers are already registered in main() before
@@ -41,5 +42,10 @@ class AppBindings implements Bindings {
     Get.lazyPut(() => PostsController(), fenix: true);
     Get.lazyPut(() => EventsController(), fenix: true);
     Get.lazyPut(() => DocumentsController(), fenix: true);
+
+    // Deep linking — permanent singleton, initialized after session resolves
+    if (!Get.isRegistered<DeepLinkService>()) {
+      Get.put<DeepLinkService>(DeepLinkService(), permanent: true);
+    }
   }
 }

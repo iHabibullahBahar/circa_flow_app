@@ -16,4 +16,5 @@ abstract final class AppRoutes {
   static const String events = '/events';
   static const String eventDetail = '/events/detail';
   static const String documents = '/documents';
+  static const String documentDetail = '/documents/detail';
 }

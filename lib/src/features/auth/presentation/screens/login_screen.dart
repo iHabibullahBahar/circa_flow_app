@@ -46,7 +46,6 @@ class LoginScreen extends HookWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 40),
-                    
                     if (logoUrl != null)
                       Center(
                         child: Container(
@@ -72,11 +71,10 @@ class LoginScreen extends HookWidget {
                       )
                     else
                       Center(
-                        child: Icon(Icons.circle_rounded, size: 64, color: cs.primary),
+                        child: Icon(Icons.circle_rounded,
+                            size: 64, color: cs.primary),
                       ),
-                      
                     const SizedBox(height: 24),
-
                     Center(
                       child: Text(
                         'Welcome back',
@@ -99,11 +97,9 @@ class LoginScreen extends HookWidget {
                         ),
                       ),
                     ),
-                    
                     const SizedBox(height: 48),
-
                     Text(
-                      'Email or Phone',
+                      'Email',
                       style: tt.bodySmall?.copyWith(
                         color: cs.onSurface,
                         fontWeight: FontWeight.w600,
@@ -115,11 +111,10 @@ class LoginScreen extends HookWidget {
                       hintText: 'Enter your email',
                       keyboardType: TextInputType.emailAddress,
                       enabled: !isLoading,
-                      validator: (v) => AppUtils.isBlank(v) ? 'Enter your email' : null,
+                      validator: (v) =>
+                          AppUtils.isBlank(v) ? 'Enter your email' : null,
                     ),
-                    
                     const SizedBox(height: 20),
-
                     Text(
                       'Password',
                       style: tt.bodySmall?.copyWith(
@@ -141,7 +136,8 @@ class LoginScreen extends HookWidget {
                           size: 20,
                           color: cs.onSurfaceVariant,
                         ),
-                        onPressed: () => obscurePassword.value = !obscurePassword.value,
+                        onPressed: () =>
+                            obscurePassword.value = !obscurePassword.value,
                       ),
                       validator: (v) {
                         if (AppUtils.isBlank(v)) return 'Enter your password';
@@ -153,7 +149,8 @@ class LoginScreen extends HookWidget {
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: () => Get.toNamed<void>(AppRoutes.forgotPassword),
+                        onPressed: () =>
+                            Get.toNamed<void>(AppRoutes.forgotPassword),
                         style: TextButton.styleFrom(
                           padding: EdgeInsets.zero,
                           minimumSize: Size.zero,
@@ -168,18 +165,14 @@ class LoginScreen extends HookWidget {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 24),
-
                     AppButton(
                       label: 'Sign In',
                       onPressed: handleLogin,
                       isLoading: isLoading,
                       isFullWidth: true,
                     ),
-
                     const SizedBox(height: 24),
-
                     if (configCtrl.allowRegistration)
                       Center(
                         child: Row(
@@ -187,7 +180,8 @@ class LoginScreen extends HookWidget {
                           children: [
                             Text(
                               "Don't have an account? ",
-                              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                              style: tt.bodyMedium
+                                  ?.copyWith(color: cs.onSurfaceVariant),
                             ),
                             GestureDetector(
                               onTap: () => Get.toNamed<void>(AppRoutes.signup),
@@ -202,9 +196,7 @@ class LoginScreen extends HookWidget {
                           ],
                         ),
                       ),
-                    
                     const SizedBox(height: 48),
-
                     Center(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -263,10 +255,13 @@ class _UberTextField extends StatelessWidget {
       ),
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: TextStyle(color: context.contextTheme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
+        hintStyle: TextStyle(
+            color: context.contextTheme.colorScheme.onSurfaceVariant
+                .withValues(alpha: 0.5)),
         filled: true,
         fillColor: context.appColors.placeholder.withValues(alpha: 0.3),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: context.appColors.border),
@@ -277,15 +272,16 @@ class _UberTextField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: context.contextTheme.colorScheme.primary, width: 1.5),
+          borderSide: BorderSide(
+              color: context.contextTheme.colorScheme.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: context.contextTheme.colorScheme.error, width: 1),
+          borderSide: BorderSide(
+              color: context.contextTheme.colorScheme.error, width: 1),
         ),
         suffixIcon: suffix,
       ),
     );
   }
 }
-

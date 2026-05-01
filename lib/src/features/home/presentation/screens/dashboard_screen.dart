@@ -20,10 +20,12 @@ class DashboardScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: cs.surface,
       body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: dashCtrl.refreshData,
-          child: CustomScrollView(
-            slivers: [
+        child: Obx(() => AppShimmer(
+          enabled: dashCtrl.isLoading.value,
+          child: RefreshIndicator(
+            onRefresh: dashCtrl.refreshData,
+            child: CustomScrollView(
+              slivers: [
               // --- Premium Header ---
               SliverToBoxAdapter(
                 child: Padding(
@@ -83,7 +85,8 @@ class DashboardScreen extends StatelessWidget {
               SliverToBoxAdapter(
                 child: Obx(() {
                   final posts = dashCtrl.featuredPosts;
-                  if (posts.isEmpty) return const SizedBox.shrink();
+                  final isEnabled = configCtrl.config.value.modules.posts;
+                  if (!isEnabled || posts.isEmpty) return const SizedBox.shrink();
                   
                   return _DashboardSection(
                     title: 'Latest Posts',
@@ -99,7 +102,8 @@ class DashboardScreen extends StatelessWidget {
               SliverToBoxAdapter(
                 child: Obx(() {
                   final events = dashCtrl.upcomingEvents;
-                  if (events.isEmpty) return const SizedBox.shrink();
+                  final isEnabled = configCtrl.config.value.modules.events;
+                  if (!isEnabled || events.isEmpty) return const SizedBox.shrink();
                   
                   return _DashboardSection(
                     title: 'Upcoming Events',
@@ -113,52 +117,57 @@ class DashboardScreen extends StatelessWidget {
 
               // --- Resources / Quick Actions ---
               SliverToBoxAdapter(
-                child: _DashboardSection(
-                  title: 'Resources',
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: cs.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.8)),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: cs.surfaceVariant,
-                            borderRadius: BorderRadius.circular(12),
+                child: Obx(() {
+                  final isEnabled = configCtrl.config.value.modules.documents;
+                  if (!isEnabled) return const SizedBox.shrink();
+
+                  return _DashboardSection(
+                    title: 'Resources',
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: cs.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: context.appColors.border),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: context.appColors.placeholder,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(Icons.description_rounded, color: cs.onSurfaceVariant),
                           ),
-                          child: Icon(Icons.description_rounded, color: cs.onSurfaceVariant),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Member Handbook',
-                                style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                              ),
-                              Text(
-                                'Tap to view or download',
-                                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                              ),
-                            ],
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Member Handbook',
+                                  style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  'Tap to view or download',
+                                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        Icon(Icons.chevron_right_rounded, color: cs.onSurfaceVariant),
-                      ],
+                          Icon(Icons.chevron_right_rounded, color: cs.onSurfaceVariant),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                }),
               ),
 
               const SliverToBoxAdapter(child: SizedBox(height: 32)),
             ],
           ),
-        ),
+        ))),
       ),
     );
   }
@@ -177,7 +186,7 @@ class DashboardScreen extends StatelessWidget {
       height: 48,
       width: 48,
       decoration: BoxDecoration(
-        color: cs.surfaceVariant,
+        color: Get.context!.appColors.placeholder,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Icon(Icons.business_rounded, color: cs.onSurfaceVariant),
@@ -200,7 +209,7 @@ class _PostListTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: cs.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.8)),
+        border: Border.all(color: context.appColors.border),
       ),
       child: Row(
         children: [
@@ -221,7 +230,7 @@ class _PostListTile extends StatelessWidget {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: cs.surfaceVariant,
+                color: Get.context!.appColors.placeholder,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(Icons.article_rounded, color: cs.onSurfaceVariant),
@@ -337,7 +346,7 @@ class _EventListTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: cs.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+          border: Border.all(color: context.appColors.border),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.03),
@@ -353,7 +362,7 @@ class _EventListTile extends StatelessWidget {
               Container(
                 width: 60,
                 decoration: BoxDecoration(
-                  color: cs.primaryContainer.withValues(alpha: 0.15),
+                  color: context.appColors.placeholder.withValues(alpha: 0.5),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(16),
                     bottomLeft: Radius.circular(16),

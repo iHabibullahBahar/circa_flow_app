@@ -61,7 +61,7 @@ class EventDetailScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
-                          color: cs.primaryContainer.withValues(alpha: 0.3),
+                          color: context.appColors.placeholder,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Column(
@@ -76,7 +76,7 @@ class EventDetailScreen extends StatelessWidget {
                             Text(
                               _getMon(event.startsAt).toUpperCase(),
                               style: tt.labelSmall?.copyWith(
-                                color: cs.primary,
+                                color: cs.onSurfaceVariant,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 1,
                               ),
@@ -163,7 +163,7 @@ class EventDetailScreen extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(24, 12, 24, 24 + context.mediaQueryPadding.bottom),
       decoration: BoxDecoration(
         color: cs.surface,
-        border: Border(top: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5))),
+        border: Border(top: BorderSide(color: context.appColors.border)),
       ),
       child: AppButton(
         label: event.isOnline ? 'Join Event' : 'Visit Website',

@@ -26,6 +26,25 @@ class EventsScreen extends GetView<EventsController> {
           return const _EmptyView();
         }
 
+        // --- Skeleton Loading State ---
+        if (controller.events.isEmpty && controller.isLoading.value) {
+          return AppShimmer(
+            child: ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: 5,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (ctx, i) => _EventCard(
+                event: EventModel(
+                  id: 0,
+                  title: 'Loading Event Name',
+                  description: 'Description that might take two lines for loading state',
+                  startsAt: '2026-01-01T00:00:00Z',
+                ),
+              ),
+            ),
+          );
+        }
+
         return RefreshIndicator(
           onRefresh: controller.refreshData,
           color: cs.primary,

@@ -33,13 +33,13 @@ class MoreScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: cs.surface,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.8)),
+                  border: Border.all(color: context.appColors.border),
                 ),
                 child: Row(
                   children: [
                     CircleAvatar(
                       radius: 24,
-                      backgroundColor: isGuest ? cs.surfaceVariant : cs.primaryContainer,
+                      backgroundColor: isGuest ? context.appColors.placeholder : cs.primary,
                       child: isGuest 
                         ? Icon(Icons.person_outline_rounded, color: cs.onSurfaceVariant)
                         : Text(
@@ -50,7 +50,7 @@ class MoreScreen extends StatelessWidget {
                                         : 'U') // 'U' for User as fallback
                                 .toUpperCase(),
                             style: tt.titleMedium?.copyWith(
-                              color: cs.onPrimaryContainer,
+                              color: isAuthenticated ? cs.onPrimary : cs.onSurface,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -199,9 +199,9 @@ class MoreScreen extends StatelessWidget {
 
               return Container(
                 decoration: BoxDecoration(
-                  color: cs.errorContainer.withValues(alpha: 0.3),
+                  color: context.appColors.placeholder,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: cs.error.withValues(alpha: 0.3)),
+                  border: Border.all(color: cs.error.withValues(alpha: 0.2)),
                 ),
                 child: ListTile(
                   leading:
@@ -258,7 +258,7 @@ class MoreScreen extends StatelessWidget {
             height: 1,
             indent: 16,
             endIndent: 16,
-            color: cs.outlineVariant,
+            color: context.appColors.border.withValues(alpha: 0.5),
           ),
       ],
     );

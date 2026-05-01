@@ -92,7 +92,7 @@ class _PostCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: cs.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+          border: Border.all(color: context.appColors.border),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.03),
@@ -128,13 +128,13 @@ class _PostCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: cs.secondaryContainer.withValues(alpha: 0.5),
+                            color: context.appColors.placeholder,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             _formatDate(post.publishedAt!),
                             style: tt.labelSmall?.copyWith(
-                              color: cs.onSecondaryContainer,
+                              color: cs.onSurfaceVariant,
                               fontWeight: FontWeight.bold,
                               fontSize: 10.sp,
                             ),

@@ -77,7 +77,7 @@ class _DocumentTile extends StatelessWidget {
       color: cs.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: cs.outlineVariant),
+        side: BorderSide(color: context.appColors.border),
       ),
       child: ListTile(
         contentPadding:
@@ -86,10 +86,10 @@ class _DocumentTile extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: cs.primaryContainer,
+            color: context.appColors.placeholder,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(doc.fileIcon, color: cs.onPrimaryContainer, size: 22),
+          child: Icon(doc.fileIcon, color: cs.onSurfaceVariant, size: 22),
         ),
         title: Text(
           doc.title,

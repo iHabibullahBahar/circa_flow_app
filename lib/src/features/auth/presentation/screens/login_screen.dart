@@ -2,6 +2,7 @@ import 'package:circa_flow_main/src/imports/core_imports.dart';
 import 'package:circa_flow_main/src/imports/packages_imports.dart';
 import 'package:circa_flow_main/src/config/config_controller.dart';
 import 'package:circa_flow_main/src/features/auth/presentation/providers/auth_controller.dart';
+import 'package:circa_flow_main/src/theme/color_schemes.dart';
 
 class LoginScreen extends HookWidget {
   const LoginScreen({super.key});
@@ -46,7 +47,6 @@ class LoginScreen extends HookWidget {
                   children: [
                     const SizedBox(height: 40),
                     
-                    // --- Logo ---
                     if (logoUrl != null)
                       Center(
                         child: Container(
@@ -77,7 +77,6 @@ class LoginScreen extends HookWidget {
                       
                     const SizedBox(height: 24),
 
-                    // --- Header ---
                     Center(
                       child: Text(
                         'Get started with $orgName',
@@ -93,7 +92,6 @@ class LoginScreen extends HookWidget {
                     
                     const SizedBox(height: 48),
 
-                    // --- Email Input ---
                     Text(
                       'Email or Phone',
                       style: tt.bodySmall?.copyWith(
@@ -112,7 +110,6 @@ class LoginScreen extends HookWidget {
                     
                     const SizedBox(height: 20),
 
-                    // --- Password Input ---
                     Text(
                       'Password',
                       style: tt.bodySmall?.copyWith(
@@ -145,7 +142,6 @@ class LoginScreen extends HookWidget {
                     
                     const SizedBox(height: 24),
 
-                    // --- Primary Button ---
                     SizedBox(
                       width: double.infinity,
                       height: 56,
@@ -182,7 +178,6 @@ class LoginScreen extends HookWidget {
 
                     const SizedBox(height: 24),
                     
-                    // --- Divider ---
                     Row(
                       children: [
                         Expanded(child: Divider(color: cs.outlineVariant)),
@@ -199,7 +194,6 @@ class LoginScreen extends HookWidget {
                     
                     const SizedBox(height: 24),
 
-                    // --- Secondary Buttons (Guest / Signup) ---
                     if (configCtrl.allowGuestAccess)
                       _UberSecondaryButton(
                         label: 'Continue as Guest',
@@ -218,7 +212,6 @@ class LoginScreen extends HookWidget {
                     
                     const SizedBox(height: 48),
 
-                    // --- Bottom Links ---
                     Center(
                       child: Column(
                         children: [
@@ -260,8 +253,6 @@ class LoginScreen extends HookWidget {
   }
 }
 
-// ── Components ───────────────────────────────────────────────────────────────
-
 class _UberTextField extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
@@ -297,15 +288,15 @@ class _UberTextField extends StatelessWidget {
         hintText: hintText,
         hintStyle: TextStyle(color: context.contextTheme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
         filled: true,
-        fillColor: context.contextTheme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        fillColor: context.appColors.placeholder.withValues(alpha: 0.3),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(color: context.appColors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(color: context.appColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
@@ -342,8 +333,8 @@ class _UberSecondaryButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
-          backgroundColor: cs.surfaceContainerHighest.withValues(alpha: 0.3),
-          side: BorderSide.none,
+          backgroundColor: context.appColors.placeholder.withValues(alpha: 0.3),
+          side: BorderSide(color: context.appColors.border),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),

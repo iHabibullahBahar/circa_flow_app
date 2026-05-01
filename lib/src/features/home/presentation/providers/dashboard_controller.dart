@@ -3,6 +3,8 @@ import 'package:circa_flow_main/src/features/posts/presentation/providers/posts_
 import 'package:circa_flow_main/src/features/events/presentation/providers/events_controller.dart';
 import 'package:circa_flow_main/src/features/posts/data/models/post_model.dart';
 import 'package:circa_flow_main/src/features/events/data/models/event_model.dart';
+import 'package:circa_flow_main/src/services/dashboard_service.dart';
+import '../../data/models/dashboard_response_model.dart';
 
 class DashboardController extends GetxController {
   final postsCtrl = Get.find<PostsController>();
@@ -23,16 +25,28 @@ class DashboardController extends GetxController {
   Future<void> refreshData() async {
     isLoading.value = true;
     try {
-      await Future.wait([
-        Get.find<ConfigController>().loadConfig(),
-        postsCtrl.refreshData(),
-        eventsCtrl.refreshData(),
-      ]);
+      final result = await DashboardService.instance.fetchDashboard();
       
-      featuredPosts.value = postsCtrl.posts.take(3).toList();
-      upcomingEvents.value = eventsCtrl.events.take(5).toList();
+      result.fold(
+        (failure) {
+          debugPrint('Dashboard refresh error: ${failure.message}');
+          // On failure, we might want to fallback to separate calls or show error
+        },
+        (response) {
+          // 1. Update Global Config (Banners, Branding, Modules)
+          final configCtrl = Get.find<ConfigController>();
+          configCtrl.config.value = response.config;
+          configCtrl.status.value = ConfigStatus.ready;
+
+          // 2. Update Dashboard Content
+          featuredPosts.assignAll(response.posts);
+          upcomingEvents.assignAll(response.events);
+          
+          AppLogger.info('✅ Dashboard data aggregated successfully');
+        },
+      );
     } catch (e) {
-      debugPrint('Dashboard refresh error: $e');
+      debugPrint('Dashboard controller error: $e');
     } finally {
       isLoading.value = false;
     }

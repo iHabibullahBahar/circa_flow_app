@@ -2,6 +2,7 @@ import 'package:circa_flow_main/src/imports/core_imports.dart';
 import 'package:circa_flow_main/src/imports/packages_imports.dart';
 import 'package:circa_flow_main/src/config/config_controller.dart';
 import 'package:circa_flow_main/src/features/auth/presentation/providers/auth_controller.dart';
+import 'package:circa_flow_main/src/theme/color_schemes.dart';
 
 class SignupScreen extends HookWidget {
   const SignupScreen({super.key});
@@ -224,8 +225,6 @@ class SignupScreen extends HookWidget {
   }
 }
 
-// ── Components ───────────────────────────────────────────────────────────────
-
 class _UberTextField extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
@@ -262,15 +261,15 @@ class _UberTextField extends StatelessWidget {
         hintText: hintText,
         hintStyle: TextStyle(color: cs.onSurfaceVariant.withValues(alpha: 0.5)),
         filled: true,
-        fillColor: cs.surfaceContainerHighest.withValues(alpha: 0.3),
+        fillColor: context.appColors.placeholder.withValues(alpha: 0.3),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(color: context.appColors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(color: context.appColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),

@@ -3,6 +3,7 @@
 
 // Config
 const String zConfigEndpoint = '/config';
+const String zDashboardEndpoint = '/dashboard';
 
 // Auth
 const String zLoginEndpoint = '/auth/login';

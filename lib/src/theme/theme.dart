@@ -161,6 +161,12 @@ ThemeData _buildTheme(
         minimumSize: const Size(88, 48),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ).copyWith(
+        backgroundColor: WidgetStateProperty.resolveWith((states) {
+          // If it's the standard FilledButton.tonal background
+          return customColors.placeholder;
+        }),
+        foregroundColor: WidgetStateProperty.all(colorScheme.onSurface),
       ),
     ),
 
@@ -195,14 +201,14 @@ ThemeData _buildTheme(
     // Input Decoration Theme
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+      fillColor: customColors.placeholder.withValues(alpha: 0.3),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: colorScheme.outline),
+        borderSide: BorderSide(color: customColors.border),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: colorScheme.outline),
+        borderSide: BorderSide(color: customColors.border),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),

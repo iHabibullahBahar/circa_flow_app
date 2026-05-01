@@ -6,12 +6,16 @@ class OrganizationConfig {
   final String name;
   final String slug;
   final String? timezone;
+  final String? appStoreUrl;
+  final String? playStoreUrl;
 
   const OrganizationConfig({
     required this.id,
     required this.name,
     required this.slug,
     this.timezone,
+    this.appStoreUrl,
+    this.playStoreUrl,
   });
 
   factory OrganizationConfig.fromJson(Map<String, dynamic> json) {
@@ -20,12 +24,33 @@ class OrganizationConfig {
       name: (json['name'] as String?) ?? 'App',
       slug: (json['slug'] as String?) ?? '',
       timezone: json['timezone'] as String?,
+      appStoreUrl: json['app_store_url'] as String?,
+      playStoreUrl: json['play_store_url'] as String?,
     );
   }
 
   /// Fallback when no config has been fetched yet.
   factory OrganizationConfig.fallback() =>
       const OrganizationConfig(id: 0, name: 'App', slug: '');
+}
+
+class VersionConfig {
+  final String minAppVersion;
+  final int minBuildNumber;
+
+  const VersionConfig({
+    this.minAppVersion = '1.0.0',
+    this.minBuildNumber = 1,
+  });
+
+  factory VersionConfig.fromJson(Map<String, dynamic> json) {
+    return VersionConfig(
+      minAppVersion: (json['min_app_version'] as String?) ?? '1.0.0',
+      minBuildNumber: (json['min_build_number'] as num?)?.toInt() ?? 1,
+    );
+  }
+
+  factory VersionConfig.fallback() => const VersionConfig();
 }
 
 class BrandingConfig {
@@ -147,6 +172,7 @@ class BannerConfig {
 class AppConfigModel {
   final OrganizationConfig organization;
   final BrandingConfig branding;
+  final VersionConfig version;
   final ModulesConfig modules;
   final List<CustomLink> customLinks;
   final List<CustomLink> customButtons;
@@ -157,6 +183,7 @@ class AppConfigModel {
   const AppConfigModel({
     required this.organization,
     required this.branding,
+    required this.version,
     required this.modules,
     required this.customLinks,
     required this.customButtons,
@@ -180,6 +207,8 @@ class AppConfigModel {
           (data['organization'] as Map<String, dynamic>?) ?? {}),
       branding: BrandingConfig.fromJson(
           (data['branding'] as Map<String, dynamic>?) ?? {}),
+      version: VersionConfig.fromJson(
+          (data['version'] as Map<String, dynamic>?) ?? {}),
       modules: ModulesConfig.fromJson(data['modules']),
       customLinks: linksJson
           .whereType<Map<String, dynamic>>()
@@ -205,6 +234,7 @@ class AppConfigModel {
   factory AppConfigModel.fallback() => AppConfigModel(
         organization: OrganizationConfig.fallback(),
         branding: BrandingConfig.fallback(),
+        version: VersionConfig.fallback(),
         modules: ModulesConfig.fallback(),
         customLinks: const [],
         customButtons: const [],
@@ -220,10 +250,16 @@ class AppConfigModel {
             'name': organization.name,
             'slug': organization.slug,
             'timezone': organization.timezone,
+            'app_store_url': organization.appStoreUrl,
+            'play_store_url': organization.playStoreUrl,
           },
           'branding': {
             'primary_color': branding.primaryColor,
             'logo_url': branding.logoUrl,
+          },
+          'version': {
+            'min_app_version': version.minAppVersion,
+            'min_build_number': version.minBuildNumber,
           },
           'modules': {
             'posts': modules.posts,

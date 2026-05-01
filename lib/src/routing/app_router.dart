@@ -8,6 +8,7 @@ import 'package:circa_flow_main/src/features/auth/presentation/screens/forgot_pa
 import 'package:circa_flow_main/src/features/home/presentation/screens/home_page.dart';
 import 'package:circa_flow_main/src/features/onboarding/presentation/screens/onboarding_page.dart';
 import 'package:circa_flow_main/src/features/events/presentation/screens/event_detail_screen.dart';
+import 'package:circa_flow_main/src/features/update/presentation/screens/force_update_screen.dart';
 import 'package:circa_flow_main/src/shared/screens/webview_screen.dart';
 
 class AppRouter {
@@ -43,6 +44,10 @@ class AppRouter {
         GetPage(
           name: AppRoutes.webview,
           page: () => const WebViewScreen(),
+        ),
+        GetPage(
+          name: AppRoutes.forceUpdate,
+          page: () => const ForceUpdateScreen(),
         ),
       ];
 }

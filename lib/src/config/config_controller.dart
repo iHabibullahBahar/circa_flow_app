@@ -25,6 +25,10 @@ class ConfigController extends GetxController {
   List<CustomLink> get customButtons => config.value.customButtons;
   bool get allowRegistration => config.value.allowRegistration;
   bool get allowGuestAccess => config.value.allowGuestAccess;
+  String get minAppVersion => config.value.version.minAppVersion;
+  int get minBuildNumber => config.value.version.minBuildNumber;
+  String? get appStoreUrl => config.value.organization.appStoreUrl;
+  String? get playStoreUrl => config.value.organization.playStoreUrl;
 
   bool isModuleEnabled(String key) => config.value.modules.isEnabled(key);
 

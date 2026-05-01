@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../utils/utils.dart';
 import '../config/api_endpoints.dart';
 import 'secure_storage_service.dart';
@@ -24,10 +25,18 @@ class AuthService {
     required String password,
     String? deviceName,
   }) async {
+    // Silently capture the local app version to keep the DB in sync.
+    String? appVersion;
+    try {
+      final info = await PackageInfo.fromPlatform();
+      appVersion = info.version;
+    } catch (_) {}
+
     final result = await _api.post<Map<String, dynamic>>(zLoginEndpoint, data: {
       'identifier': identifier,
       'password': password,
       if (deviceName != null) 'device_name': deviceName,
+      if (appVersion != null) 'app_version': appVersion,
     });
 
     return result.map((data) {
@@ -68,12 +77,20 @@ class AuthService {
     required String passwordConfirmation,
     String? deviceName,
   }) async {
+    // Capture the local app version for registration tracking.
+    String? appVersion;
+    try {
+      final info = await PackageInfo.fromPlatform();
+      appVersion = info.version;
+    } catch (_) {}
+
     final result = await _api.post<Map<String, dynamic>>(zRegisterEndpoint, data: {
       'name': name,
       'email': email,
       'password': password,
       'password_confirmation': passwordConfirmation,
       if (deviceName != null) 'device_name': deviceName,
+      if (appVersion != null) 'app_version': appVersion,
     });
 
     return result.map((data) {

@@ -8,6 +8,7 @@ abstract final class AppRoutes {
   static const String signup = '/signup';
   static const String forgotPassword = '/forgot-password';
   static const String webview = '/webview';
+  static const String forceUpdate = '/force-update';
 
   // Module feature routes
   static const String posts = '/posts';

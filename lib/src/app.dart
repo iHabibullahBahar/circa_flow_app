@@ -1,5 +1,6 @@
 import 'package:circa_flow_main/src/imports/imports.dart';
 import 'package:circa_flow_main/src/config/config_controller.dart';
+import 'package:circa_flow_main/src/shared/wrappers/version_check_wrapper.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -31,6 +32,7 @@ class App extends StatelessWidget {
         builder: (context, child) {
           Widget current = child!;
           current = SkeletonWrapper(child: current);
+          current = VersionCheckWrapper(child: current);
           current = SessionListenerWrapper(child: current);
           return current;
         },

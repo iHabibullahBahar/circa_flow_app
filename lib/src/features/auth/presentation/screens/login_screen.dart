@@ -79,13 +79,23 @@ class LoginScreen extends HookWidget {
 
                     Center(
                       child: Text(
-                        'Get started with $orgName',
+                        'Welcome back',
                         textAlign: TextAlign.center,
                         style: tt.headlineSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: cs.onSurface,
                           fontSize: 28.sp,
                           letterSpacing: -0.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Center(
+                      child: Text(
+                        'Welcome back! Please enter your details.',
+                        textAlign: TextAlign.center,
+                        style: tt.bodyMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
                         ),
                       ),
                     ),
@@ -139,75 +149,73 @@ class LoginScreen extends HookWidget {
                         return null;
                       },
                     ),
-                    
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () => Get.toNamed<void>(AppRoutes.forgotPassword),
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          foregroundColor: cs.primary,
+                        ),
+                        child: Text(
+                          'Forgot Password?',
+                          style: tt.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+
                     const SizedBox(height: 24),
 
                     AppButton(
-                      label: 'Continue',
+                      label: 'Sign In',
                       onPressed: handleLogin,
                       isLoading: isLoading,
                       isFullWidth: true,
                     ),
 
-                    if (configCtrl.allowGuestAccess || configCtrl.allowRegistration) ...[
-                      const SizedBox(height: 24),
-                      Row(
-                        children: [
-                          Expanded(child: Divider(color: cs.outlineVariant)),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text(
-                              'or',
-                              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    const SizedBox(height: 24),
+
+                    if (configCtrl.allowRegistration)
+                      Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Don't have an account? ",
+                              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                             ),
-                          ),
-                          Expanded(child: Divider(color: cs.outlineVariant)),
-                        ],
+                            GestureDetector(
+                              onTap: () => Get.toNamed<void>(AppRoutes.signup),
+                              child: Text(
+                                'Sign Up',
+                                style: tt.bodyMedium?.copyWith(
+                                  color: cs.onSurface,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 24),
-                      if (configCtrl.allowGuestAccess)
-                        AppButton(
-                          label: 'Continue as Guest',
-                          prefixIcon: Icon(Icons.person_outline_rounded, size: 20, color: cs.onSurface),
-                          onPressed: () => Get.offAllNamed<void>(AppRoutes.home),
-                          variant: ButtonVariant.outline,
-                          isFullWidth: true,
-                        ),
-                      if (configCtrl.allowRegistration) ...[
-                        if (configCtrl.allowGuestAccess) const SizedBox(height: 12),
-                        AppButton(
-                          label: 'Create an account',
-                          prefixIcon: Icon(Icons.add_circle_outline_rounded, size: 20, color: cs.onSurface),
-                          onPressed: () => Get.toNamed<void>(AppRoutes.signup),
-                          variant: ButtonVariant.outline,
-                          isFullWidth: true,
-                        ),
-                      ],
-                    ],
                     
                     const SizedBox(height: 48),
 
                     Center(
-                      child: Column(
-                        children: [
-                          AppButton(
-                            label: 'Find my account / Forgot Password',
-                            onPressed: () => Get.toNamed<void>(AppRoutes.forgotPassword),
-                            variant: ButtonVariant.ghost,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'By proceeding, you consent to the terms of service and privacy policy of $orgName.',
+                          textAlign: TextAlign.center,
+                          style: tt.labelSmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                            height: 1.5,
                           ),
-                          const SizedBox(height: 12),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text(
-                              'By proceeding, you consent to the terms of service and privacy policy of $orgName.',
-                              textAlign: TextAlign.center,
-                              style: tt.labelSmall?.copyWith(
-                                color: cs.onSurfaceVariant,
-                                height: 1.5,
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 24),

@@ -105,6 +105,8 @@ ThemeData _buildTheme(
 
   return ThemeData(
     useMaterial3: false,
+    splashFactory: NoSplash.splashFactory,
+    highlightColor: Colors.transparent,
     primaryColor: colorScheme.primary,
     colorScheme: colorScheme,
     textTheme: textTheme,

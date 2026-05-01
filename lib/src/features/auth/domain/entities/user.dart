@@ -9,6 +9,7 @@ class AppUser extends Equatable {
   final String? phone;
   final String? photoUrl;
   final String? role;
+  final int? organizationId;
   final bool isActive;
 
   const AppUser({
@@ -18,6 +19,7 @@ class AppUser extends Equatable {
     this.phone,
     this.photoUrl,
     this.role,
+    this.organizationId,
     this.isActive = true,
   });
 
@@ -29,5 +31,5 @@ class AppUser extends Equatable {
   String get displayName => name ?? email;
 
   @override
-  List<Object?> get props => [id, email, name, phone, photoUrl, role, isActive];
+  List<Object?> get props => [id, email, name, phone, photoUrl, role, organizationId, isActive];
 }

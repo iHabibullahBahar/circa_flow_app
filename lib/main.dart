@@ -18,6 +18,11 @@ Future<void> main() async {
 
   await AppConfig.init();
 
+  // OneSignal Initialization
+  OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
+  OneSignal.initialize("41000094-b38b-4010-a480-d376696fe1e3");
+  OneSignal.Notifications.requestPermission(true);
+
   // Register permanent controllers BEFORE runApp so they are available
   // the moment the widget tree starts building (App.build calls Get.find).
   Get.put<ConfigController>(ConfigController(), permanent: true);

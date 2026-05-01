@@ -29,6 +29,7 @@ class SessionController extends GetxController {
       (u) {
         if (u != null) {
           user.value = u;
+          _updateOneSignalTag(u);
           status.value = SessionStatus.authenticated;
         } else {
           status.value = SessionStatus.unauthenticated;
@@ -39,17 +40,26 @@ class SessionController extends GetxController {
     _authSub = _repository.onAuthStateChanged.listen((u) {
       if (u != null) {
         user.value = u;
+        _updateOneSignalTag(u);
         status.value = SessionStatus.authenticated;
       } else {
         user.value = null;
+        OneSignal.User.removeTag("org_id");
         status.value = SessionStatus.unauthenticated;
       }
     });
   }
 
+  void _updateOneSignalTag(AppUser u) {
+    if (u.organizationId != null) {
+      OneSignal.User.addTagWithKey("org_id", u.organizationId.toString());
+    }
+  }
+
   Future<void> logout() async {
     await _repository.logout();
     user.value = null;
+    OneSignal.User.removeTag("org_id");
     status.value = SessionStatus.unauthenticated;
   }
 

@@ -105,6 +105,7 @@ class AuthRepositoryImpl implements AuthRepository {
       email: (m['email'] as String?) ?? '',
       name: m['name'] as String?,
       phone: m['phone'] as String?,
+      organizationId: m['organization_id'] as int?,
       isActive: (m['is_active'] as bool?) ?? true,
     );
   }

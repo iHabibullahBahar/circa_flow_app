@@ -42,7 +42,24 @@ class PostModel {
     if (publishedAt == null) return '';
     try {
       final dt = DateTime.parse(publishedAt!).toLocal();
-      return '${dt.day}/${dt.month}/${dt.year}';
+      final months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec'
+      ];
+      final hour = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
+      final ampm = dt.hour >= 12 ? 'PM' : 'AM';
+      final time = '$hour:${dt.minute.toString().padLeft(2, '0')} $ampm';
+      return '${dt.day} ${months[dt.month - 1]} ${dt.year}, $time';
     } catch (_) {
       return publishedAt ?? '';
     }

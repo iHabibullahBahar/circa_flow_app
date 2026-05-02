@@ -49,24 +49,6 @@ class PostDetailScreen extends StatelessWidget {
                   // --- Header Row ---
                   Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: cs.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          'ANNOUNCEMENT',
-                          style: TextStyle(
-                            fontSize: 10.sp,
-                            fontWeight: FontWeight.w800,
-                            color: cs.primary,
-                            letterSpacing: 1.1,
-                          ),
-                        ),
-                      ),
-                      const Spacer(),
                       Text(
                         post.formattedDate,
                         style: TextStyle(

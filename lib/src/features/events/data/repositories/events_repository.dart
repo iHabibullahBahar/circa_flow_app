@@ -28,7 +28,16 @@ class EventsRepository {
 
   FutureEither<bool> registerForEvent(int eventId) async {
     final result = await _api.post<Map<String, dynamic>>(
-      zEventRegisterEndpoint(eventId),
+      zEventRegisterEndpoint,
+      data: {'id': eventId},
+    );
+    return result.map((_) => true);
+  }
+
+  FutureEither<bool> cancelRegistration(int eventId) async {
+    final result = await _api.post<Map<String, dynamic>>(
+      zEventCancelEndpoint,
+      data: {'id': eventId},
     );
     return result.map((_) => true);
   }

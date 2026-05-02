@@ -16,7 +16,8 @@ const String zMeEndpoint = '/me'; // POST /api/v1/me
 const String zPostsEndpoint = '/posts';
 const String zEventsEndpoint = '/events';
 const String zMyEventsEndpoint = '/events/my';
-String zEventRegisterEndpoint(int id) => '/events/$id/register';
+const String zEventRegisterEndpoint = '/events/register';
+const String zEventCancelEndpoint = '/events/cancel';
 const String zDocumentsEndpoint = '/documents';
 
 // Devices (notifications)

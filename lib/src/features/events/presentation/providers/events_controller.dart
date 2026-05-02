@@ -86,36 +86,55 @@ class EventsController extends GetxController {
       (err) => showGlobalToast(message: err.message, status: 'error'),
       (_) {
         showGlobalToast(message: 'Successfully registered!');
-        // Refresh local state or specific event
-        final index = events.indexWhere((e) => e.id == event.id);
-        if (index != -1) {
-          final updated = EventModel(
-            id: event.id,
-            title: event.title,
-            type: event.type,
-            description: event.description,
-            coverImage: event.coverImage,
-            location: event.location,
-            locationUrl: event.locationUrl,
-            startsAt: event.startsAt,
-            endsAt: event.endsAt,
-            isOnline: event.isOnline,
-            onlineUrl: event.onlineUrl,
-            organizer: event.organizer,
-            capacity: event.capacity,
-            timezone: event.timezone,
-            platform: event.platform,
-            registrationEnabled: event.registrationEnabled,
-            isRegistered: true,
-            spotsLeft: (event.spotsLeft ?? 1) - 1,
-            links: event.links,
-          );
-          events[index] = updated;
-        }
-        
-        // If we are in "My Events" tab, we might want to refresh.
-        // But usually, the user is in "Upcoming" when they register.
+        _updateEventState(event.id, isRegistered: true);
       },
     );
+  }
+
+  Future<void> cancelRegistration(EventModel event) async {
+    if (!event.isRegistered) return;
+
+    Get.dialog<void>(const AppLoading(), barrierDismissible: false);
+    final result = await _repo.cancelRegistration(event.id);
+    Get.back<void>();
+
+    result.fold(
+      (err) => showGlobalToast(message: err.message, status: 'error'),
+      (_) {
+        showGlobalToast(message: 'Registration cancelled.');
+        _updateEventState(event.id, isRegistered: false);
+      },
+    );
+  }
+
+  void _updateEventState(int eventId, {required bool isRegistered}) {
+    final index = events.indexWhere((e) => e.id == eventId);
+    if (index != -1) {
+      final event = events[index];
+      final updated = EventModel(
+        id: event.id,
+        title: event.title,
+        type: event.type,
+        description: event.description,
+        coverImage: event.coverImage,
+        location: event.location,
+        locationUrl: event.locationUrl,
+        startsAt: event.startsAt,
+        endsAt: event.endsAt,
+        isOnline: event.isOnline,
+        onlineUrl: event.onlineUrl,
+        organizer: event.organizer,
+        capacity: event.capacity,
+        timezone: event.timezone,
+        platform: event.platform,
+        registrationEnabled: event.registrationEnabled,
+        isRegistered: isRegistered,
+        spotsLeft: isRegistered 
+            ? (event.spotsLeft != null ? event.spotsLeft! - 1 : null)
+            : (event.spotsLeft != null ? event.spotsLeft! + 1 : null),
+        links: event.links,
+      );
+      events[index] = updated;
+    }
   }
 }

@@ -93,13 +93,7 @@ class _PostCard extends StatelessWidget {
           color: cs.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: context.appColors.border),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          boxShadow: const [],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

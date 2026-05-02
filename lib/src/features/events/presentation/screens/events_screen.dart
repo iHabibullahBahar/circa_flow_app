@@ -12,10 +12,45 @@ class EventsScreen extends GetView<EventsController> {
     return Scaffold(
       backgroundColor: cs.surface,
       appBar: AppBar(
-        title: const Text('Events'),
         backgroundColor: cs.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(5),
+          child: Column(
+            children: [
+              Obx(() => Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                          bottom: BorderSide(
+                              color: cs.outlineVariant.withValues(alpha: 0.3))),
+                    ),
+                    child: Row(
+                      children: [
+                        _TabItem(
+                          label: 'Upcoming',
+                          isSelected:
+                              controller.currentTab.value == EventTab.upcoming,
+                          onTap: () => controller.setTab(EventTab.upcoming),
+                        ),
+                        _TabItem(
+                          label: 'My Events',
+                          isSelected:
+                              controller.currentTab.value == EventTab.myEvents,
+                          onTap: () => controller.setTab(EventTab.myEvents),
+                        ),
+                        _TabItem(
+                          label: 'Past',
+                          isSelected:
+                              controller.currentTab.value == EventTab.past,
+                          onTap: () => controller.setTab(EventTab.past),
+                        ),
+                      ],
+                    ),
+                  )),
+            ],
+          ),
+        ),
       ),
       body: Obx(() {
         if (controller.hasError.value) {
@@ -32,12 +67,13 @@ class EventsScreen extends GetView<EventsController> {
             child: ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: 5,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              separatorBuilder: (_, __) => const SizedBox(height: 16),
               itemBuilder: (ctx, i) => _EventCard(
                 event: EventModel(
                   id: 0,
                   title: 'Loading Event Name',
-                  description: 'Description that might take two lines for loading state',
+                  description:
+                      'Description that might take two lines for loading state',
                   startsAt: '2026-01-01T00:00:00Z',
                 ),
               ),
@@ -58,8 +94,9 @@ class EventsScreen extends GetView<EventsController> {
             },
             child: ListView.separated(
               padding: const EdgeInsets.all(16),
-              itemCount: controller.events.length + (controller.isLoading.value ? 1 : 0),
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemCount: controller.events.length +
+                  (controller.isLoading.value ? 1 : 0),
+              separatorBuilder: (_, __) => const SizedBox(height: 16),
               itemBuilder: (ctx, i) {
                 if (i >= controller.events.length) {
                   return Center(
@@ -80,16 +117,55 @@ class EventsScreen extends GetView<EventsController> {
   }
 }
 
+class _TabItem extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _TabItem({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.contextTheme.colorScheme;
+    final tt = context.contextTheme.textTheme;
+
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              child: Text(label,
+                  style: tt.titleSmall?.copyWith(
+                      color: isSelected ? cs.primary : cs.onSurfaceVariant)),
+            ),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              height: 3,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: isSelected ? cs.primary : Colors.transparent,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(3)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ── Event Card ───────────────────────────────────────────────────────────────
 
 class _EventCard extends StatelessWidget {
   final EventModel event;
   const _EventCard({required this.event});
-
-  String? get _redirectUrl {
-    final url = event.locationUrl;
-    return (url != null && url.isNotEmpty) ? url : null;
-  }
 
   void _onTap() {
     Get.toNamed<void>(AppRoutes.eventDetail, arguments: event);
@@ -99,72 +175,107 @@ class _EventCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = context.contextTheme.colorScheme;
     final tt = context.contextTheme.textTheme;
-    final hasLink = _redirectUrl != null;
 
     return InkWell(
-      onTap: hasLink ? _onTap : null,
-      borderRadius: BorderRadius.circular(16),
+      onTap: _onTap,
+      borderRadius: BorderRadius.circular(20),
       child: Container(
         decoration: BoxDecoration(
           color: cs.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.4)),
+          boxShadow: const [],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- Image Section with Date Badge ---
+            // --- Image Section with Tags & Date Badge ---
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(20)),
                   child: AppCachedImage(
                     imageUrl: event.coverImage ?? '',
-                    height: 180,
+                    height: 125.h,
                     width: double.infinity,
                     fit: BoxFit.cover,
                   ),
                 ),
+
+                // --- Type Tag (Physical / Online / Hybrid) ---
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: event.type == 'online'
+                          ? Colors.blue
+                          : (event.type == 'hybrid'
+                              ? Colors.orange
+                              : Colors.green),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          event.type == 'online'
+                              ? Icons.videocam_rounded
+                              : (event.type == 'training'
+                                  ? Icons.school_rounded
+                                  : (event.type == 'hybrid'
+                                      ? Icons.layers_rounded
+                                      : Icons.location_on_rounded)),
+                          size: 12,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(width: 2),
+                        Text(
+                          event.type,
+                          style: tt.labelSmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 10.sp,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // --- Date Badge ---
                 if (event.startsAt != null)
                   Positioned(
-                    top: 12,
+                    bottom: 12,
                     left: 12,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 4,
-                          ),
-                        ],
+                        boxShadow: const [],
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            _getDay(event.startsAt!),
-                            style: tt.titleMedium?.copyWith(
-                              color: Colors.black,
-                              fontWeight: FontWeight.w900,
-                              height: 1,
+                            _getMonth(event.startsAt!).toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.red[500],
                             ),
                           ),
                           Text(
-                            _getMonth(event.startsAt!).toUpperCase(),
-                            style: tt.labelSmall?.copyWith(
-                              color: Colors.red[700],
-                              fontWeight: FontWeight.w800,
-                              fontSize: 9.sp,
+                            _getDay(event.startsAt!),
+                            style: TextStyle(
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black87,
                             ),
                           ),
                         ],
@@ -173,89 +284,89 @@ class _EventCard extends StatelessWidget {
                   ),
               ],
             ),
-            
+
             // --- Content Section ---
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(
+                    event.title,
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
+                  Gap(8.h),
+
+                  // --- Time Range ---
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Icon(Icons.access_time_rounded,
+                          size: 14, color: cs.onSurfaceVariant),
+                      const SizedBox(width: 8),
+                      Text(
+                        _getTimeRange(event),
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  Gap(4.h),
+
+                  // --- Location ---
+                  Row(
+                    children: [
+                      Icon(Icons.location_on_rounded,
+                          size: 14, color: cs.onSurfaceVariant),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          event.title,
-                          style: tt.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: cs.onSurface,
-                            fontSize: 18.sp,
-                            letterSpacing: -0.5,
+                          event.isOnline ? 'Online' : (event.location ?? 'TBA'),
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: Colors.black87,
                           ),
-                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   ),
-                  if (event.description != null) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      event.description!,
-                      style: tt.bodyMedium?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        height: 1.4,
+
+                  // --- Spots left badge ---
+                  if (event.registrationEnabled && event.spotsLeft != null) ...[
+                    Gap(10.h),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: cs.outlineVariant.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.groups_rounded,
+                              size: 14, color: cs.onSurfaceVariant),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${event.spotsLeft} spots left',
+                            style: TextStyle(
+                                fontSize: 11.sp,
+                                color: Colors.black87.withValues(alpha: 0.5)),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
-                  const SizedBox(height: 16),
-                  
-                  // --- Location & Action ---
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Icon(
-                              event.isOnline ? Icons.videocam_rounded : Icons.location_on_rounded,
-                              size: 16,
-                              color: cs.primary,
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                event.isOnline ? 'Online' : (event.location ?? 'TBA'),
-                                style: tt.labelLarge?.copyWith(
-                                  color: cs.onSurfaceVariant,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (hasLink) ...[
-                        const SizedBox(width: 12),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: cs.primary,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            'Details',
-                            style: tt.labelMedium?.copyWith(
-                              color: cs.onPrimary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
                 ],
               ),
             ),
@@ -263,6 +374,27 @@ class _EventCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _getTimeRange(EventModel event) {
+    if (event.startsAt == null) return 'TBA';
+    try {
+      final start = DateTime.parse(event.startsAt!).toLocal();
+      final startStr = _formatTime(start);
+      if (event.endsAt != null) {
+        final end = DateTime.parse(event.endsAt!).toLocal();
+        return '$startStr - ${_formatTime(end)}';
+      }
+      return startStr;
+    } catch (_) {
+      return '';
+    }
+  }
+
+  String _formatTime(DateTime dt) {
+    final hour = dt.hour == 0 ? 12 : (dt.hour > 12 ? dt.hour - 12 : dt.hour);
+    final period = dt.hour >= 12 ? 'PM' : 'AM';
+    return '$hour:${dt.minute.toString().padLeft(2, '0')} $period';
   }
 
   String _getDay(String iso) {
@@ -278,8 +410,18 @@ class _EventCard extends StatelessWidget {
     try {
       final dt = DateTime.parse(iso).toLocal();
       final months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec'
       ];
       return months[dt.month - 1];
     } catch (_) {

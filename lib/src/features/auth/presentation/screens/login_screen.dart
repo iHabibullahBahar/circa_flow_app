@@ -104,7 +104,10 @@ class LoginScreen extends HookWidget {
                       hint: 'Enter your email',
                       keyboardType: TextInputType.emailAddress,
                       enabled: !isLoading,
-                      autofillHints: const [AutofillHints.email, AutofillHints.username],
+                      autofillHints: const [
+                        AutofillHints.email,
+                        AutofillHints.username
+                      ],
                       validator: (v) =>
                           AppUtils.isBlank(v) ? 'Enter your email' : null,
                     ),

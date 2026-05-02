@@ -354,13 +354,7 @@ class _EventListTile extends StatelessWidget {
           color: cs.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: context.appColors.border),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          boxShadow: const [],
         ),
         child: IntrinsicHeight(
           child: Row(
@@ -534,13 +528,7 @@ class _DashboardBannersState extends State<_DashboardBanners> {
                     margin: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+                      boxShadow: const [],
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(20),

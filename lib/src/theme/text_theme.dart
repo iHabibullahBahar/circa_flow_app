@@ -61,8 +61,8 @@ TextTheme buildTextTheme() {
     /// Use for: section headings within a scrollable page, card group titles.
     headlineSmall: TextStyle(
       fontSize: 24,
-      fontWeight: FontWeight.w400,
-      letterSpacing: 0,
+      fontWeight: FontWeight.w800,
+      letterSpacing: -0.5,
     ),
 
     // ── Title ─────────────────────────────────────────────────────────────────
@@ -74,16 +74,16 @@ TextTheme buildTextTheme() {
     ///          dialog/modal titles.
     titleLarge: TextStyle(
       fontSize: 22,
-      fontWeight: FontWeight.w500,
-      letterSpacing: 0,
+      fontWeight: FontWeight.w800,
+      letterSpacing: -0.5,
     ),
 
     /// 16 sp — Standard component title.
     /// Use for: ListTile titles, card headings, tab labels, dropdown labels.
     titleMedium: TextStyle(
       fontSize: 16,
-      fontWeight: FontWeight.w500,
-      letterSpacing: 0.15,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0,
     ),
 
     /// 14 sp — Compact component title.

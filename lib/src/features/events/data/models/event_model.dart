@@ -5,6 +5,7 @@ import 'package:circa_flow_main/src/features/posts/data/models/post_model.dart'
 class EventModel {
   final int id;
   final String title;
+  final String type;
   final String? description;
   final String? coverImage;
   final String? location;
@@ -16,11 +17,16 @@ class EventModel {
   final String? organizer;
   final int? capacity;
   final String? timezone;
+  final String? platform;
+  final bool registrationEnabled;
+  final bool isRegistered;
+  final int? spotsLeft;
   final List<PostLink> links;
 
   const EventModel({
     required this.id,
     required this.title,
+    this.type = 'physical',
     this.description,
     this.coverImage,
     this.location,
@@ -32,12 +38,17 @@ class EventModel {
     this.organizer,
     this.capacity,
     this.timezone,
+    this.platform,
+    this.registrationEnabled = false,
+    this.isRegistered = false,
+    this.spotsLeft,
     this.links = const [],
   });
 
   factory EventModel.fromJson(Map<String, dynamic> j) => EventModel(
         id: (j['id'] as num).toInt(),
         title: (j['title'] as String?) ?? '',
+        type: (j['type'] as String?) ?? 'physical',
         description: j['description'] as String?,
         coverImage: j['cover_image'] as String?,
         location: j['location'] as String?,
@@ -49,6 +60,10 @@ class EventModel {
         organizer: j['organizer'] as String?,
         capacity: (j['capacity'] as num?)?.toInt(),
         timezone: j['timezone'] as String?,
+        platform: j['platform'] as String?,
+        registrationEnabled: (j['registration_enabled'] as bool?) ?? false,
+        isRegistered: (j['is_registered'] as bool?) ?? false,
+        spotsLeft: (j['spots_left'] as num?)?.toInt(),
         links: (j['links'] as List<dynamic>?)
                 ?.whereType<Map<String, dynamic>>()
                 .map(PostLink.fromJson)

@@ -1,8 +1,7 @@
 import '../../imports/imports.dart';
 
-
 /// A premium, highly customizable wrapper around [CachedNetworkImage].
-/// 
+///
 /// This widget provides smooth transitions, specialized error handling,
 /// and integrates with the project's design system.
 class AppCachedImage extends StatelessWidget {
@@ -79,8 +78,10 @@ class AppCachedImage extends StatelessWidget {
       colorBlendMode: colorBlendMode,
       alignment: alignment,
       fadeInDuration: fadeInDuration ?? const Duration(milliseconds: 500),
-      placeholder: (context, url) => placeholder ?? _buildDefaultPlaceholder(context),
-      errorWidget: (context, url, error) => errorWidget ?? _buildDefaultErrorWidget(context),
+      placeholder: (context, url) =>
+          placeholder ?? _buildDefaultPlaceholder(context),
+      errorWidget: (context, url, error) =>
+          errorWidget ?? _buildDefaultErrorWidget(context),
     );
 
     if (borderRadius != null) {
@@ -114,24 +115,45 @@ class AppCachedImage extends StatelessWidget {
     return Container(
       width: width,
       height: height,
-      color: context.contextTheme.colorScheme.surfaceContainerHighest .withValues(alpha: 0.9),
-      child: const Center(
-        child: CircularProgressIndicator(strokeWidth: 2),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            context.contextTheme.colorScheme.primary.withValues(alpha: 0.4),
+            context.contextTheme.colorScheme.primary.withValues(alpha: 0.8),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.school_rounded,
+          color: Colors.white.withValues(alpha: 0.3),
+          size: 48,
+        ),
       ),
     );
   }
 
   Widget _buildDefaultErrorWidget(BuildContext context) {
-    final cs = context.contextTheme.colorScheme;
     return Container(
       width: width,
       height: height,
-      color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            context.contextTheme.colorScheme.primary.withValues(alpha: 0.6),
+            context.contextTheme.colorScheme.primary.withValues(alpha: 0.6),
+          ],
+        ),
+      ),
       child: Center(
         child: Icon(
-          Icons.image_outlined,
-          color: cs.onSurfaceVariant.withValues(alpha: 0.4),
-          size: 32,
+          Icons.school_rounded,
+          color: Colors.white.withValues(alpha: 0.4),
+          size: 56,
         ),
       ),
     );

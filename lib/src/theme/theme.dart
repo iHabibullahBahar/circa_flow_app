@@ -151,11 +151,6 @@ ThemeData _buildTheme(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 0,
-      ).copyWith(
-        elevation: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.hovered)) return 2;
-          return 0;
-        }),
       ),
     ),
 
@@ -249,7 +244,7 @@ ThemeData _buildTheme(
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: colorScheme.surface,
       indicatorColor: colorScheme.secondaryContainer,
-      elevation: 8,
+      elevation: 0,
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       height: 80,
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
@@ -287,7 +282,7 @@ ThemeData _buildTheme(
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: colorScheme.primary,
       foregroundColor: colorScheme.onPrimaryContainer,
-      elevation: 2,
+      elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
 
@@ -333,7 +328,7 @@ ThemeData _buildTheme(
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 4,
+      elevation: 0,
       backgroundColor: colorScheme.inverseSurface,
       contentTextStyle:
           textTheme.bodyMedium?.copyWith(color: colorScheme.onInverseSurface),

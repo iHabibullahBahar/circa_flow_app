@@ -10,50 +10,48 @@ class PostsScreen extends GetView<PostsController> {
     final cs = context.contextTheme.colorScheme;
 
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Posts'),
-        backgroundColor: cs.surface,
+        backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
+        toolbarHeight: 0, // No title needed
       ),
       body: Obx(() {
         if (controller.hasError.value) {
           return _ErrorView(onRetry: controller.refreshData);
         }
 
-        if (controller.posts.isEmpty && !controller.isLoading.value) {
-          return const _EmptyView();
-        }
-
         return RefreshIndicator(
           onRefresh: controller.refreshData,
           color: cs.primary,
-          child: NotificationListener<ScrollNotification>(
-            onNotification: (notification) {
-              if (notification is ScrollEndNotification &&
-                  notification.metrics.extentAfter < 200) {
-                controller.loadMore();
-              }
-              return false;
-            },
-            child: ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: controller.posts.length + (controller.isLoading.value ? 1 : 0),
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (ctx, i) {
-                if (i >= controller.posts.length) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: cs.primary),
+          child: CustomScrollView(
+            slivers: [
+              if (controller.posts.isEmpty && !controller.isLoading.value)
+                const SliverFillRemaining(child: _EmptyView())
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.all(16),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        if (index >= controller.posts.length) {
+                          return Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: cs.primary),
+                            ),
+                          );
+                        }
+                        return _PostCard(post: controller.posts[index]);
+                      },
+                      childCount: controller.posts.length +
+                          (controller.isLoading.value ? 1 : 0),
                     ),
-                  );
-                }
-                return _PostCard(post: controller.posts[i]);
-              },
-            ),
+                  ),
+                ),
+            ],
           ),
         );
       }),
@@ -67,121 +65,88 @@ class _PostCard extends StatelessWidget {
   final PostModel post;
   const _PostCard({required this.post});
 
-  String? get _redirectUrl =>
-      post.links.isNotEmpty ? post.links.first.url : null;
-
-  void _onTap() {
-    final url = _redirectUrl;
-    if (url == null || url.isEmpty) return;
-    Get.toNamed<void>(
-      AppRoutes.webview,
-      arguments: WebViewArgs(url: url, title: post.title),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final cs = context.contextTheme.colorScheme;
-    final tt = context.contextTheme.textTheme;
-    final hasLink = _redirectUrl != null && _redirectUrl!.isNotEmpty;
-
     return InkWell(
-      onTap: hasLink ? _onTap : null,
-      borderRadius: BorderRadius.circular(16),
+      onTap: () => Get.toNamed<void>(AppRoutes.postDetail, arguments: post),
+      borderRadius: BorderRadius.circular(24),
       child: Container(
+        margin: const EdgeInsets.only(bottom: 20),
         decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: context.appColors.border),
-          boxShadow: const [],
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFEEEEEE)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- Image Section ---
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              child: AppCachedImage(
-                imageUrl: post.coverImage ?? '',
-                height: 200,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                // Fallback icon handled by AppCachedImage
-              ),
-            ),
-            
-            // --- Content Section ---
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      if (post.publishedAt != null)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: context.appColors.placeholder,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            _formatDate(post.publishedAt!),
-                            style: tt.labelSmall?.copyWith(
-                              color: cs.onSurfaceVariant,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 10.sp,
-                            ),
-                          ),
-                        ),
-                      const Spacer(),
-                      if (hasLink)
-                        Icon(Icons.arrow_forward_ios_rounded, 
-                          size: 12, 
-                          color: cs.onSurfaceVariant.withValues(alpha: 0.5)
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
+                  // --- Title ---
                   Text(
                     post.title,
-                    style: tt.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: cs.onSurface,
+                    style: TextStyle(
                       fontSize: 18.sp,
-                      letterSpacing: -0.5,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black87,
+                      height: 1.3,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (post.body != null) ...[
-                    const SizedBox(height: 8),
+                  const Gap(8),
+
+                  // --- Snippet ---
+                  if (post.body != null)
                     Text(
                       post.body!,
-                      style: tt.bodyMedium?.copyWith(
-                        color: cs.onSurfaceVariant,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: Colors.black54,
                         height: 1.4,
                       ),
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
-                  ],
-                  if (hasLink) ...[
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Text(
-                          'Continue reading',
-                          style: tt.labelLarge?.copyWith(
-                            color: cs.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Icon(Icons.open_in_new_rounded, size: 14, color: cs.primary),
-                      ],
+                ],
+              ),
+            ),
+
+            // --- Media ---
+            if (post.coverImage != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: AppCachedImage(
+                    imageUrl: post.coverImage!,
+                    height: 200.h,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+
+            // --- Reactions Row & Date ---
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Row(
+                children: [
+                  _ReactionItem(icon: Icons.favorite_border, count: '1'),
+                  const Gap(20),
+                  _ReactionItem(icon: Icons.chat_bubble_outline, count: '0'),
+                  const Spacer(),
+                  Text(
+                    post.formattedDate,
+                    style: TextStyle(
+                      fontSize: 11.sp,
+                      color: Colors.black26,
+                      fontWeight: FontWeight.w600,
                     ),
-                  ],
+                  ),
                 ],
               ),
             ),
@@ -190,18 +155,29 @@ class _PostCard extends StatelessWidget {
       ),
     );
   }
+}
 
-  String _formatDate(String iso) {
-    try {
-      final dt = DateTime.parse(iso).toLocal();
-      final months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-      ];
-      return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
-    } catch (_) {
-      return iso;
-    }
+class _ReactionItem extends StatelessWidget {
+  final IconData icon;
+  final String count;
+  const _ReactionItem({required this.icon, required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: Colors.black26),
+        const Gap(6),
+        Text(
+          count,
+          style: TextStyle(
+            fontSize: 14.sp,
+            color: Colors.black26,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
   }
 }
 

@@ -10,6 +10,8 @@ import 'package:circa_flow_main/src/features/onboarding/presentation/screens/onb
 import 'package:circa_flow_main/src/features/events/presentation/screens/event_detail_screen.dart';
 import 'package:circa_flow_main/src/features/update/presentation/screens/force_update_screen.dart';
 import 'package:circa_flow_main/src/features/notifications/presentation/screens/notification_screen.dart';
+import 'package:circa_flow_main/src/features/posts/presentation/screens/post_detail_screen.dart';
+import 'package:circa_flow_main/src/features/posts/data/models/post_model.dart';
 import 'package:circa_flow_main/src/shared/screens/webview_screen.dart';
 
 class AppRouter {
@@ -53,6 +55,13 @@ class AppRouter {
         GetPage(
           name: AppRoutes.notifications,
           page: () => const NotificationScreen(),
+        ),
+        GetPage(
+          name: AppRoutes.postDetail,
+          page: () {
+            final post = Get.arguments as PostModel;
+            return PostDetailScreen(post: post);
+          },
         ),
       ];
 }

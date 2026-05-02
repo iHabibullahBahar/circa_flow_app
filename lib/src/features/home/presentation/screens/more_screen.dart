@@ -237,33 +237,15 @@ class MoreScreen extends StatelessWidget {
   }
 
   void _confirmLogout(BuildContext context, SessionController session) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Sign Out',
-            style: TextStyle(fontWeight: FontWeight.w900)),
-        content: const Text(
-            'Are you sure you want to sign out? This will end your current session.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Cancel',
-                style: TextStyle(
-                    color: context.contextTheme.colorScheme.onSurfaceVariant)),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              session.logout();
-            },
-            child: Text('Sign Out',
-                style: TextStyle(
-                    color: context.contextTheme.colorScheme.error,
-                    fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
+    AppDialogs.showConfirm(
+      title: 'Sign Out',
+      description: 'Are you sure you want to sign out? You will need to log in again to access your account.',
+      confirmLabel: 'Sign Out',
+      icon: Icons.logout_rounded,
+      iconColor: Colors.red[700],
+      iconBgColor: Colors.red[50],
+      confirmVariant: ButtonVariant.danger,
+      onConfirm: () => session.logout(),
     );
   }
 }

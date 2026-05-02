@@ -48,7 +48,7 @@ void showToast(
               : HugeIcons.strokeRoundedInformationCircle);
 
   return ToastBar(
-    position: ToastPosition.top,
+    position: ToastPosition.bottom,
     autoDismiss: autoDismiss ?? true,
     toastDuration: duration ?? const Duration(seconds: 2),
     animationDuration: const Duration(milliseconds: 150),

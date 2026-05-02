@@ -18,284 +18,249 @@ class MoreScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: cs.surface,
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-          children: [
-            // --- User Info ---
-            Obx(() {
-              final user = session.user.value;
-              final isAuthenticated = session.isAuthenticated;
-              final isGuest = !isAuthenticated;
+      appBar: AppBar(
+        title: Text(
+          'Account & Settings',
+          style: tt.titleLarge?.copyWith(
+            fontWeight: FontWeight.w900,
+            color: const Color(0xFF1A334D), // Dark Navy like screenshot
+            fontSize: 18.sp,
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: cs.surface,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Divider(
+              height: 1,
+              color: context.appColors.border.withValues(alpha: 0.3)),
+        ),
+      ),
+      body: ListView(
+        physics: const BouncingScrollPhysics(),
+        children: [
+          // --- User Profile (Subtle) ---
+          Obx(() {
+            final user = session.user.value;
+            final isAuthenticated = session.isAuthenticated;
+            if (!isAuthenticated) return const SizedBox.shrink();
 
-              return Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: cs.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: context.appColors.border),
-                ),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 24,
-                      backgroundColor: isGuest ? context.appColors.placeholder : cs.primary,
-                      child: isGuest 
-                        ? Icon(Icons.person_outline_rounded, color: cs.onSurfaceVariant)
-                        : Text(
-                            (user?.name?.isNotEmpty == true
-                                    ? user!.name![0]
-                                    : user?.email.isNotEmpty == true
-                                        ? user!.email[0]
-                                        : 'U') // 'U' for User as fallback
-                                .toUpperCase(),
-                            style: tt.titleMedium?.copyWith(
-                              color: isAuthenticated ? cs.onPrimary : cs.onSurface,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            isGuest ? 'Guest' : (user?.name ?? 'Member'),
-                            style: tt.titleSmall
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                          Text(
-                            isGuest 
-                              ? 'Sign in to access more features' 
-                              : (user?.email ?? ''),
-                            style: tt.bodySmall
-                                ?.copyWith(color: cs.onSurfaceVariant),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-            const SizedBox(height: 24),
-
-            // --- Useful Links (Expandable) ---
-            Obx(() {
-              final links = configCtrl.customLinks;
-              if (links.isEmpty) return const SizedBox.shrink();
-              
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            return Container(
+              padding: const EdgeInsets.all(20),
+              color: cs.surface,
+              child: Row(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: cs.primary.withValues(alpha: 0.1),
                     child: Text(
-                      'Information',
-                      style: tt.labelMedium?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        letterSpacing: 0.5,
-                      ),
+                      (user?.name?.isNotEmpty == true ? user!.name![0] : 'U')
+                          .toUpperCase(),
+                      style: tt.titleLarge?.copyWith(
+                          color: cs.primary, fontWeight: FontWeight.bold),
                     ),
                   ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: cs.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.8)),
-                    ),
-                    child: Theme(
-                      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                      child: ExpansionTile(
-                        leading: Icon(Icons.link_rounded, color: cs.primary),
-                        title: Text(
-                          'Useful Links',
-                          style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        children: links
-                            .asMap()
-                            .entries
-                            .map((entry) => _buildLinkTile(
-                                  context,
-                                  entry.value,
-                                  showDivider: entry.key < links.length - 1,
-                                  isNested: true,
-                                ))
-                            .toList(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-              );
-            }),
-
-            // --- Custom Buttons (Distinct) ---
-            Obx(() {
-              final buttons = configCtrl.customButtons;
-              if (buttons.isEmpty) return const SizedBox.shrink();
-              
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      'Services',
-                      style: tt.labelMedium?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: cs.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.8)),
-                    ),
+                  const SizedBox(width: 16),
+                  Expanded(
                     child: Column(
-                      children: buttons
-                          .asMap()
-                          .entries
-                          .map((entry) => _buildLinkTile(
-                                context,
-                                entry.value,
-                                showDivider: entry.key < buttons.length - 1,
-                              ))
-                          .toList(),
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user?.name ?? 'Member',
+                          style: tt.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF1A334D)),
+                        ),
+                        Text(
+                          user?.email ?? '',
+                          style: tt.bodySmall
+                              ?.copyWith(color: cs.onSurfaceVariant),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 24),
                 ],
-              );
-            }),
+              ),
+            );
+          }),
 
-            // --- Auth Action ---
-            Obx(() {
-              final isGuest = !session.isAuthenticated;
-              
-              if (isGuest) {
-                return Container(
-                  decoration: BoxDecoration(
-                    color: cs.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: cs.primary.withValues(alpha: 0.5)),
-                  ),
-                  child: ListTile(
-                    leading: Icon(Icons.login_rounded, color: cs.primary, size: 22),
-                    title: Text(
-                      'Sign In',
-                      style: tt.titleSmall?.copyWith(color: cs.primary, fontWeight: FontWeight.bold),
-                    ),
-                    onTap: () => Get.offAllNamed<void>(AppRoutes.login),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+          // --- Services Section ---
+          Obx(() {
+            final buttons = configCtrl.customButtons;
+            if (buttons.isEmpty) return const SizedBox.shrink();
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSectionHeader(context, 'Services'),
+                ...buttons.map((btn) => _buildLinkTile(context, btn)),
+              ],
+            );
+          }),
+
+          // --- Information Section ---
+          Obx(() {
+            final links = configCtrl.customLinks;
+            if (links.isEmpty) return const SizedBox.shrink();
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSectionHeader(context, 'Useful Links'),
+                ...links.map((link) => _buildLinkTile(context, link)),
+              ],
+            );
+          }),
+
+          // --- Account Section ---
+          _buildSectionHeader(context, 'Account'),
+          Obx(() {
+            final isGuest = !session.isAuthenticated;
+            if (isGuest) {
+              return _buildActionTile(
+                context,
+                label: 'Sign In',
+                icon: Icons.login_rounded,
+                onTap: () => Get.offAllNamed<void>(AppRoutes.login),
+              );
+            }
+
+            return _buildActionTile(
+              context,
+              label: 'Sign Out',
+              icon: Icons.logout_rounded,
+              onTap: () => _confirmLogout(context, session),
+              isDestructive: true,
+            );
+          }),
+
+          const SizedBox(height: 40),
+          Center(
+            child: FutureBuilder<PackageInfo>(
+              future: PackageInfo.fromPlatform(),
+              builder: (context, snapshot) {
+                final version = snapshot.data?.version ?? '1.0.0';
+                final build = snapshot.data?.buildNumber ?? '1';
+                return Text(
+                  'Version $version (Build $build)',
+                  style: tt.labelSmall?.copyWith(
+                    color: cs.onSurfaceVariant.withValues(alpha: 0.4),
+                    letterSpacing: 1,
                   ),
                 );
-              }
+              },
+            ),
+          ),
+          const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
 
-              return Container(
-                decoration: BoxDecoration(
-                  color: context.appColors.placeholder,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: cs.error.withValues(alpha: 0.2)),
-                ),
-                child: ListTile(
-                  leading:
-                      Icon(Icons.logout_rounded, color: cs.error, size: 22),
-                  title: Text(
-                    'Sign Out',
-                    style: tt.titleSmall?.copyWith(color: cs.error),
-                  ),
-                  onTap: () => _confirmLogout(context, session),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-              );
-            }),
-          ],
+  Widget _buildSectionHeader(BuildContext context, String title) {
+    final cs = context.contextTheme.colorScheme;
+    final tt = context.contextTheme.textTheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.only(left: 16, top: 24, bottom: 8),
+      color:
+          const Color(0xFFF8FAFC), // Very light grey background for header rows
+      child: Text(
+        title,
+        style: tt.labelMedium?.copyWith(
+          color: cs.onSurfaceVariant.withValues(alpha: 0.6),
+          fontWeight: FontWeight.w600,
+          letterSpacing: 1,
+          fontSize: 11.sp,
         ),
       ),
     );
   }
 
-  Widget _buildLinkTile(BuildContext context, CustomLink link,
-      {required bool showDivider, bool isNested = false}) {
+  Widget _buildLinkTile(BuildContext context, CustomLink link) {
+    return _buildActionTile(
+      context,
+      label: link.title,
+      icon: Icons.description_rounded, // Force documents icon as requested
+      onTap: () => Get.toNamed<void>(
+        AppRoutes.webview,
+        arguments: WebViewArgs(url: link.url, title: link.title),
+      ),
+    );
+  }
+
+  Widget _buildActionTile(BuildContext context,
+      {required String label,
+      required IconData icon,
+      required VoidCallback onTap,
+      bool isDestructive = false}) {
     final cs = context.contextTheme.colorScheme;
     final tt = context.contextTheme.textTheme;
 
     return Column(
       children: [
         ListTile(
+          onTap: onTap,
           contentPadding:
-              EdgeInsets.only(left: isNested ? 48 : 16, right: 16),
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
           leading: Icon(
-            _iconFromName(link.icon),
-            color: cs.onSurfaceVariant,
-            size: 22,
+            icon,
+            color: isDestructive
+                ? cs.error.withValues(alpha: 0.7)
+                : const Color(0xFF5E718D),
+            size: 24,
           ),
           title: Text(
-            link.title,
-            style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+            label,
+            style: tt.bodyLarge?.copyWith(
+              color: isDestructive ? cs.error : const Color(0xFF1A334D),
+              fontWeight: FontWeight.w600,
+              fontSize: 15.sp,
+            ),
           ),
-          trailing:
-              Icon(Icons.chevron_right_rounded, color: cs.onSurfaceVariant),
-          onTap: () => Get.toNamed<void>(
-            AppRoutes.webview,
-            arguments: WebViewArgs(url: link.url, title: link.title),
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-                showDivider ? 0 : 16),
+          trailing: Icon(
+            Icons.chevron_right_rounded,
+            color: cs.onSurfaceVariant.withValues(alpha: 0.3),
+            size: 20,
           ),
         ),
-        if (showDivider)
-          Divider(
-            height: 1,
-            indent: 16,
-            endIndent: 16,
-            color: context.appColors.border.withValues(alpha: 0.5),
-          ),
+        Divider(
+          height: 1,
+          indent: 60,
+          color: context.appColors.border.withValues(alpha: 0.3),
+        ),
       ],
     );
-  }
-
-  IconData _iconFromName(String? name) {
-    return switch (name) {
-      'web' || 'website' || 'link' => Icons.language_rounded,
-      'support' || 'help' => Icons.help_outline_rounded,
-      'news' || 'article' => Icons.article_outlined,
-      'map' || 'location' => Icons.place_outlined,
-      'phone' || 'call' => Icons.phone_outlined,
-      'email' || 'mail' => Icons.email_outlined,
-      'document' || 'file' => Icons.description_outlined,
-      _ => Icons.open_in_new_rounded,
-    };
   }
 
   void _confirmLogout(BuildContext context, SessionController session) {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Sign Out'),
-        content: const Text('Are you sure you want to sign out?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Sign Out',
+            style: TextStyle(fontWeight: FontWeight.w900)),
+        content: const Text(
+            'Are you sure you want to sign out? This will end your current session.'),
         actions: [
-          AppButton(
-            label: 'Cancel',
+          TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            variant: ButtonVariant.ghost,
+            child: Text('Cancel',
+                style: TextStyle(
+                    color: context.contextTheme.colorScheme.onSurfaceVariant)),
           ),
-          AppButton(
-            label: 'Sign Out',
+          TextButton(
             onPressed: () {
               Navigator.of(ctx).pop();
               session.logout();
             },
-            variant: ButtonVariant.danger,
+            child: Text('Sign Out',
+                style: TextStyle(
+                    color: context.contextTheme.colorScheme.error,
+                    fontWeight: FontWeight.bold)),
           ),
         ],
       ),

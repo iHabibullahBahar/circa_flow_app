@@ -95,7 +95,8 @@ class DocumentDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // --- Description ---
-                  if (doc.description != null && doc.description!.isNotEmpty) ...[
+                  if (doc.description != null &&
+                      doc.description!.isNotEmpty) ...[
                     Text(
                       'About this Document',
                       style: TextStyle(
@@ -206,7 +207,9 @@ class _FileDownloadCard extends StatelessWidget {
           color: isPrimary ? cs.primary.withValues(alpha: 0.05) : cs.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isPrimary ? cs.primary.withValues(alpha: 0.2) : context.appColors.border,
+            color: isPrimary
+                ? cs.primary.withValues(alpha: 0.2)
+                : context.appColors.border,
             width: isPrimary ? 1.5 : 1,
           ),
         ),
@@ -257,7 +260,8 @@ class _FileDownloadCard extends StatelessWidget {
                 color: cs.primary,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.download_rounded, color: Colors.white, size: 18),
+              child: const Icon(Icons.remove_red_eye,
+                  color: Colors.white, size: 18),
             ),
           ],
         ),

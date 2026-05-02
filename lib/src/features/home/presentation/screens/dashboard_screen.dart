@@ -180,17 +180,12 @@ class DashboardScreen extends StatelessWidget {
                         title: 'Recent Documents',
                         onViewAll: () => Get.find<HomeShellController>()
                             .changeTabByLabel('Documents'),
-                        child: SizedBox(
-                          height: 100.h,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: docs.length.clamp(0, 5),
-                            clipBehavior: Clip.none,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            itemBuilder: (context, index) {
-                              final doc = docs[index];
-                              return _DashboardDocumentCard(doc: doc);
-                            },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Column(
+                            children: docs.take(3).map((doc) {
+                              return _DashboardDocumentTile(doc: doc);
+                            }).toList(),
                           ),
                         ),
                       );
@@ -415,6 +410,7 @@ class _DashboardSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = context.contextTheme.colorScheme;
     final tt = context.contextTheme.textTheme;
 
     return Padding(
@@ -435,11 +431,22 @@ class _DashboardSection extends StatelessWidget {
                   ),
                 ),
                 if (onViewAll != null)
-                  AppButton(
-                    label: 'View all',
-                    onPressed: onViewAll,
-                    variant: ButtonVariant.ghost,
-                    height: ButtonSize.small,
+                  InkWell(
+                    onTap: onViewAll,
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      child: Text(
+                        'View all',
+                        style: tt.labelLarge?.copyWith(
+                          color: cs.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
                   ),
               ],
             ),
@@ -680,87 +687,100 @@ class _DashboardEventCard extends StatelessWidget {
   }
 }
 
-class _DashboardDocumentCard extends StatelessWidget {
+class _DashboardDocumentTile extends StatelessWidget {
   final DocumentModel doc;
-  const _DashboardDocumentCard({required this.doc});
+  const _DashboardDocumentTile({required this.doc});
 
   @override
   Widget build(BuildContext context) {
     final cs = context.contextTheme.colorScheme;
     final tt = context.contextTheme.textTheme;
 
-    return InkWell(
-      onTap: () => Get.toNamed<void>(
-        AppRoutes.documentDetail,
-        arguments: doc,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.appColors.border.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: 170.w,
-        margin: const EdgeInsets.only(right: 12, bottom: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: context.appColors.border),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+      child: InkWell(
+        onTap: () => Get.toNamed<void>(
+          AppRoutes.documentDetail,
+          arguments: doc,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: cs.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    doc.fileIcon,
-                    color: cs.primary,
-                    size: 20,
-                  ),
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: cs.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const Spacer(),
-                if (doc.fileType != null)
-                  Text(
-                    doc.fileType!.toUpperCase(),
-                    style: tt.labelSmall?.copyWith(
-                      color: cs.onSurfaceVariant,
-                      fontWeight: FontWeight.bold,
+                child: Icon(
+                  doc.fileIcon,
+                  color: cs.primary,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      doc.title,
+                      style: tt.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13.sp,
+                        color: cs.onSurface,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              doc.title,
-              style: tt.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                fontSize: 13.sp,
-                height: 1.2,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            if (doc.fileSizeFormatted.isNotEmpty)
-              Text(
-                doc.fileSizeFormatted,
-                style: tt.bodySmall?.copyWith(
-                  color: cs.onSurfaceVariant,
-                  fontSize: 10.sp,
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        if (doc.fileType != null) ...[
+                          Text(
+                            doc.fileType!.toUpperCase(),
+                            style: tt.labelSmall?.copyWith(
+                              color: cs.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 9.sp,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        if (doc.fileSizeFormatted.isNotEmpty)
+                          Text(
+                            doc.fileSizeFormatted,
+                            style: tt.labelSmall?.copyWith(
+                              color: cs.onSurfaceVariant.withValues(alpha: 0.6),
+                              fontSize: 9.sp,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-          ],
+              Icon(
+                Icons.chevron_right_rounded,
+                color: cs.onSurfaceVariant.withValues(alpha: 0.4),
+                size: 20,
+              ),
+            ],
+          ),
         ),
       ),
     );

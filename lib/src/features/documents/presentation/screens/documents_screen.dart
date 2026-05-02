@@ -39,7 +39,8 @@ class DocumentsScreen extends GetView<DocumentsController> {
             },
             child: ListView.separated(
               padding: const EdgeInsets.all(16),
-              itemCount: controller.documents.length + (controller.isLoading.value ? 1 : 0),
+              itemCount: controller.documents.length +
+                  (controller.isLoading.value ? 1 : 0),
               separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (ctx, i) {
                 if (i >= controller.documents.length) {
@@ -113,8 +114,7 @@ class _DocumentTileState extends State<_DocumentTile> {
                 color: cs.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child:
-                  Icon(widget.doc.fileIcon, color: cs.primary, size: 24),
+              child: Icon(widget.doc.fileIcon, color: cs.primary, size: 24),
             ),
             title: Text(
               widget.doc.title,
@@ -142,8 +142,8 @@ class _DocumentTileState extends State<_DocumentTile> {
                   if (widget.doc.fileSizeBytes != null)
                     Text(
                       widget.doc.fileSizeFormatted,
-                      style: tt.labelSmall
-                          ?.copyWith(color: cs.onSurfaceVariant),
+                      style:
+                          tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   if (hasAttachments) ...[
                     const SizedBox(width: 8),
@@ -167,15 +167,8 @@ class _DocumentTileState extends State<_DocumentTile> {
                 ],
               ),
             ),
-            trailing: hasAttachments
-                ? AnimatedRotation(
-                    turns: _isExpanded ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 300),
-                    child: Icon(Icons.expand_more_rounded,
-                        color: cs.onSurfaceVariant),
-                  )
-                : Icon(Icons.arrow_forward_ios_rounded,
-                    size: 14, color: cs.outline),
+            trailing: Icon(Icons.arrow_forward_ios_rounded,
+                size: 14, color: cs.outline),
           ),
           if (_isExpanded && hasAttachments)
             Padding(

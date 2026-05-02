@@ -14,21 +14,7 @@ class OnboardingPage extends HookWidget {
     final pageController = usePageController();
     final currentIndex = useState(0);
 
-    final List<Map<String, dynamic>> onboardingData =
-        useMemoized(() => [
-              {
-                'title': 'onboarding.onboarding_title_1'.t(),
-                'subtitle': 'onboarding.onboarding_subtitle_1'.t(),
-              },
-              {
-                'title': 'onboarding.onboarding_title_2'.t(),
-                'subtitle': 'onboarding.onboarding_subtitle_2'.t(),
-              },
-              {
-                'title': 'onboarding.onboarding_title_3'.t(),
-                'subtitle': 'onboarding.onboarding_subtitle_3'.t(),
-              },
-            ]);
+    final List<OnboardingSlide> onboardingData = configCtrl.onboarding;
 
     void onGetStarted() {
       Get.offAllNamed<void>(AppRoutes.login);
@@ -51,15 +37,30 @@ class OnboardingPage extends HookWidget {
                 return Column(
                   children: [
                     if (logoUrl != null)
-                      AppCachedImage(
-                        imageUrl: logoUrl,
-                        width: 56.w,
-                        height: 56.w,
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: colorScheme.onSurface.withValues(alpha: 0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12.r),
+                          child: AppCachedImage(
+                            imageUrl: logoUrl,
+                            width: 64,
+                            height: 64,
+                          ),
+                        ),
                       )
                     else
                       Icon(
                         Icons.circle_rounded,
-                        size: 48.sp,
+                        size: 64.sp,
                         color: colorScheme.primary,
                       ),
                     SizedBox(height: AppSpacing.sm.h),
@@ -96,7 +97,7 @@ class OnboardingPage extends HookWidget {
                         ),
                         SizedBox(height: AppSpacing.xl.h),
                         Text(
-                          onboardingData[index]['title'] as String,
+                          onboardingData[index].title,
                           textAlign: TextAlign.center,
                           style: textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.w700,
@@ -107,7 +108,7 @@ class OnboardingPage extends HookWidget {
                         ),
                         SizedBox(height: AppSpacing.md.h),
                         Text(
-                          onboardingData[index]['subtitle'] as String,
+                          onboardingData[index].subtitle,
                           textAlign: TextAlign.center,
                           style: textTheme.bodyMedium?.copyWith(
                             color: colorScheme.onSurfaceVariant,

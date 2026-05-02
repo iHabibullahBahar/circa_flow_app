@@ -64,9 +64,9 @@ class AppCachedImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Adjust sizing for screenutil if enabled
+    // Standardize scaling to preserve aspect ratio (using width-based factor)
     final double? adjustedWidth = width?.w;
-    final double? adjustedHeight = height?.h;
+    final double? adjustedHeight = height?.w;
 
     Widget imageContent = CachedNetworkImage(
       imageUrl: imageUrl,

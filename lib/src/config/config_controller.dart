@@ -29,6 +29,7 @@ class ConfigController extends GetxController {
   int get minBuildNumber => config.value.version.minBuildNumber;
   String? get appStoreUrl => config.value.organization.appStoreUrl;
   String? get playStoreUrl => config.value.organization.playStoreUrl;
+  List<OnboardingSlide> get onboarding => config.value.onboarding;
 
   bool isModuleEnabled(String key) => config.value.modules.isEnabled(key);
 

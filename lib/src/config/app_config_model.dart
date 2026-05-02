@@ -168,6 +168,23 @@ class BannerConfig {
   }
 }
 
+class OnboardingSlide {
+  final String title;
+  final String subtitle;
+
+  const OnboardingSlide({
+    required this.title,
+    required this.subtitle,
+  });
+
+  factory OnboardingSlide.fromJson(Map<String, dynamic> json) {
+    return OnboardingSlide(
+      title: (json['title'] as String?) ?? '',
+      subtitle: (json['subtitle'] as String?) ?? '',
+    );
+  }
+}
+
 /// The root config model returned by POST /api/v1/config.
 class AppConfigModel {
   final OrganizationConfig organization;
@@ -177,6 +194,7 @@ class AppConfigModel {
   final List<CustomLink> customLinks;
   final List<CustomLink> customButtons;
   final List<BannerConfig> banners;
+  final List<OnboardingSlide> onboarding;
   final bool allowRegistration;
   final bool allowGuestAccess;
 
@@ -188,6 +206,7 @@ class AppConfigModel {
     required this.customLinks,
     required this.customButtons,
     required this.banners,
+    required this.onboarding,
     this.allowRegistration = false,
     this.allowGuestAccess = false,
   });
@@ -225,6 +244,11 @@ class AppConfigModel {
               .map((e) => BannerConfig.fromJson(e))
               .toList() ??
           [],
+      onboarding: (data['onboarding'] as List?)
+              ?.whereType<Map<String, dynamic>>()
+              .map((e) => OnboardingSlide.fromJson(e))
+              .toList() ??
+          const [],
       allowRegistration: data['allow_registration'] == true,
       allowGuestAccess: data['allow_guest_access'] == true,
     );
@@ -239,6 +263,7 @@ class AppConfigModel {
         customLinks: const [],
         customButtons: const [],
         banners: const [],
+        onboarding: const [],
         allowRegistration: false,
         allowGuestAccess: false,
       );
@@ -285,6 +310,9 @@ class AppConfigModel {
               }).toList(),
           'allow_registration': allowRegistration,
           'allow_guest_access': allowGuestAccess,
+          'onboarding': onboarding
+              .map((s) => {'title': s.title, 'subtitle': s.subtitle})
+              .toList(),
         }
       };
 }

@@ -12,6 +12,8 @@ import 'package:circa_flow_main/src/features/update/presentation/screens/force_u
 import 'package:circa_flow_main/src/features/notifications/presentation/screens/notification_screen.dart';
 import 'package:circa_flow_main/src/features/posts/presentation/screens/post_detail_screen.dart';
 import 'package:circa_flow_main/src/features/posts/data/models/post_model.dart';
+import 'package:circa_flow_main/src/features/documents/presentation/screens/document_detail_screen.dart';
+import 'package:circa_flow_main/src/features/documents/data/models/document_model.dart';
 import 'package:circa_flow_main/src/shared/screens/webview_screen.dart';
 
 class AppRouter {
@@ -61,6 +63,13 @@ class AppRouter {
           page: () {
             final post = Get.arguments as PostModel;
             return PostDetailScreen(post: post);
+          },
+        ),
+        GetPage(
+          name: AppRoutes.documentDetail,
+          page: () {
+            final doc = Get.arguments as DocumentModel;
+            return DocumentDetailScreen(doc: doc);
           },
         ),
       ];

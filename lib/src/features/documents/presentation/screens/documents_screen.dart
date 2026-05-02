@@ -63,94 +63,184 @@ class DocumentsScreen extends GetView<DocumentsController> {
 
 // ── Document Tile ─────────────────────────────────────────────────────────────
 
-class _DocumentTile extends StatelessWidget {
+class _DocumentTile extends StatefulWidget {
   final DocumentModel doc;
   const _DocumentTile({required this.doc});
+
+  @override
+  State<_DocumentTile> createState() => _DocumentTileState();
+}
+
+class _DocumentTileState extends State<_DocumentTile> {
+  bool _isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.contextTheme.colorScheme;
+    final tt = context.contextTheme.textTheme;
+    final hasAttachments = widget.doc.attachments.isNotEmpty;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.appColors.border),
+        boxShadow: _isExpanded
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                )
+              ]
+            : [],
+      ),
+      child: Column(
+        children: [
+          ListTile(
+            onTap: () => Get.toNamed<void>(
+              AppRoutes.documentDetail,
+              arguments: widget.doc,
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            leading: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: cs.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child:
+                  Icon(widget.doc.fileIcon, color: cs.primary, size: 24),
+            ),
+            title: Text(
+              widget.doc.title,
+              style: tt.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                fontSize: 14.sp,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Row(
+                children: [
+                  if (widget.doc.fileType != null) ...[
+                    Text(
+                      widget.doc.fileType!.toUpperCase(),
+                      style: tt.labelSmall?.copyWith(
+                        color: cs.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  if (widget.doc.fileSizeBytes != null)
+                    Text(
+                      widget.doc.fileSizeFormatted,
+                      style: tt.labelSmall
+                          ?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                  if (hasAttachments) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: cs.secondaryContainer,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        '${widget.doc.attachments.length} FILES',
+                        style: tt.labelSmall?.copyWith(
+                          fontSize: 8.sp,
+                          color: cs.onSecondaryContainer,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            trailing: hasAttachments
+                ? AnimatedRotation(
+                    turns: _isExpanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 300),
+                    child: Icon(Icons.expand_more_rounded,
+                        color: cs.onSurfaceVariant),
+                  )
+                : Icon(Icons.arrow_forward_ios_rounded,
+                    size: 14, color: cs.outline),
+          ),
+          if (_isExpanded && hasAttachments)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                children: [
+                  const Divider(height: 1),
+                  const SizedBox(height: 8),
+                  ...widget.doc.attachments.map((file) => _AttachmentItem(
+                        file: file,
+                        onTap: () => _openFile(file.url, file.name),
+                      )),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _openFile(String url, String title) {
+    Get.toNamed<void>(
+      AppRoutes.webview,
+      arguments: WebViewArgs(
+        url: url,
+        title: title,
+      ),
+    );
+  }
+}
+
+class _AttachmentItem extends StatelessWidget {
+  final DocumentAttachment file;
+  final VoidCallback onTap;
+
+  const _AttachmentItem({required this.file, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final cs = context.contextTheme.colorScheme;
     final tt = context.contextTheme.textTheme;
 
-    return Card(
-      elevation: 0,
-      color: cs.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: context.appColors.border),
-      ),
-      child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: context.appColors.placeholder,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(doc.fileIcon, color: cs.onSurfaceVariant, size: 22),
-        ),
-        title: Text(
-          doc.title,
-          style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        child: Row(
           children: [
-            if (doc.description != null)
-              Text(
-                doc.description!,
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            Icon(file.icon, size: 18, color: cs.onSurfaceVariant),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                file.name,
+                style: tt.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: cs.onSurface,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-            Row(
-              children: [
-                if (doc.fileType != null) ...[
-                  Text(
-                    doc.fileType!.toUpperCase(),
-                    style: tt.labelSmall?.copyWith(
-                      color: cs.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                ],
-                if (doc.fileSizeBytes != null)
-                  Text(
-                    doc.fileSizeFormatted,
-                    style:
-                        tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                const SizedBox(width: 8),
-                Icon(Icons.download_outlined,
-                    size: 12, color: cs.onSurfaceVariant),
-                const SizedBox(width: 2),
-                Text(
-                  '${doc.downloadsCount}',
-                  style:
-                      tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
-                ),
-              ],
             ),
+            Icon(Icons.download_rounded, size: 16, color: cs.primary),
           ],
         ),
-        trailing: doc.downloadUrl != null
-            ? IconButton(
-                icon: Icon(Icons.open_in_new_rounded,
-                    color: cs.primary, size: 20),
-                onPressed: () => Get.toNamed<void>(
-                  AppRoutes.webview,
-                  arguments: WebViewArgs(
-                    url: doc.downloadUrl!,
-                    title: doc.title,
-                  ),
-                ),
-              )
-            : null,
       ),
     );
   }

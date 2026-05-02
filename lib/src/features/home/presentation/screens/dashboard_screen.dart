@@ -8,6 +8,8 @@ import 'package:circa_flow_main/src/features/events/data/models/event_model.dart
 import 'package:circa_flow_main/src/shared/widgets/app_cached_image.dart';
 
 import 'package:circa_flow_main/src/features/notifications/presentation/providers/notification_controller.dart';
+import 'package:circa_flow_main/src/features/documents/presentation/providers/documents_controller.dart';
+import 'package:circa_flow_main/src/features/documents/data/models/document_model.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -123,10 +125,11 @@ class DashboardScreen extends StatelessWidget {
                         onViewAll: () => Get.find<HomeShellController>()
                             .changeTabByLabel('Posts'),
                         child: SizedBox(
-                          height: 180.h,
+                          height: 175.h,
                           child: ListView.builder(
                             scrollDirection: Axis.horizontal,
                             itemCount: posts.length,
+                            clipBehavior: Clip.none, // Allow shadow bleed
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             itemBuilder: (context, index) {
                               return _DashboardPostCard(post: posts[index]);
@@ -154,6 +157,7 @@ class DashboardScreen extends StatelessWidget {
                           child: ListView.builder(
                             scrollDirection: Axis.horizontal,
                             itemCount: events.length,
+                            clipBehavior: Clip.none, // Allow shadow bleed
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             itemBuilder: (context, index) {
                               return _DashboardEventCard(event: events[index]);
@@ -164,54 +168,29 @@ class DashboardScreen extends StatelessWidget {
                     }),
                   ),
 
-                  // --- Resources / Quick Actions ---
+                  // --- Recent Documents ---
                   SliverToBoxAdapter(
                     child: Obx(() {
-                      final isEnabled =
-                          configCtrl.config.value.modules.documents;
-                      if (!isEnabled) return const SizedBox.shrink();
+                      final docCtrl = Get.put(DocumentsController());
+                      final docs = docCtrl.documents;
+                      final isEnabled = configCtrl.config.value.modules.documents;
+                      if (!isEnabled || docs.isEmpty) return const SizedBox.shrink();
 
                       return _DashboardSection(
-                        title: 'Resources',
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: cs.surface,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: context.appColors.border),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: context.appColors.placeholder,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(Icons.description_rounded,
-                                    color: cs.onSurfaceVariant),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Member Handbook',
-                                      style: tt.titleSmall?.copyWith(
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                    Text(
-                                      'Tap to view or download',
-                                      style: tt.bodySmall?.copyWith(
-                                          color: cs.onSurfaceVariant),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Icon(Icons.chevron_right_rounded,
-                                  color: cs.onSurfaceVariant),
-                            ],
+                        title: 'Recent Documents',
+                        onViewAll: () => Get.find<HomeShellController>()
+                            .changeTabByLabel('Documents'),
+                        child: SizedBox(
+                          height: 100.h,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: docs.length.clamp(0, 5),
+                            clipBehavior: Clip.none,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            itemBuilder: (context, index) {
+                              final doc = docs[index];
+                              return _DashboardDocumentCard(doc: doc);
+                            },
                           ),
                         ),
                       );
@@ -234,7 +213,8 @@ class DashboardScreen extends StatelessWidget {
         width: 48,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3), width: 1),
+          border: Border.all(
+              color: cs.outlineVariant.withValues(alpha: 0.3), width: 1),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
@@ -269,24 +249,32 @@ class _DashboardPostCard extends StatelessWidget {
 
     return InkWell(
       onTap: () => Get.toNamed<void>(AppRoutes.postDetail, arguments: post),
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         width: 240,
         margin: const EdgeInsets.only(right: 16, bottom: 8, top: 2),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(16),
           border:
               Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1),
           boxShadow: [
+            // Deep Soft Ambient Shadow
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 12,
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 30,
+              offset: const Offset(0, 12),
+              spreadRadius: -4,
+            ),
+            // Secondary Definition Shadow
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 15,
               offset: const Offset(0, 4),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(16),
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -482,12 +470,19 @@ class _DashboardEventCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: cs.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: context.appColors.border),
           boxShadow: [
+            // Deep Soft Ambient Shadow
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 25,
+              offset: const Offset(0, 10),
+              spreadRadius: -5,
+            ),
+            // Light Definition Shadow
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 10,
-              offset: const Offset(0, 4),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -685,6 +680,93 @@ class _DashboardEventCard extends StatelessWidget {
   }
 }
 
+class _DashboardDocumentCard extends StatelessWidget {
+  final DocumentModel doc;
+  const _DashboardDocumentCard({required this.doc});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.contextTheme.colorScheme;
+    final tt = context.contextTheme.textTheme;
+
+    return InkWell(
+      onTap: () => Get.toNamed<void>(
+        AppRoutes.documentDetail,
+        arguments: doc,
+      ),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: 170.w,
+        margin: const EdgeInsets.only(right: 12, bottom: 8),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: context.appColors.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: cs.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    doc.fileIcon,
+                    color: cs.primary,
+                    size: 20,
+                  ),
+                ),
+                const Spacer(),
+                if (doc.fileType != null)
+                  Text(
+                    doc.fileType!.toUpperCase(),
+                    style: tt.labelSmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              doc.title,
+              style: tt.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                fontSize: 13.sp,
+                height: 1.2,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            if (doc.fileSizeFormatted.isNotEmpty)
+              Text(
+                doc.fileSizeFormatted,
+                style: tt.bodySmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  fontSize: 10.sp,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _DashboardBanners extends StatefulWidget {
   final List<BannerConfig> banners;
   const _DashboardBanners({required this.banners});
@@ -716,27 +798,38 @@ class _DashboardBannersState extends State<_DashboardBanners> {
     return Column(
       children: [
         SizedBox(
-          height: 190.h,
+          height: 180.h, // Increased to allow shadow breathing room
           child: PageView.builder(
             controller: _controller,
             itemCount: widget.banners.length,
+            clipBehavior: Clip.none, // Essential to prevent shadow clipping
             onPageChanged: (index) => setState(() => _currentPage = index),
             itemBuilder: (context, index) {
               final banner = widget.banners[index];
               return AnimatedScale(
-                scale: _currentPage == index ? 1.0 : 0.95,
-                duration: const Duration(milliseconds: 300),
+                scale: _currentPage == index ? 1.0 : 0.92,
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeOutQuart,
                 child: GestureDetector(
                   onTap: () => _handleAction(banner),
                   child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 12),
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
+                        // Deep Soft Ambient Shadow
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
-                          blurRadius: 15,
-                          offset: const Offset(0, 8),
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 40,
+                          offset: const Offset(0, 15),
+                          spreadRadius: -5,
+                        ),
+                        // Secondary Soft Glow
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 20,
+                          offset: const Offset(0, 5),
                         ),
                       ],
                     ),
@@ -757,7 +850,7 @@ class _DashboardBannersState extends State<_DashboardBanners> {
                                 end: Alignment.bottomCenter,
                                 colors: [
                                   Colors.black.withValues(alpha: 0.0),
-                                  Colors.black.withValues(alpha: 0.4),
+                                  Colors.black.withValues(alpha: 0.35),
                                 ],
                               ),
                             ),

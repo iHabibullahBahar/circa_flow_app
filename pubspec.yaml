@@ -82,6 +82,7 @@ dependencies:
   upgrader: ^13.1.0
   pub_semver: ^2.2.0
   onesignal_flutter: ^5.5.2
+  timeago: ^3.7.0
 
 dev_dependencies:
   flutter_test:

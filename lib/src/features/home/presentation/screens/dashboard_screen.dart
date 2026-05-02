@@ -7,6 +7,8 @@ import 'package:circa_flow_main/src/features/posts/data/models/post_model.dart';
 import 'package:circa_flow_main/src/features/events/data/models/event_model.dart';
 import 'package:circa_flow_main/src/shared/widgets/app_cached_image.dart';
 
+import 'package:circa_flow_main/src/features/notifications/presentation/providers/notification_controller.dart';
+
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
@@ -14,6 +16,7 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final configCtrl = Get.find<ConfigController>();
     final dashCtrl = Get.put(DashboardController());
+    final notificationCtrl = Get.put(NotificationController());
     final cs = context.contextTheme.colorScheme;
     final tt = context.contextTheme.textTheme;
 
@@ -23,7 +26,10 @@ class DashboardScreen extends StatelessWidget {
         child: Obx(() => AppShimmer(
           enabled: dashCtrl.isLoading.value,
           child: RefreshIndicator(
-            onRefresh: dashCtrl.refreshData,
+            onRefresh: () async {
+              await dashCtrl.refreshData();
+              await notificationCtrl.refreshNotifications();
+            },
             child: CustomScrollView(
               slivers: [
               // --- Premium Header ---
@@ -61,11 +67,15 @@ class DashboardScreen extends StatelessWidget {
                         ),
                       ),
                       IconButton(
-                        onPressed: () {},
-                        icon: Badge(
-                          label: const Text('2'),
-                          child: Icon(Icons.notifications_none_rounded, color: cs.onSurface),
-                        ),
+                        onPressed: () => Get.toNamed<void>(AppRoutes.notifications),
+                        icon: Obx(() {
+                          final count = notificationCtrl.unreadCount.value;
+                          return Badge(
+                            label: Text(count.toString()),
+                            isLabelVisible: count > 0,
+                            child: Icon(Icons.notifications_none_rounded, color: cs.onSurface),
+                          );
+                        }),
                       ),
                     ],
                   ),

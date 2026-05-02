@@ -14,6 +14,7 @@ const String zMeEndpoint = '/me'; // POST /api/v1/me
 
 // Modules
 const String zPostsEndpoint = '/posts';
+const String zPostsReactEndpoint = '/posts/react';
 const String zEventsEndpoint = '/events';
 const String zMyEventsEndpoint = '/events/my';
 const String zEventRegisterEndpoint = '/events/register';

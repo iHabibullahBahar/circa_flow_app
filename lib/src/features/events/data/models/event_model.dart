@@ -22,6 +22,7 @@ class EventModel {
   final bool isRegistered;
   final int? spotsLeft;
   final List<PostLink> links;
+  final String redirectionTarget;
 
   const EventModel({
     required this.id,
@@ -43,6 +44,7 @@ class EventModel {
     this.isRegistered = false,
     this.spotsLeft,
     this.links = const [],
+    this.redirectionTarget = 'app',
   });
 
   factory EventModel.fromJson(Map<String, dynamic> j) => EventModel(
@@ -69,6 +71,7 @@ class EventModel {
                 .map(PostLink.fromJson)
                 .toList() ??
             [],
+        redirectionTarget: (j['redirection_target'] as String?) ?? 'app',
       );
 
   String get formattedDate {

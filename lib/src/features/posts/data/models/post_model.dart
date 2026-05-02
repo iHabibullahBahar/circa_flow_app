@@ -7,6 +7,8 @@ class PostModel {
   final String? coverImage;
   final List<String> images;
   final List<PostLink> links;
+  final int reactionCount;
+  final bool isLiked;
   final String? publishedAt;
 
   const PostModel({
@@ -17,6 +19,8 @@ class PostModel {
     this.coverImage,
     this.images = const [],
     this.links = const [],
+    this.reactionCount = 0,
+    this.isLiked = false,
     this.publishedAt,
   });
 
@@ -35,8 +39,36 @@ class PostModel {
                 .map(PostLink.fromJson)
                 .toList() ??
             [],
+        reactionCount: (j['reaction_count'] as num?)?.toInt() ?? 0,
+        isLiked: (j['is_liked'] as bool?) ?? false,
         publishedAt: j['published_at'] as String?,
       );
+
+  PostModel copyWith({
+    int? id,
+    String? title,
+    String? slug,
+    String? body,
+    String? coverImage,
+    List<String>? images,
+    List<PostLink>? links,
+    int? reactionCount,
+    bool? isLiked,
+    String? publishedAt,
+  }) {
+    return PostModel(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      slug: slug ?? this.slug,
+      body: body ?? this.body,
+      coverImage: coverImage ?? this.coverImage,
+      images: images ?? this.images,
+      links: links ?? this.links,
+      reactionCount: reactionCount ?? this.reactionCount,
+      isLiked: isLiked ?? this.isLiked,
+      publishedAt: publishedAt ?? this.publishedAt,
+    );
+  }
 
   String get formattedDate {
     if (publishedAt == null) return '';
@@ -70,11 +102,17 @@ class PostModel {
 class PostLink {
   final String url;
   final String label;
+  final String target; // 'app' or 'browser'
 
-  const PostLink({required this.url, required this.label});
+  const PostLink({
+    required this.url,
+    required this.label,
+    this.target = 'app',
+  });
 
   factory PostLink.fromJson(Map<String, dynamic> j) => PostLink(
         url: (j['url'] as String?) ?? '',
         label: (j['label'] as String?) ?? 'Link',
+        target: (j['target'] as String?) ?? 'app',
       );
 }

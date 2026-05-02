@@ -18,6 +18,13 @@ class PostsRepository {
     return result.map(_mapResult);
   }
 
+  FutureEither<Map<String, dynamic>> toggleReaction(int postId) async {
+    return await _api.post<Map<String, dynamic>>(
+      zPostsReactEndpoint,
+      data: {'post_id': postId},
+    );
+  }
+
   PaginatedResult<PostModel> _mapResult(Map<String, dynamic>? res) {
     if (res == null) {
       return const PaginatedResult(

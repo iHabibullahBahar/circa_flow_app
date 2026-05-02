@@ -59,4 +59,33 @@ class PostsController extends GetxController {
       },
     );
   }
+
+  Future<void> toggleReaction(PostModel post) async {
+    final index = posts.indexOf(post);
+    if (index == -1) return;
+
+    // Optimistic UI update
+    final wasLiked = post.isLiked;
+    final updatedPost = post.copyWith(
+      isLiked: !wasLiked,
+      reactionCount: wasLiked ? post.reactionCount - 1 : post.reactionCount + 1,
+    );
+    posts[index] = updatedPost;
+
+    final result = await _repo.toggleReaction(post.id);
+    result.fold(
+      (_) {
+        // Rollback on error
+        posts[index] = post;
+      },
+      (data) {
+        // Sync with server response
+        posts[index] = updatedPost.copyWith(
+          isLiked: (data['is_liked'] as bool?) ?? !wasLiked,
+          reactionCount:
+              (data['reaction_count'] as num?)?.toInt() ?? updatedPost.reactionCount,
+        );
+      },
+    );
+  }
 }

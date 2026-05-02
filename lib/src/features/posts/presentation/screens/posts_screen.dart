@@ -67,6 +67,7 @@ class _PostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.find<PostsController>();
     return InkWell(
       onTap: () => Get.toNamed<void>(AppRoutes.postDetail, arguments: post),
       borderRadius: BorderRadius.circular(24),
@@ -135,9 +136,12 @@ class _PostCard extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               child: Row(
                 children: [
-                  _ReactionItem(icon: Icons.favorite_border, count: '1'),
-                  const Gap(20),
-                  _ReactionItem(icon: Icons.chat_bubble_outline, count: '0'),
+                  _ReactionItem(
+                    icon: post.isLiked ? Icons.favorite : Icons.favorite_border,
+                    count: post.reactionCount.toString(),
+                    isActive: post.isLiked,
+                    onTap: () => controller.toggleReaction(post),
+                  ),
                   const Spacer(),
                   Text(
                     post.formattedDate,
@@ -160,26 +164,47 @@ class _PostCard extends StatelessWidget {
 class _ReactionItem extends StatelessWidget {
   final IconData icon;
   final String count;
-  const _ReactionItem({required this.icon, required this.count});
+  final bool isActive;
+  final VoidCallback? onTap;
+
+  const _ReactionItem({
+    required this.icon,
+    required this.count,
+    this.isActive = false,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: Colors.black26),
-        const Gap(6),
-        Text(
-          count,
-          style: TextStyle(
-            fontSize: 14.sp,
-            color: Colors.black26,
-            fontWeight: FontWeight.w600,
-          ),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 20,
+              color: isActive ? Colors.redAccent : Colors.black26,
+            ),
+            const Gap(8),
+            Text(
+              count,
+              style: TextStyle(
+                fontSize: 13.sp,
+                color: isActive ? Colors.redAccent : Colors.black45,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
+
 
 // ── Empty & Error states ─────────────────────────────────────────────────────
 

@@ -181,9 +181,13 @@ class PostDetailScreen extends StatelessWidget {
   }
 
   void _handleLink(PostLink link) {
-    Get.toNamed<void>(
-      AppRoutes.webview,
-      arguments: WebViewArgs(url: link.url, title: link.label),
-    );
+    if (link.target == 'browser') {
+      launchUrl(Uri.parse(link.url), mode: LaunchMode.externalApplication);
+    } else {
+      Get.toNamed<void>(
+        AppRoutes.webview,
+        arguments: WebViewArgs(url: link.url, title: link.label),
+      );
+    }
   }
 }

@@ -1,5 +1,6 @@
 import '../../../../imports/imports.dart';
 import '../../data/models/post_model.dart';
+import '../providers/posts_controller.dart';
 
 class PostDetailScreen extends StatelessWidget {
   final PostModel post;
@@ -47,18 +48,56 @@ class PostDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // --- Header Row ---
-                  Row(
-                    children: [
-                      Text(
-                        post.formattedDate,
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: Colors.black38,
-                          fontWeight: FontWeight.w500,
+                  Obx(() {
+                    final postCtrl = Get.find<PostsController>();
+                    // Find the post in the controller to ensure reactivity
+                    final currentPost = postCtrl.posts.firstWhere((p) => p.id == post.id, orElse: () => post);
+                    
+                    return Row(
+                      children: [
+                        Text(
+                          currentPost.formattedDate,
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: Colors.black38,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                        const Spacer(),
+                        InkWell(
+                          onTap: () => postCtrl.toggleReaction(currentPost),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: currentPost.isLiked 
+                                ? Colors.red.withValues(alpha: 0.1) 
+                                : Colors.black.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  currentPost.isLiked ? Icons.favorite_rounded : Icons.favorite_outline_rounded,
+                                  color: currentPost.isLiked ? Colors.red : Colors.black45,
+                                  size: 18,
+                                ),
+                                const Gap(8),
+                                Text(
+                                  '${currentPost.reactionCount}',
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w800,
+                                    color: currentPost.isLiked ? Colors.red : Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }),
                   const Gap(20),
 
                   // --- Title ---

@@ -23,6 +23,8 @@ class DashboardScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: cs.surface,
       body: SafeArea(
+        left: false,
+        right: false,
         child: Obx(() => AppShimmer(
             enabled: dashCtrl.isLoading.value,
             child: RefreshIndicator(
@@ -35,49 +37,64 @@ class DashboardScreen extends StatelessWidget {
                   // --- Premium Header ---
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildLogo(configCtrl),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  configCtrl.orgName.toUpperCase(),
-                                  style: tt.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 1.2,
-                                    fontSize: 16.sp,
-                                    color: cs.primary,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                          Row(
+                            children: [
+                              _buildLogo(configCtrl),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      configCtrl.orgName.toUpperCase(),
+                                      style: tt.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 14.sp,
+                                        color: cs.primary,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      'Hello, Welcome back!',
+                                      style: tt.labelMedium?.copyWith(
+                                        color:
+                                            cs.onSurface.withValues(alpha: 0.5),
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                Text(
-                                  'OFFICIAL PLATFORM',
-                                  style: tt.labelSmall?.copyWith(
-                                    color: cs.onSurfaceVariant,
-                                    letterSpacing: 2.0,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                              ),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: cs.surfaceContainerHighest
+                                      .withValues(alpha: 0.3),
+                                  shape: BoxShape.circle,
                                 ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: () =>
-                                Get.toNamed<void>(AppRoutes.notifications),
-                            icon: Obx(() {
-                              final count = notificationCtrl.unreadCount.value;
-                              return Badge(
-                                label: Text(count.toString()),
-                                isLabelVisible: count > 0,
-                                child: Icon(Icons.notifications_none_rounded,
-                                    color: cs.onSurface),
-                              );
-                            }),
+                                child: IconButton(
+                                  onPressed: () => Get.toNamed<void>(
+                                      AppRoutes.notifications),
+                                  icon: Obx(() {
+                                    final count =
+                                        notificationCtrl.unreadCount.value;
+                                    return Badge(
+                                      label: Text(count.toString()),
+                                      isLabelVisible: count > 0,
+                                      backgroundColor: cs.primary,
+                                      child: Icon(
+                                          Icons.notifications_none_rounded,
+                                          color: cs.onSurface,
+                                          size: 22),
+                                    );
+                                  }),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -106,11 +123,11 @@ class DashboardScreen extends StatelessWidget {
                         onViewAll: () => Get.find<HomeShellController>()
                             .changeTabByLabel('Posts'),
                         child: SizedBox(
-                          height: 240.h,
+                          height: 180.h,
                           child: ListView.builder(
                             scrollDirection: Axis.horizontal,
                             itemCount: posts.length,
-                            padding: const EdgeInsets.symmetric(horizontal: 0),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
                             itemBuilder: (context, index) {
                               return _DashboardPostCard(post: posts[index]);
                             },
@@ -137,7 +154,7 @@ class DashboardScreen extends StatelessWidget {
                           child: ListView.builder(
                             scrollDirection: Axis.horizontal,
                             itemCount: events.length,
-                            padding: const EdgeInsets.symmetric(horizontal: 0),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
                             itemBuilder: (context, index) {
                               return _DashboardEventCard(event: events[index]);
                             },
@@ -212,11 +229,22 @@ class DashboardScreen extends StatelessWidget {
   Widget _buildLogo(ConfigController configCtrl) {
     final cs = Get.context!.contextTheme.colorScheme;
     if (configCtrl.logoUrl != null) {
-      return AppCachedImage(
-        imageUrl: configCtrl.logoUrl!,
+      return Container(
         height: 48,
         width: 48,
-        fit: BoxFit.contain,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3), width: 1),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: AppCachedImage(
+            imageUrl: configCtrl.logoUrl!,
+            height: 48,
+            width: 48,
+            fit: BoxFit.cover,
+          ),
+        ),
       );
     }
     return Container(
@@ -226,7 +254,7 @@ class DashboardScreen extends StatelessWidget {
         color: Get.context!.appColors.placeholder,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Icon(Icons.business_rounded, color: cs.onSurfaceVariant),
+      child: Icon(Icons.business_rounded, color: cs.onSurfaceVariant, size: 24),
     );
   }
 }
@@ -238,21 +266,22 @@ class _DashboardPostCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = context.contextTheme.colorScheme;
-    final tt = context.contextTheme.textTheme;
 
     return InkWell(
       onTap: () => Get.toNamed<void>(AppRoutes.postDetail, arguments: post),
       borderRadius: BorderRadius.circular(24),
       child: Container(
-        width: 280,
-        margin: const EdgeInsets.only(right: 16, bottom: 8),
+        width: 240,
+        margin: const EdgeInsets.only(right: 16, bottom: 8, top: 2),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
+          border:
+              Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -261,7 +290,7 @@ class _DashboardPostCard extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // --- Full Bleed Background ---
+              // --- Image Background with Ken Burns-ish effect (Static) ---
               if (post.coverImage != null)
                 AppCachedImage(
                   imageUrl: post.coverImage!,
@@ -273,129 +302,108 @@ class _DashboardPostCard extends StatelessWidget {
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [cs.primaryContainer, cs.surfaceContainerHighest],
+                      colors: [
+                        cs.primary.withValues(alpha: 0.8),
+                        cs.secondary.withValues(alpha: 0.6),
+                      ],
                     ),
                   ),
-                  child: Center(
-                    child: Icon(Icons.article_rounded, 
-                      size: 48, 
-                      color: cs.onSurfaceVariant.withValues(alpha: 0.2)),
-                  ),
+                  child: Icon(Icons.auto_awesome_motion_rounded,
+                      size: 50, color: Colors.white.withValues(alpha: 0.15)),
                 ),
 
-              // --- Gradient Mask ---
+              // --- Refined Gradient Overlay ---
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.transparent,
-                      Colors.black.withValues(alpha: 0.1),
-                      Colors.black.withValues(alpha: 0.8),
+                      Colors.black.withValues(alpha: 0.0),
+                      Colors.black.withValues(alpha: 0.2),
+                      Colors.black.withValues(alpha: 0.9),
                     ],
-                    stops: const [0.4, 0.6, 1.0],
+                    stops: const [0.3, 0.5, 1.0],
                   ),
                 ),
               ),
 
-              // --- Content Overlay ---
+              // --- Content ---
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: cs.primary.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        'NEWS',
-                        style: TextStyle(
-                          color: cs.onPrimary,
-                          fontSize: 8.sp,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.0,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
                     Text(
                       post.title,
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 16.sp,
+                        fontSize: 15.sp,
                         fontWeight: FontWeight.w900,
-                        height: 1.2,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black.withValues(alpha: 0.3),
-                            blurRadius: 10,
-                          ),
-                        ],
+                        height: 1.15,
+                        letterSpacing: -0.2,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     Row(
                       children: [
-                        Icon(Icons.schedule_rounded, 
-                          size: 12, color: Colors.white.withValues(alpha: 0.6)),
-                        const SizedBox(width: 4),
+                        Container(
+                          width: 20,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.person_rounded,
+                              size: 12, color: Colors.white70),
+                        ),
+                        const SizedBox(width: 6),
                         Text(
                           post.formattedDate,
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.6),
-                            fontSize: 10.sp,
+                            color: Colors.white.withValues(alpha: 0.5),
+                            fontSize: 9.sp,
                             fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const Spacer(),
+                        // Dynamic Like Interaction
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                post.isLiked
+                                    ? Icons.favorite_rounded
+                                    : Icons.favorite_border_rounded,
+                                size: 12,
+                                color: post.isLiked
+                                    ? Colors.redAccent
+                                    : Colors.white70,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${post.reactionCount}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                   ],
-                ),
-              ),
-
-              // --- Floating Reaction Bubble ---
-              Positioned(
-                top: 16,
-                right: 16,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        post.isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                        size: 14,
-                        color: post.isLiked ? Colors.red : Colors.black54,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${post.reactionCount}',
-                        style: TextStyle(
-                          color: Colors.black87,
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
             ],
@@ -422,28 +430,31 @@ class _DashboardSection extends StatelessWidget {
     final tt = context.contextTheme.textTheme;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+      padding: const EdgeInsets.only(top: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: tt.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 18.sp,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title,
+                  style: tt.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 18.sp,
+                  ),
                 ),
-              ),
-              if (onViewAll != null)
-                AppButton(
-                  label: 'View all',
-                  onPressed: onViewAll,
-                  variant: ButtonVariant.ghost,
-                  height: ButtonSize.small,
-                ),
-            ],
+                if (onViewAll != null)
+                  AppButton(
+                    label: 'View all',
+                    onPressed: onViewAll,
+                    variant: ButtonVariant.ghost,
+                    height: ButtonSize.small,
+                  ),
+              ],
+            ),
           ),
           const SizedBox(height: 12),
           child,
@@ -705,7 +716,7 @@ class _DashboardBannersState extends State<_DashboardBanners> {
     return Column(
       children: [
         SizedBox(
-          height: 180.h,
+          height: 190.h,
           child: PageView.builder(
             controller: _controller,
             itemCount: widget.banners.length,
@@ -718,19 +729,38 @@ class _DashboardBannersState extends State<_DashboardBanners> {
                 child: GestureDetector(
                   onTap: () => _handleAction(banner),
                   child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    margin: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: const [],
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(24),
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
                           AppCachedImage(
                             imageUrl: banner.imageUrl,
                             fit: BoxFit.cover,
+                          ),
+                          // Subtle Gradient Overlay
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.black.withValues(alpha: 0.0),
+                                  Colors.black.withValues(alpha: 0.4),
+                                ],
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -743,15 +773,18 @@ class _DashboardBannersState extends State<_DashboardBanners> {
         ),
         if (widget.banners.length > 1)
           Padding(
-            padding: const EdgeInsets.only(top: 8.0),
+            padding: const EdgeInsets.only(top: 4.0),
             child: AnimatedSmoothIndicator(
               activeIndex: _currentPage,
               count: widget.banners.length,
               effect: ExpandingDotsEffect(
-                dotHeight: 6,
-                dotWidth: 6,
+                dotHeight: 4,
+                dotWidth: 8,
+                spacing: 6,
+                expansionFactor: 3,
                 activeDotColor: context.contextTheme.colorScheme.primary,
-                dotColor: context.contextTheme.colorScheme.outlineVariant,
+                dotColor: context.contextTheme.colorScheme.outlineVariant
+                    .withValues(alpha: 0.5),
               ),
             ),
           ),

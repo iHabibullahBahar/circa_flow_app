@@ -14,27 +14,40 @@ class OnboardingPage extends HookWidget {
     final pageController = usePageController();
     final currentIndex = useState(0);
 
-    final List<OnboardingSlide> onboardingData = configCtrl.onboarding;
 
-    void onGetStarted() {
+
+    void onGetStarted() async {
+      await SecureStorageService.instance.write('has_seen_onboarding', 'true');
       Get.offAllNamed<void>(AppRoutes.login);
     }
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: SafeArea(
-        child: Column(
-          children: [
-            // --- Top branding (config-driven) ---
-            Padding(
-              padding: EdgeInsets.only(
-                top: AppSpacing.lg.h,
-                bottom: AppSpacing.sm.h,
-              ),
-              child: Obx(() {
-                final logoUrl = configCtrl.logoUrl;
-                final orgName = configCtrl.orgName;
-                return Column(
+        child: Obx(() {
+          final logoUrl = configCtrl.logoUrl;
+          final orgName = configCtrl.orgName;
+          final List<OnboardingSlide> onboardingData = configCtrl.onboarding.isNotEmpty 
+            ? configCtrl.onboarding 
+            : [
+                OnboardingSlide(title: 'Welcome to $orgName', subtitle: 'The complete platform for organization management and community engagement.'),
+                OnboardingSlide(title: 'Stay Connected', subtitle: 'Receive real-time updates and participate in events.'),
+                OnboardingSlide(title: 'All in One Place', subtitle: 'Manage your documents and resources seamlessly.'),
+              ];
+
+          if (onboardingData.isEmpty && configCtrl.status.value == ConfigStatus.loading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          return Column(
+            children: [
+              // --- Top branding (config-driven) ---
+              Padding(
+                padding: EdgeInsets.only(
+                  top: AppSpacing.lg.h,
+                  bottom: AppSpacing.sm.h,
+                ),
+                child: Column(
                   children: [
                     if (logoUrl != null)
                       Container(
@@ -73,83 +86,82 @@ class OnboardingPage extends HookWidget {
                       ),
                     ),
                   ],
-                );
-              }),
-            ),
-
-            // --- Page slides ---
-            Expanded(
-              child: PageView.builder(
-                controller: pageController,
-                itemCount: onboardingData.length,
-                onPageChanged: (i) => currentIndex.value = i,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: AppSpacing.xl.w),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          _iconForPage(index),
-                          size: 100.sp,
-                          color: colorScheme.primary.withValues(alpha: 0.8),
-                        ),
-                        SizedBox(height: AppSpacing.xl.h),
-                        Text(
-                          onboardingData[index].title,
-                          textAlign: TextAlign.center,
-                          style: textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: colorScheme.onSurface,
-                            height: 1.2,
-                            fontSize: 24.sp,
-                          ),
-                        ),
-                        SizedBox(height: AppSpacing.md.h),
-                        Text(
-                          onboardingData[index].subtitle,
-                          textAlign: TextAlign.center,
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                            height: 1.5,
-                            fontSize: 14.sp,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                ),
               ),
-            ),
 
-            // --- Page indicator + button ---
-            Padding(
-              padding: EdgeInsets.all(AppSpacing.xl.w),
-              child: Column(
-                children: [
-                  SmoothPageIndicator(
-                    controller: pageController,
-                    count: onboardingData.length,
-                    effect: WormEffect(
-                      dotHeight: 8,
-                      dotWidth: 8,
-                      activeDotColor: colorScheme.primary,
-                      dotColor: colorScheme.outlineVariant,
-                    ),
-                  ),
-                  SizedBox(height: AppSpacing.xl.h),
-                  AppButton(
-                    label: 'shared.get_started'.t(),
-                    onPressed: onGetStarted,
-                    isFullWidth: true,
-                  ),
-                  SizedBox(height: AppSpacing.md.h),
-                ],
+              // --- Page slides ---
+              Expanded(
+                child: PageView.builder(
+                  controller: pageController,
+                  itemCount: onboardingData.length,
+                  onPageChanged: (i) => currentIndex.value = i,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: EdgeInsets.symmetric(horizontal: AppSpacing.xl.w),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            _iconForPage(index),
+                            size: 100.sp,
+                            color: colorScheme.primary.withValues(alpha: 0.8),
+                          ),
+                          SizedBox(height: AppSpacing.xl.h),
+                          Text(
+                            onboardingData[index].title,
+                            textAlign: TextAlign.center,
+                            style: textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: colorScheme.onSurface,
+                              height: 1.2,
+                              fontSize: 24.sp,
+                            ),
+                          ),
+                          SizedBox(height: AppSpacing.md.h),
+                          Text(
+                            onboardingData[index].subtitle,
+                            textAlign: TextAlign.center,
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              height: 1.5,
+                              fontSize: 14.sp,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
-        ),
+
+              // --- Page indicator + button ---
+              Padding(
+                padding: EdgeInsets.all(AppSpacing.xl.w),
+                child: Column(
+                  children: [
+                    SmoothPageIndicator(
+                      controller: pageController,
+                      count: onboardingData.length,
+                      effect: WormEffect(
+                        dotHeight: 8,
+                        dotWidth: 8,
+                        activeDotColor: colorScheme.primary,
+                        dotColor: colorScheme.outlineVariant,
+                      ),
+                    ),
+                    SizedBox(height: AppSpacing.xl.h),
+                    AppButton(
+                      label: 'shared.get_started'.t(),
+                      onPressed: onGetStarted,
+                      isFullWidth: true,
+                    ),
+                    SizedBox(height: AppSpacing.md.h),
+                  ],
+                ),
+              ),
+            ],
+          );
+        }),
       ),
     );
   }

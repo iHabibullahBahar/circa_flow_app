@@ -72,7 +72,11 @@ class _SessionListenerWrapperState extends State<SessionListenerWrapper> {
     }
   }
 
-  void _resolveNavigation(SessionStatus status) {
+  Future<void> _resolveNavigation(SessionStatus status) async {
+    final hasSeenOnboardingResult = await SecureStorageService.instance.read('has_seen_onboarding');
+    bool hasSeenOnboarding = false;
+    hasSeenOnboardingResult.fold((_) {}, (val) => hasSeenOnboarding = val == 'true');
+
     // Only set _navigated = true on the very first resolution (from Splash)
     if (!_navigated) {
       _navigated = true;
@@ -84,7 +88,11 @@ class _SessionListenerWrapperState extends State<SessionListenerWrapper> {
       if (status == SessionStatus.unauthenticated) {
         final configCtrl = Get.find<ConfigController>();
         if (!configCtrl.allowGuestAccess) {
-          Get.offAllNamed<void>(AppRoutes.onboarding);
+          if (hasSeenOnboarding) {
+            Get.offAllNamed<void>(AppRoutes.login);
+          } else {
+            Get.offAllNamed<void>(AppRoutes.onboarding);
+          }
         }
       }
       return; 
@@ -96,7 +104,11 @@ class _SessionListenerWrapperState extends State<SessionListenerWrapper> {
       Get.offAllNamed<void>(AppRoutes.home);
     } else if (status == SessionStatus.unauthenticated) {
       if (!configCtrl.allowGuestAccess) {
-        Get.offAllNamed<void>(AppRoutes.onboarding);
+        if (hasSeenOnboarding) {
+          Get.offAllNamed<void>(AppRoutes.login);
+        } else {
+          Get.offAllNamed<void>(AppRoutes.onboarding);
+        }
       } else {
         Get.offAllNamed<void>(AppRoutes.home);
       }

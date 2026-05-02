@@ -24,7 +24,10 @@ class AuthController extends GetxController {
     isLoading.value = false;
     result.fold(
       (failure) => showToast(context, message: failure.message, status: 'error'),
-      (_) => Get.offAllNamed<void>(AppRoutes.home),
+      (_) async {
+        await SecureStorageService.instance.write('has_seen_onboarding', 'true');
+        Get.offAllNamed<void>(AppRoutes.home);
+      },
     );
   }
 
@@ -48,7 +51,8 @@ class AuthController extends GetxController {
     isLoading.value = false;
     result.fold(
       (failure) => showToast(context, message: failure.message, status: 'error'),
-      (_) {
+      (_) async {
+        await SecureStorageService.instance.write('has_seen_onboarding', 'true');
         showToast(context, message: 'Account created successfully!', status: 'success');
         Get.offAllNamed<void>(AppRoutes.home);
       },

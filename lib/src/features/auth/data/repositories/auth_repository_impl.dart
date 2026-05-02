@@ -11,7 +11,13 @@ class AuthRepositoryImpl implements AuthRepository {
   Stream<AppUser?> get onAuthStateChanged {
     return _authService.authStateChanges.map((payload) {
       if (payload == null) return null;
-      return _memberFromPayload(payload);
+
+      // Extract the member from the payload. Login/Register send {token, member}
+      final memberData = (payload['member'] as Map<String, dynamic>?) ??
+          (payload['data']?['member'] as Map<String, dynamic>?) ??
+          payload;
+
+      return _memberFromPayload(memberData);
     });
   }
 

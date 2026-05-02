@@ -20,6 +20,12 @@ class LoginScreen extends HookWidget {
     final cs = context.contextTheme.colorScheme;
     final tt = context.contextTheme.textTheme;
 
+    useEffect(() {
+      // Refresh config whenever we arrive at Login to ensure branding/registration flags are fresh
+      configCtrl.loadConfig();
+      return null;
+    }, []);
+
     void handleLogin() {
       if (!(formKey.currentState?.validate() ?? false)) return;
       controller.login(
@@ -166,23 +172,29 @@ class LoginScreen extends HookWidget {
                     const SizedBox(height: 24),
                     if (configCtrl.allowRegistration)
                       Center(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        child: Column(
                           children: [
-                            Text(
-                              "Don't have an account? ",
-                              style: tt.bodyMedium
-                                  ?.copyWith(color: cs.onSurfaceVariant),
-                            ),
-                            GestureDetector(
-                              onTap: () => Get.toNamed<void>(AppRoutes.signup),
-                              child: Text(
-                                'Sign Up',
-                                style: tt.bodyMedium?.copyWith(
-                                  color: cs.onSurface,
-                                  fontWeight: FontWeight.bold,
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "Don't have an account? ",
+                                  style: tt.bodyMedium?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                  ),
                                 ),
-                              ),
+                                GestureDetector(
+                                  onTap: () => Get.toNamed<void>(AppRoutes.signup),
+                                  child: Text(
+                                    'Sign Up',
+                                    style: tt.bodyMedium?.copyWith(
+                                      color: cs.primary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),

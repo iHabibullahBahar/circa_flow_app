@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 import 'package:circa_flow_main/src/features/auth/presentation/providers/session_controller.dart';
 import 'package:circa_flow_main/src/features/messaging/data/models/conversation_model.dart';
 import '../providers/chat_controller.dart';
-import '../providers/socket_manager.dart';
 
 /// Full-screen chat screen powered by flutter_chat_ui.
 ///
@@ -86,7 +85,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return Scaffold(
       backgroundColor: cs.surface,
-      appBar: _ChatAppBar(conversation: widget.conversation),
+      appBar: _ChatAppBar(
+        conversation: widget.conversation,
+        convCtrl: _convCtrl,
+      ),
       body: Obx(() {
         if (_convCtrl.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
@@ -133,7 +135,11 @@ class _ChatScreenState extends State<ChatScreen> {
 
 class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   final ConversationModel conversation;
-  const _ChatAppBar({required this.conversation});
+  final ConversationController convCtrl;
+  const _ChatAppBar({
+    required this.conversation,
+    required this.convCtrl,
+  });
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -143,14 +149,6 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final isConnected = () {
-      try {
-        return Get.find<SocketManager>().isConnected;
-      } catch (_) {
-        return false.obs;
-      }
-    }();
-
     return AppBar(
       backgroundColor: cs.surface,
       elevation: 0,
@@ -158,16 +156,39 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
       leading: const BackButton(),
       title: Row(
         children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: cs.primaryContainer,
-            backgroundImage: conversation.avatarUrl != null
-                ? NetworkImage(conversation.avatarUrl!)
-                : null,
-            child: conversation.avatarUrl == null
-                ? Icon(_typeIcon(conversation.type),
-                    size: 18, color: cs.onPrimaryContainer)
-                : null,
+          // Avatar with animated online dot overlay for DMs
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: cs.primaryContainer,
+                backgroundImage: conversation.avatarUrl != null
+                    ? NetworkImage(conversation.avatarUrl!)
+                    : null,
+                child: conversation.avatarUrl == null
+                    ? Icon(_typeIcon(conversation.type),
+                        size: 18, color: cs.onPrimaryContainer)
+                    : null,
+              ),
+              if (conversation.isDirect)
+                Obx(() => Positioned(
+                      right: -1,
+                      bottom: -1,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 400),
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: convCtrl.isOtherOnline.value
+                              ? Colors.green
+                              : Colors.grey.shade400,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: cs.surface, width: 1.5),
+                        ),
+                      ),
+                    )),
+            ],
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -181,14 +202,50 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                Obx(() => Text(
-                      isConnected.value ? 'Online' : 'Connecting...',
-                      style: tt.labelSmall?.copyWith(
-                        color: isConnected.value
-                            ? Colors.green
-                            : cs.onSurfaceVariant,
-                      ),
-                    )),
+                // Presence subtitle
+                Obx(() {
+                  if (conversation.isDirect) {
+                    // Typing takes priority
+                    if (convCtrl.typingMemberName.value != null) {
+                      return Text(
+                        'typing…',
+                        style: tt.labelSmall?.copyWith(
+                          color: cs.primary,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      );
+                    }
+                    if (convCtrl.isOtherOnline.value) {
+                      return Text('Online',
+                          style: tt.labelSmall
+                              ?.copyWith(color: Colors.green));
+                    }
+                    final raw = convCtrl.otherLastSeenAt.value;
+                    if (raw != null) {
+                      final dt = DateTime.tryParse(raw)?.toLocal();
+                      final diff =
+                          dt != null ? DateTime.now().difference(dt) : null;
+                      final label = diff == null
+                          ? 'Offline'
+                          : diff.inMinutes < 60
+                              ? 'Last seen ${diff.inMinutes}m ago'
+                              : diff.inHours < 24
+                                  ? 'Last seen ${diff.inHours}h ago'
+                                  : 'Last seen ${dt!.day}/${dt.month}';
+                      return Text(label,
+                          style: tt.labelSmall
+                              ?.copyWith(color: cs.onSurfaceVariant));
+                    }
+                    return Text('Offline',
+                        style: tt.labelSmall
+                            ?.copyWith(color: cs.onSurfaceVariant));
+                  }
+                  return Text(
+                    '${conversation.isCommunity ? 'Community' : 'Group'} chat',
+                    style:
+                        tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+                  );
+                }),
               ],
             ),
           ),
@@ -200,7 +257,7 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
             icon: const Icon(Icons.people_outline_rounded),
             tooltip: 'Members',
             onPressed: () {
-              // TODO Phase 1E: show members bottom sheet
+              // TODO: show members bottom sheet
             },
           ),
       ],
@@ -215,6 +272,7 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
         _ => Icons.person_rounded,
       };
 }
+
 
 // ── Typing indicator banner ────────────────────────────────────────────────────
 

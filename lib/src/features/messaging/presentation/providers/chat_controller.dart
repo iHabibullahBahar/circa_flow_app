@@ -35,9 +35,15 @@ class ConversationController extends GetxController {
   final hasMoreMessages = true.obs;
   final typingMemberName = Rx<String?>(null);
 
+  /// Presence: whether any other participant in this conversation is currently online.
+  final isOtherOnline = false.obs;
+  final otherLastSeenAt = Rx<String?>(null);
+
   Timer? _typingTimer;
   Timer? _typingClearTimer;
+  Timer? _presenceTimer;
   int? _oldestMessageId;
+  List<int> _otherMemberIds = []; // cached after first members fetch
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────
 
@@ -46,6 +52,7 @@ class ConversationController extends GetxController {
     super.onInit();
     chatController = InMemoryChatController();
     _loadMessages();
+    _startPresencePolling();
 
     // Subscribe to conversation WS channel
     try {
@@ -58,6 +65,7 @@ class ConversationController extends GetxController {
   void onClose() {
     _typingTimer?.cancel();
     _typingClearTimer?.cancel();
+    _presenceTimer?.cancel();
     chatController.dispose();
 
     try {
@@ -389,6 +397,61 @@ class ConversationController extends GetxController {
       source: File(localPath).uri.toString(), // file:// URI for local display
       createdAt: DateTime.now(),
       status: MessageStatus.sending,
+    );
+  }
+
+  // ── Presence ───────────────────────────────────────────────────────────────
+
+  void _startPresencePolling() {
+    _fetchPresence(); // immediate first poll
+    // Poll every 90 seconds (server window is 120s so 90s keeps it fresh)
+    _presenceTimer = Timer.periodic(
+      const Duration(seconds: 90),
+      (_) => _fetchPresence(),
+    );
+  }
+
+  Future<void> _fetchPresence() async {
+    final me = Get.find<SessionController>().user.value?.id;
+
+    // On first call: fetch members from API to build the ID list
+    if (_otherMemberIds.isEmpty) {
+      final membersResult =
+          await _repository.getMembers(conversationId: conversation.id);
+      membersResult.fold(
+        (_) => null,
+        (rawList) {
+          _otherMemberIds = rawList
+              .map((r) => (r['member_id'] as num?)?.toInt())
+              .whereType<int>()
+              .where((id) => id.toString() != me)
+              .toList();
+        },
+      );
+    }
+
+    if (_otherMemberIds.isEmpty) return;
+
+    final result =
+        await _repository.fetchPresence(memberIds: _otherMemberIds);
+    result.fold(
+      (_) => null,
+      (presenceMap) {
+        bool anyOnline = false;
+        String? lastSeen;
+        for (final id in _otherMemberIds) {
+          final p = presenceMap[id.toString()] as Map<String, dynamic>?;
+          if (p == null) continue;
+          if (p['online'] == true) {
+            anyOnline = true;
+            break;
+          }
+          final seen = p['last_seen_at'] as String?;
+          if (seen != null && lastSeen == null) lastSeen = seen;
+        }
+        isOtherOnline.value = anyOnline;
+        if (!anyOnline) otherLastSeenAt.value = lastSeen;
+      },
     );
   }
 

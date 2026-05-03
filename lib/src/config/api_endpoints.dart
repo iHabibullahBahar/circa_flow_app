@@ -66,4 +66,5 @@ const String zMessagingSendEndpoint = 'messaging/messages/send';
 const String zMessagingReadEndpoint = 'messaging/messages/read';
 const String zMessagingTypingEndpoint = 'messaging/typing';
 const String zMessagingDmSettingEndpoint = 'messaging/dm-setting';
+const String zMessagingPresenceEndpoint = 'messaging/presence';
 const String zBroadcastingAuthEndpoint = 'broadcasting/auth';

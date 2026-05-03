@@ -1,6 +1,7 @@
-import 'package:circa_flow_main/src/imports/core_imports.dart';
 import 'package:circa_flow_main/src/config/api_endpoints.dart';
+import 'package:circa_flow_main/src/imports/core_imports.dart';
 import 'package:circa_flow_main/src/services/api_service.dart';
+import 'package:fpdart/fpdart.dart';
 
 class ChatRepository {
   final ApiService _api = ApiService.instance;
@@ -66,7 +67,8 @@ class ChatRepository {
         (response['data'] as Map<String, dynamic>?) ?? {});
   }
 
-  /// Mark messages read up to [messageId].
+  /// Mark messages read up to [messageId]. Fire-and-forget — dispatched
+  /// as a background job on the backend so the response is instant.
   FutureEither<void> markRead({
     required int conversationId,
     required int messageId,
@@ -92,5 +94,35 @@ class ChatRepository {
         'is_typing': isTyping,
       },
     );
+  }
+
+  /// Fetch presence for a list of member IDs.
+  /// Returns map of memberId → {online: bool, last_seen_at: String?}
+  FutureEither<Map<String, dynamic>> fetchPresence({
+    required List<int> memberIds,
+  }) async {
+    if (memberIds.isEmpty) {
+      return Right({});
+    }
+    final result = await _api.post<Map<String, dynamic>>(
+      zMessagingPresenceEndpoint,
+      data: {'member_ids': memberIds},
+    );
+    return result.map((response) =>
+        (response['data'] as Map<String, dynamic>?) ?? {});
+  }
+
+  /// Fetch conversation members with presence info.
+  FutureEither<List<Map<String, dynamic>>> getMembers({
+    required int conversationId,
+  }) async {
+    final result = await _api.post<Map<String, dynamic>>(
+      zMessagingMembersEndpoint,
+      data: {'conversation_id': conversationId},
+    );
+    return result.map((response) {
+      final List<dynamic> data = (response['data'] as List<dynamic>?) ?? [];
+      return data.whereType<Map<String, dynamic>>().toList();
+    });
   }
 }

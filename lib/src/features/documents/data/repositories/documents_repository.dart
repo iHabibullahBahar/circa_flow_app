@@ -19,6 +19,22 @@ class DocumentsRepository {
     return result.map(_mapResult);
   }
 
+  FutureEither<DocumentModel> fetchDocumentDetails(int id) async {
+    final result = await _api.post<Map<String, dynamic>>(
+      zDocumentsShowEndpoint,
+      data: {'id': id},
+    );
+    return result.map((res) => DocumentModel.fromJson(res?['data']));
+  }
+
+  FutureEither<Map<String, dynamic>> getDownloadUrl(int id) async {
+    final result = await _api.post<Map<String, dynamic>>(
+      zDocumentsDownloadEndpoint,
+      data: {'id': id},
+    );
+    return result.map((res) => res?['data'] ?? {});
+  }
+
   PaginatedResult<DocumentModel> _mapResult(Map<String, dynamic>? res) {
     if (res == null) {
       return const PaginatedResult(

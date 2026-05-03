@@ -1,4 +1,5 @@
 import 'package:circa_flow_main/src/imports/core_imports.dart';
+import 'package:circa_flow_main/src/config/api_endpoints.dart';
 import 'package:circa_flow_main/src/services/api_service.dart';
 import '../models/community_model.dart';
 
@@ -15,7 +16,7 @@ class CommunityRepositoryImpl implements CommunityRepository {
 
   @override
   FutureEither<List<CommunityModel>> getAllCommunities() async {
-    final result = await _apiService.post<dynamic>('/communities');
+    final result = await _apiService.post<dynamic>(zCommunitiesEndpoint);
     return result.map((response) {
       final data = (response as Map<String, dynamic>)['data'] as List<dynamic>;
       return data
@@ -26,7 +27,7 @@ class CommunityRepositoryImpl implements CommunityRepository {
 
   @override
   FutureEither<List<CommunityModel>> getMyCommunities() async {
-    final result = await _apiService.post<dynamic>('/communities/mine');
+    final result = await _apiService.post<dynamic>(zCommunitiesMineEndpoint);
     return result.map((response) {
       final data = (response as Map<String, dynamic>)['data'] as List<dynamic>;
       return data
@@ -38,7 +39,7 @@ class CommunityRepositoryImpl implements CommunityRepository {
   @override
   FutureEither<CommunityModel> lookupCommunity(String code) async {
     final result = await _apiService
-        .post<dynamic>('/communities/lookup', data: {'code': code});
+        .post<dynamic>(zCommunitiesLookupEndpoint, data: {'code': code});
     return result.map((response) {
       final data =
           (response as Map<String, dynamic>)['data'] as Map<String, dynamic>;
@@ -49,7 +50,7 @@ class CommunityRepositoryImpl implements CommunityRepository {
   @override
   FutureEither<Map<String, dynamic>> joinCommunity(int id) async {
     final result =
-        await _apiService.post<dynamic>('/communities/$id/join');
+        await _apiService.post<dynamic>(zCommunitiesJoinEndpoint, data: {'id': id});
     return result.map((response) {
       return (response as Map<String, dynamic>)['data'] as Map<String, dynamic>;
     });
@@ -57,6 +58,6 @@ class CommunityRepositoryImpl implements CommunityRepository {
 
   @override
   FutureEither<void> leaveCommunity(int id) async {
-    return _apiService.post<dynamic>('/communities/$id/leave');
+    return _apiService.post<dynamic>(zCommunitiesLeaveEndpoint, data: {'id': id});
   }
 }

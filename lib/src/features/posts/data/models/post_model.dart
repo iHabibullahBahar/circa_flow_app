@@ -8,6 +8,7 @@ class PostModel {
   final List<String> images;
   final List<PostLink> links;
   final int reactionCount;
+  final int commentsCount;
   final bool isLiked;
   final String? publishedAt;
 
@@ -20,6 +21,7 @@ class PostModel {
     this.images = const [],
     this.links = const [],
     this.reactionCount = 0,
+    this.commentsCount = 0,
     this.isLiked = false,
     this.publishedAt,
   });
@@ -40,6 +42,7 @@ class PostModel {
                 .toList() ??
             [],
         reactionCount: (j['reaction_count'] as num?)?.toInt() ?? 0,
+        commentsCount: (j['comments_count'] as num?)?.toInt() ?? 0,
         isLiked: (j['is_liked'] as bool?) ?? false,
         publishedAt: j['published_at'] as String?,
       );
@@ -53,6 +56,7 @@ class PostModel {
     List<String>? images,
     List<PostLink>? links,
     int? reactionCount,
+    int? commentsCount,
     bool? isLiked,
     String? publishedAt,
   }) {
@@ -65,6 +69,7 @@ class PostModel {
       images: images ?? this.images,
       links: links ?? this.links,
       reactionCount: reactionCount ?? this.reactionCount,
+      commentsCount: commentsCount ?? this.commentsCount,
       isLiked: isLiked ?? this.isLiked,
       publishedAt: publishedAt ?? this.publishedAt,
     );

@@ -18,11 +18,44 @@ class PostsRepository {
     return result.map(_mapResult);
   }
 
+  FutureEither<PostModel> fetchPostDetails(int id) async {
+    final result = await _api.post<Map<String, dynamic>>(
+      zPostsShowEndpoint,
+      data: {'id': id},
+    );
+    return result.map((res) => PostModel.fromJson(res?['data']));
+  }
+
   FutureEither<Map<String, dynamic>> toggleReaction(int postId) async {
     return await _api.post<Map<String, dynamic>>(
       zPostsReactEndpoint,
       data: {'post_id': postId},
     );
+  }
+
+  FutureEither<PaginatedResult<dynamic>> fetchComments(int postId, {int page = 1}) async {
+    final result = await _api.post<Map<String, dynamic>>(
+      zPostsCommentsListEndpoint,
+      data: {'post_id': postId, 'page': page},
+    );
+    // Since we don't have CommentModel yet, we'll return dynamic for now
+    return result.map((res) {
+      final data = res['data'] as List<dynamic>? ?? [];
+      return PaginatedResult<dynamic>(
+        items: data,
+        currentPage: (res['current_page'] as num?)?.toInt() ?? 1,
+        lastPage: (res['last_page'] as num?)?.toInt() ?? 1,
+        total: (res['total'] as num?)?.toInt() ?? data.length,
+      );
+    });
+  }
+
+  FutureEither<dynamic> storeComment(int postId, String content) async {
+    final result = await _api.post<dynamic>(
+      zPostsCommentsStoreEndpoint,
+      data: {'post_id': postId, 'content': content},
+    );
+    return result;
   }
 
   PaginatedResult<PostModel> _mapResult(Map<String, dynamic>? res) {

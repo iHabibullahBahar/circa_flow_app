@@ -1,5 +1,4 @@
-import 'package:circa_flow_main/src/imports/core_imports.dart';
-import 'package:circa_flow_main/src/imports/packages_imports.dart';
+import 'package:circa_flow_main/src/imports/imports.dart';
 import '../../data/models/community_model.dart';
 
 class CommunityCard extends StatelessWidget {
@@ -20,17 +19,16 @@ class CommunityCard extends StatelessWidget {
     final tt = context.contextTheme.textTheme;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
         color: cs.surface,
-        borderRadius: BorderRadius.circular(16),
-        border:
-            Border.all(color: context.appColors.border.withValues(alpha: 0.2)),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -38,59 +36,69 @@ class CommunityCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Cover Image
-          if (community.coverImageUrl != null &&
-              community.coverImageUrl!.isNotEmpty)
-            CachedNetworkImage(
-              imageUrl: community.coverImageUrl!,
-              height: 120,
-              fit: BoxFit.cover,
-              placeholder: (context, url) => Container(
-                height: 120,
-                color: cs.surfaceContainerHighest,
-                child:
-                    const Center(child: CircularProgressIndicator.adaptive()),
+          // Cover Image with Badges
+          Stack(
+            children: [
+              if (community.coverImageUrl != null &&
+                  community.coverImageUrl!.isNotEmpty)
+                AppCachedImage(
+                  imageUrl: community.coverImageUrl!,
+                  height: 160.h,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                )
+              else
+                _buildPlaceholder(cs),
+              
+              // Visibility Badge
+              Positioned(
+                top: 12,
+                left: 12,
+                child: _buildVisibilityBadge(cs, tt),
               ),
-              errorWidget: (context, url, error) => _buildPlaceholder(cs),
-            )
-          else
-            _buildPlaceholder(cs),
+
+              // Role Badge (if member)
+              if (community.myRole != null)
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: _buildRoleBadge(cs, tt),
+                ),
+            ],
+          ),
 
           // Content
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(20.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        community.name,
-                        style: tt.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFF1A334D),
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    _buildVisibilityBadge(cs, tt),
-                  ],
+                Text(
+                  community.name,
+                  style: tt.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: cs.onSurface,
+                    fontSize: 18.sp,
+                    letterSpacing: -0.5,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 if (community.description != null &&
                     community.description!.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Text(
                     community.description!,
-                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    style: tt.bodyMedium?.copyWith(
+                      color: cs.onSurfaceVariant.withValues(alpha: 0.8),
+                      height: 1.4,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
+                const SizedBox(height: 20),
+                const Divider(height: 1),
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -109,8 +117,9 @@ class CommunityCard extends StatelessWidget {
 
   Widget _buildPlaceholder(ColorScheme cs) {
     return Container(
-      height: 120,
-      color: cs.primary.withValues(alpha: 0.05),
+      height: 160.h,
+      width: double.infinity,
+      color: cs.primaryContainer.withValues(alpha: 0.3),
       child: Center(
         child: Icon(Icons.groups_rounded,
             size: 48, color: cs.primary.withValues(alpha: 0.2)),
@@ -121,18 +130,59 @@ class CommunityCard extends StatelessWidget {
   Widget _buildVisibilityBadge(ColorScheme cs, TextTheme tt) {
     final isPublic = community.type == 'public';
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: isPublic
-            ? cs.primary.withValues(alpha: 0.1)
-            : cs.tertiary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(6),
+        color: Colors.black.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isPublic ? Icons.public_rounded : Icons.lock_rounded,
+            size: 12,
+            color: Colors.white,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            isPublic ? 'Public' : 'Private',
+            style: tt.labelSmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+              fontSize: 10.sp,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRoleBadge(ColorScheme cs, TextTheme tt) {
+    final role = community.myRole?.toLowerCase();
+    Color badgeColor = cs.secondary;
+    if (role == 'owner') badgeColor = Colors.amber.shade700;
+    if (role == 'moderator') badgeColor = Colors.blue.shade700;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: badgeColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: badgeColor.withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Text(
-        isPublic ? 'Public' : 'Private',
+        role?.toUpperCase() ?? 'MEMBER',
         style: tt.labelSmall?.copyWith(
-          color: isPublic ? cs.primary : cs.tertiary,
-          fontWeight: FontWeight.bold,
+          color: Colors.white,
+          fontWeight: FontWeight.w900,
+          fontSize: 9.sp,
           letterSpacing: 0.5,
         ),
       ),
@@ -140,91 +190,69 @@ class CommunityCard extends StatelessWidget {
   }
 
   Widget _buildMemberCount(ColorScheme cs, TextTheme tt) {
-    return Row(
-      children: [
-        Icon(Icons.people_outline_rounded,
-            size: 16, color: cs.onSurfaceVariant),
-        const SizedBox(width: 4),
-        Text(
-          '${community.memberCount} members',
-          style: tt.bodySmall?.copyWith(
-            color: cs.onSurfaceVariant,
-            fontWeight: FontWeight.w500,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.people_rounded, size: 16, color: cs.primary),
+          const SizedBox(width: 8),
+          Text(
+            '${community.memberCount} members',
+            style: tt.bodySmall?.copyWith(
+              color: cs.onSurface,
+              fontWeight: FontWeight.w700,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   Widget _buildActionButton(BuildContext context) {
     if (community.isMember) {
-      return TextButton(
+      return AppButton(
+        label: 'Leave',
         onPressed: community.isDefault ? null : onLeave,
-        style: TextButton.styleFrom(
-          foregroundColor: context.contextTheme.colorScheme.error,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        ),
-        child: const Text('Leave'),
+        variant: ButtonVariant.ghost,
       );
     }
 
     if (community.isPending) {
-      return OutlinedButton(
-        onPressed: null, // Disabled
-        child: const Text('Requested'),
+      return const AppButton(
+        label: 'Pending',
+        onPressed: null,
+        variant: ButtonVariant.secondary,
       );
     }
 
     if (community.myStatus == 'blocked') {
-      return const SizedBox.shrink(); // Hide button completely
+      return const SizedBox.shrink();
     }
 
     if (community.joinType == 'invite_only') {
-      return OutlinedButton(
+      return const AppButton(
+        label: 'Invite Only',
         onPressed: null,
-        child: const Text('Invite Only'),
+        variant: ButtonVariant.secondary,
       );
     }
 
     if (community.isRejected) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: context.contextTheme.colorScheme.errorContainer,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              'Rejected',
-              style: context.contextTheme.textTheme.labelSmall?.copyWith(
-                color: context.contextTheme.colorScheme.onErrorContainer,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          FilledButton(
-            onPressed: onJoin,
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            child: const Text('Request Again'),
-          ),
-        ],
+      return AppButton(
+        label: 'Request Again',
+        onPressed: onJoin,
+        variant: ButtonVariant.primary,
       );
     }
 
-    // Can request or join instantly
-    return FilledButton(
+    return AppButton(
+      label: community.joinType == 'open' ? 'Join' : 'Request',
       onPressed: onJoin,
-      style: FilledButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-      child: Text(community.joinType == 'open' ? 'Join' : 'Request'),
+      variant: ButtonVariant.primary,
     );
   }
 }

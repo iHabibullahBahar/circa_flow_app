@@ -13,9 +13,17 @@ class EventsRepository {
   FutureEither<PaginatedResult<EventModel>> fetchEvents({int page = 1, String type = 'upcoming'}) async {
     final result = await _api.post<Map<String, dynamic>>(
       zEventsEndpoint,
-      queryParameters: {'page': page, 'per_page': 20, 'type': type},
+      data: {'page': page, 'per_page': 20, 'type': type},
     );
     return result.map(_mapResult);
+  }
+
+  FutureEither<EventModel> fetchEventDetails(int id) async {
+    final result = await _api.post<Map<String, dynamic>>(
+      zEventsShowEndpoint,
+      data: {'id': id},
+    );
+    return result.map((res) => EventModel.fromJson(res?['data']));
   }
 
   FutureEither<PaginatedResult<EventModel>> fetchMyEvents({int page = 1}) async {

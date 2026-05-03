@@ -1,15 +1,29 @@
 import '../../../../imports/imports.dart';
 import '../../data/models/post_model.dart';
 import '../providers/posts_controller.dart';
+import '../providers/comments_controller.dart';
+import '../widgets/comment_item.dart';
+import 'post_comments_screen.dart';
 
-class PostDetailScreen extends StatelessWidget {
+class PostDetailScreen extends StatefulWidget {
   final PostModel post;
   const PostDetailScreen({super.key, required this.post});
 
   @override
-  Widget build(BuildContext context) {
-    final cs = context.contextTheme.colorScheme;
+  State<PostDetailScreen> createState() => _PostDetailScreenState();
+}
 
+class _PostDetailScreenState extends State<PostDetailScreen> {
+  final TextEditingController _commentController = TextEditingController();
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -34,9 +48,9 @@ class PostDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // --- Cover Image ---
-            if (post.coverImage != null)
+            if (widget.post.coverImage != null)
               AppCachedImage(
-                imageUrl: post.coverImage!,
+                imageUrl: widget.post.coverImage!,
                 width: double.infinity,
                 height: 250.h,
                 fit: BoxFit.cover,
@@ -50,8 +64,7 @@ class PostDetailScreen extends StatelessWidget {
                   // --- Header Row ---
                   Obx(() {
                     final postCtrl = Get.find<PostsController>();
-                    // Find the post in the controller to ensure reactivity
-                    final currentPost = postCtrl.posts.firstWhere((p) => p.id == post.id, orElse: () => post);
+                    final currentPost = postCtrl.posts.firstWhere((p) => p.id == widget.post.id, orElse: () => widget.post);
                     
                     return Row(
                       children: [
@@ -102,7 +115,7 @@ class PostDetailScreen extends StatelessWidget {
 
                   // --- Title ---
                   Text(
-                    post.title,
+                    widget.post.title,
                     style: TextStyle(
                       fontSize: 24.sp,
                       fontWeight: FontWeight.w900,
@@ -114,9 +127,9 @@ class PostDetailScreen extends StatelessWidget {
                   const Gap(24),
 
                   // --- Body Content ---
-                  if (post.body != null)
+                  if (widget.post.body != null)
                     Text(
-                      post.body!,
+                      widget.post.body!,
                       style: TextStyle(
                         fontSize: 15.sp,
                         color: Colors.black87.withValues(alpha: 0.7),
@@ -125,7 +138,7 @@ class PostDetailScreen extends StatelessWidget {
                     ),
 
                   // --- Images Gallery ---
-                  if (post.images.isNotEmpty) ...[
+                  if (widget.post.images.isNotEmpty) ...[
                     const Gap(32),
                     Text(
                       'Photos',
@@ -140,12 +153,12 @@ class PostDetailScreen extends StatelessWidget {
                       height: 120.h,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
-                        itemCount: post.images.length,
+                        itemCount: widget.post.images.length,
                         separatorBuilder: (_, __) => const Gap(12),
                         itemBuilder: (ctx, i) => ClipRRect(
                           borderRadius: BorderRadius.circular(12),
                           child: AppCachedImage(
-                            imageUrl: post.images[i],
+                            imageUrl: widget.post.images[i],
                             width: 120.h,
                             height: 120.h,
                             fit: BoxFit.cover,
@@ -156,7 +169,7 @@ class PostDetailScreen extends StatelessWidget {
                   ],
 
                   // --- Links Section ---
-                  if (post.links.isNotEmpty) ...[
+                  if (widget.post.links.isNotEmpty) ...[
                     const Gap(32),
                     Text(
                       'Links & Attachments',
@@ -167,28 +180,26 @@ class PostDetailScreen extends StatelessWidget {
                       ),
                     ),
                     const Gap(12),
-                    ...post.links.map((link) => Padding(
+                    ...widget.post.links.map((link) => Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: InkWell(
                             onTap: () => _handleLink(link),
                             child: Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: cs.surface,
+                                color: const Color(0xFFF5F7F9),
                                 borderRadius: BorderRadius.circular(16),
-                                border:
-                                    Border.all(color: context.appColors.border),
                               ),
                               child: Row(
                                 children: [
                                   Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: cs.primary.withValues(alpha: 0.1),
+                                      color: Colors.white,
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    child: Icon(Icons.link_rounded,
-                                        color: cs.primary, size: 20),
+                                    child: const Icon(Icons.link_rounded,
+                                        color: Colors.blue, size: 20),
                                   ),
                                   const Gap(16),
                                   Expanded(
@@ -209,6 +220,124 @@ class PostDetailScreen extends StatelessWidget {
                           ),
                         )),
                   ],
+
+                  const Gap(32),
+                  Obx(() {
+                    final commentsCtrl = Get.put(CommentsController(postId: widget.post.id), tag: widget.post.id.toString());
+                    
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Comments (${commentsCtrl.totalComments.value})',
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const Spacer(),
+                            if (commentsCtrl.totalComments.value > 3)
+                              TextButton(
+                                onPressed: () => Get.to<void>(() => PostCommentsScreen(postId: widget.post.id, postTitle: widget.post.title)),
+                                child: Text('View All', style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.bold)),
+                              ),
+                          ],
+                        ),
+                        const Gap(12),
+                        
+                        // Inline Input
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: context.contextTheme.colorScheme.primary.withValues(alpha: 0.2), width: 1.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: context.contextTheme.colorScheme.primary.withValues(alpha: 0.05),
+                                blurRadius: 20,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _commentController,
+                                  style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: Colors.black87),
+                                  decoration: InputDecoration(
+                                    hintText: 'Share your thoughts...',
+                                    hintStyle: TextStyle(color: Colors.black26, fontSize: 14.sp, fontWeight: FontWeight.w500),
+                                    border: InputBorder.none,
+                                    enabledBorder: InputBorder.none,
+                                    focusedBorder: InputBorder.none,
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                  maxLines: null,
+                                  textInputAction: TextInputAction.send,
+                                  onSubmitted: (val) => _submitComment(commentsCtrl),
+                                ),
+                              ),
+                              const Gap(12),
+                              Obx(() => InkWell(
+                                onTap: commentsCtrl.isPosting.value ? null : () => _submitComment(commentsCtrl),
+                                borderRadius: BorderRadius.circular(50),
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: commentsCtrl.isPosting.value 
+                                      ? Colors.black.withValues(alpha: 0.05) 
+                                      : context.contextTheme.colorScheme.primary.withValues(alpha: 0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.send_rounded, 
+                                    size: 18, 
+                                    color: commentsCtrl.isPosting.value 
+                                      ? Colors.black26 
+                                      : context.contextTheme.colorScheme.primary
+                                  ),
+                                ),
+                              )),
+                            ],
+                          ),
+                        ),
+                        
+                        const Gap(24),
+                        
+                        if (commentsCtrl.isLoading.value && commentsCtrl.comments.isEmpty)
+                          const Center(child: CircularProgressIndicator())
+                        else if (commentsCtrl.comments.isEmpty)
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 20),
+                              child: Text('No comments yet.', style: TextStyle(color: Colors.black26, fontSize: 12.sp)),
+                            ),
+                          )
+                        else
+                          ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: commentsCtrl.comments.length > 3 ? 3 : commentsCtrl.comments.length,
+                            separatorBuilder: (_, __) => const Gap(20),
+                            itemBuilder: (ctx, i) => CommentItem(
+                              key: ValueKey(commentsCtrl.comments[i].id),
+                              comment: commentsCtrl.comments[i],
+                              onReply: (parent, onSuccess) {
+                                // For simplicity in preview, navigate to full screen for replies
+                                Get.to<void>(() => PostCommentsScreen(postId: widget.post.id, postTitle: widget.post.title));
+                              },
+                            ),
+                          ),
+                      ],
+                    );
+                  }),
+
                   const Gap(40),
                 ],
               ),
@@ -217,6 +346,17 @@ class PostDetailScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _submitComment(CommentsController commentsCtrl) async {
+    final text = _commentController.text.trim();
+    if (text.isEmpty) return;
+    
+    final success = await commentsCtrl.postComment(text);
+    if (success) {
+      _commentController.clear();
+      FocusScope.of(context).unfocus();
+    }
   }
 
   void _handleLink(PostLink link) {

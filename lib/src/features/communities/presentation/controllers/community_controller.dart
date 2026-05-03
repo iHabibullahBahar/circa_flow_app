@@ -4,6 +4,8 @@ import '../../data/models/community_model.dart';
 import '../../data/repositories/community_repository.dart';
 import '../widgets/community_card.dart';
 
+enum CommunityTab { myCommunities, discover }
+
 class CommunityController extends GetxController {
   final CommunityRepository _repository;
 
@@ -22,6 +24,7 @@ class CommunityController extends GetxController {
   final RxBool isJoining = false.obs;
 
   final RxString searchQuery = ''.obs;
+  final Rx<CommunityTab> currentTab = CommunityTab.myCommunities.obs;
 
   @override
   void onInit() {
@@ -31,6 +34,10 @@ class CommunityController extends GetxController {
         time: const Duration(milliseconds: 300));
 
     refreshData();
+  }
+
+  void setTab(CommunityTab tab) {
+    currentTab.value = tab;
   }
 
   void refreshData() {

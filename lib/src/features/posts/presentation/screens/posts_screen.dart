@@ -1,6 +1,7 @@
 import 'package:circa_flow_main/src/imports/imports.dart';
 import '../providers/posts_controller.dart';
 import '../../data/models/post_model.dart';
+import 'post_comments_screen.dart';
 
 class PostsScreen extends GetView<PostsController> {
   const PostsScreen({super.key});
@@ -72,15 +73,34 @@ class _PostCard extends StatelessWidget {
       onTap: () => Get.toNamed<void>(AppRoutes.postDetail, arguments: post),
       borderRadius: BorderRadius.circular(24),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 20),
+        margin: const EdgeInsets.only(bottom: 24),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFEEEEEE)),
+          border: Border.all(color: const Color(0xFFF0F0F0)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // --- Media / Cover Image ---
+            if (post.coverImage != null)
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                child: AppCachedImage(
+                  imageUrl: post.coverImage!,
+                  height: 180.h,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+
             Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -91,65 +111,59 @@ class _PostCard extends StatelessWidget {
                     post.title,
                     style: TextStyle(
                       fontSize: 18.sp,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.black87,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF1A1A1A),
                       height: 1.3,
+                      letterSpacing: -0.5,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const Gap(8),
+                  const Gap(10),
 
-                  // --- Snippet ---
+                  // --- Body Snippet ---
                   if (post.body != null)
                     Text(
                       post.body!,
                       style: TextStyle(
                         fontSize: 14.sp,
                         color: Colors.black54,
-                        height: 1.4,
+                        height: 1.5,
                       ),
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
-                ],
-              ),
-            ),
+                  
+                  const Gap(20),
+                  const Divider(height: 1, color: Color(0xFFF5F5F5)),
+                  const Gap(16),
 
-            // --- Media ---
-            if (post.coverImage != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: AppCachedImage(
-                    imageUrl: post.coverImage!,
-                    height: 200.h,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-
-            // --- Reactions Row & Date ---
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              child: Row(
-                children: [
-                  _ReactionItem(
-                    icon: post.isLiked ? Icons.favorite : Icons.favorite_border,
-                    count: post.reactionCount.toString(),
-                    isActive: post.isLiked,
-                    onTap: () => controller.toggleReaction(post),
-                  ),
-                  const Spacer(),
-                  Text(
-                    post.formattedDate,
-                    style: TextStyle(
-                      fontSize: 11.sp,
-                      color: Colors.black26,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  // --- Actions Bar ---
+                  Row(
+                    children: [
+                      _ActionItem(
+                        icon: post.isLiked ? Icons.favorite_rounded : Icons.favorite_outline_rounded,
+                        label: '${post.reactionCount}',
+                        isActive: post.isLiked,
+                        activeColor: Colors.redAccent,
+                        onTap: () => controller.toggleReaction(post),
+                      ),
+                      const Gap(20),
+                      _ActionItem(
+                        icon: Icons.chat_bubble_outline_rounded,
+                        label: '${post.commentsCount}',
+                        onTap: () => Get.to<void>(() => PostCommentsScreen(postId: post.id, postTitle: post.title)),
+                      ),
+                      const Spacer(),
+                      Text(
+                        post.formattedDate,
+                        style: TextStyle(
+                          fontSize: 10.sp,
+                          color: Colors.black26,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -161,41 +175,40 @@ class _PostCard extends StatelessWidget {
   }
 }
 
-class _ReactionItem extends StatelessWidget {
+class _ActionItem extends StatelessWidget {
   final IconData icon;
-  final String count;
+  final String label;
   final bool isActive;
+  final Color? activeColor;
   final VoidCallback? onTap;
 
-  const _ReactionItem({
+  const _ActionItem({
     required this.icon,
-    required this.count,
+    required this.label,
     this.isActive = false,
+    this.activeColor,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final color = isActive ? (activeColor ?? Colors.blue) : Colors.black45;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 20,
-              color: isActive ? Colors.redAccent : Colors.black26,
-            ),
+            Icon(icon, size: 20, color: color),
             const Gap(8),
             Text(
-              count,
+              label,
               style: TextStyle(
                 fontSize: 13.sp,
-                color: isActive ? Colors.redAccent : Colors.black45,
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+                color: color,
+                fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
               ),
             ),
           ],

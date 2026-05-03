@@ -1,5 +1,4 @@
-import 'package:circa_flow_main/src/imports/core_imports.dart';
-import 'package:circa_flow_main/src/imports/packages_imports.dart';
+import 'package:circa_flow_main/src/imports/imports.dart';
 import '../controllers/community_controller.dart';
 import '../widgets/community_card.dart';
 
@@ -11,75 +10,94 @@ class CommunitiesScreen extends GetView<CommunityController> {
     final cs = context.contextTheme.colorScheme;
     final tt = context.contextTheme.textTheme;
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
+    return Scaffold(
+      backgroundColor: cs.surface,
+      appBar: AppBar(
+        title: Text(
+          'Communities',
+          style: tt.titleLarge?.copyWith(
+            fontWeight: FontWeight.w900,
+            color: const Color(0xFF1A334D),
+            fontSize: 18.sp,
+          ),
+        ),
+        centerTitle: true,
         backgroundColor: cs.surface,
-        appBar: AppBar(
-          title: Text(
-            'Communities',
-            style: tt.titleLarge?.copyWith(
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF1A334D),
-              fontSize: 18.sp,
-            ),
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(105),
+          child: Column(
+            children: [
+              _buildSearchBar(context),
+              Obx(() => Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: cs.outlineVariant.withValues(alpha: 0.3),
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        _TabItem(
+                          label: 'My Communities',
+                          isSelected: controller.currentTab.value ==
+                              CommunityTab.myCommunities,
+                          onTap: () =>
+                              controller.setTab(CommunityTab.myCommunities),
+                        ),
+                        _TabItem(
+                          label: 'Discover',
+                          isSelected: controller.currentTab.value ==
+                              CommunityTab.discover,
+                          onTap: () => controller.setTab(CommunityTab.discover),
+                        ),
+                      ],
+                    ),
+                  )),
+            ],
           ),
-          centerTitle: true,
-          backgroundColor: cs.surface,
-          elevation: 0,
-          surfaceTintColor: Colors.transparent,
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(110),
-            child: Column(
-              children: [
-                _buildSearchBar(context),
-                TabBar(
-                  indicatorColor: cs.primary,
-                  indicatorWeight: 3,
-                  labelColor: cs.primary,
-                  labelStyle:
-                      tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                  unselectedLabelColor: cs.onSurfaceVariant,
-                  tabs: const [
-                    Tab(text: 'My Communities'),
-                    Tab(text: 'Discover'),
-                  ],
-                ),
-              ],
-            ),
-          ),
         ),
-        body: TabBarView(
-          children: [
-            _buildList(context, isMine: true),
-            _buildList(context, isMine: false),
-          ],
-        ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () => _showJoinByCodeSheet(context),
-          icon: const Icon(Icons.add_link_rounded),
-          label: const Text('Join via Code'),
-        ),
+      ),
+      body: Obx(() {
+        final isMine =
+            controller.currentTab.value == CommunityTab.myCommunities;
+        return _buildList(context, isMine: isMine);
+      }),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showJoinByCodeSheet(context),
+        icon: const Icon(Icons.add_link_rounded),
+        label: const Text('Join via Code'),
+        backgroundColor: cs.primary,
+        foregroundColor: cs.onPrimary,
+        elevation: 4,
       ),
     );
   }
 
   Widget _buildSearchBar(BuildContext context) {
+    final cs = context.contextTheme.colorScheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: TextField(
-        onChanged: controller.onSearchChanged,
-        decoration: InputDecoration(
-          hintText: 'Search communities...',
-          prefixIcon: const Icon(Icons.search_rounded),
-          filled: true,
-          fillColor: context.contextTheme.colorScheme.surfaceContainerHighest
-              .withValues(alpha: 0.5),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHighest.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+        ),
+        child: TextField(
+          onChanged: controller.onSearchChanged,
+          decoration: InputDecoration(
+            hintText: 'Search communities...',
+            hintStyle: TextStyle(
+                color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+                fontSize: 14.sp),
+            prefixIcon: Icon(Icons.search_rounded, color: cs.primary),
+            border: InputBorder.none,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
         ),
       ),
     );
@@ -95,7 +113,20 @@ class CommunitiesScreen extends GetView<CommunityController> {
           : controller.filteredAllCommunities;
 
       if (isLoading && list.isEmpty) {
-        return const Center(child: CircularProgressIndicator.adaptive());
+        return AppShimmer(
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: 5,
+            itemBuilder: (context, index) => Container(
+              height: 200,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+              ),
+            ),
+          ),
+        );
       }
 
       if (list.isEmpty) {
@@ -121,34 +152,15 @@ class CommunitiesScreen extends GetView<CommunityController> {
   }
 
   Widget _buildEmptyState(BuildContext context, bool isMine) {
-    final cs = context.contextTheme.colorScheme;
-    final tt = context.contextTheme.textTheme;
-
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.groups_rounded,
-                size: 80, color: cs.primary.withValues(alpha: 0.2)),
-            const SizedBox(height: 16),
-            Text(
-              isMine ? 'No Communities Yet' : 'No Communities Found',
-              style: tt.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold, color: const Color(0xFF1A334D)),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              isMine
-                  ? 'You haven\'t joined any communities yet.\nCheck the Discover tab or use an invite code.'
-                  : 'Try adjusting your search or use an invite code if you have one.',
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+      child: AppEmptyState(
+        icon: Icons.groups_rounded,
+        title: isMine ? 'No Communities Yet' : 'No Communities Found',
+        subtitle: isMine
+            ? 'You haven\'t joined any communities yet.\nCheck the Discover tab or use an invite code.'
+            : 'Try adjusting your search or use an invite code if you have one.',
+        onAction: isMine ? null : controller.refreshData,
+        actionLabel: isMine ? null : 'Refresh',
       ),
     );
   }
@@ -222,6 +234,54 @@ class CommunitiesScreen extends GetView<CommunityController> {
           ),
         );
       },
+    );
+  }
+}
+
+class _TabItem extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _TabItem({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.contextTheme.colorScheme;
+    final tt = context.contextTheme.textTheme;
+
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              child: Text(
+                label,
+                style: tt.titleSmall?.copyWith(
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? cs.primary : cs.onSurfaceVariant,
+                ),
+              ),
+            ),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              height: 3,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: isSelected ? cs.primary : Colors.transparent,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(3)),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -118,7 +118,7 @@ class CommunitiesScreen extends GetView<CommunityController> {
             padding: const EdgeInsets.all(16),
             itemCount: 5,
             itemBuilder: (context, index) => Container(
-              height: 200,
+              height: 180.h,
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -136,7 +136,7 @@ class CommunitiesScreen extends GetView<CommunityController> {
       return RefreshIndicator(
         onRefresh: () async => controller.refreshData(),
         child: ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.fromLTRB(16, 16, 16, 100.h),
           itemCount: list.length,
           itemBuilder: (context, index) {
             final community = list[index];
@@ -168,13 +168,17 @@ class CommunitiesScreen extends GetView<CommunityController> {
   void _showJoinByCodeSheet(BuildContext context) {
     final codeController = TextEditingController();
     final cs = context.contextTheme.colorScheme;
+    
+    // Reset state when opening
+    controller.lookupError.value = '';
+    controller.foundCommunity.value = null;
 
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: cs.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
         return Padding(
@@ -182,56 +186,116 @@ class CommunitiesScreen extends GetView<CommunityController> {
             bottom: MediaQuery.of(context).viewInsets.bottom,
             left: 20,
             right: 20,
-            top: 24,
+            top: 12,
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Join via Code',
-                style: context.contextTheme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF1A334D),
-                ),
-                textAlign: TextAlign.center,
+          child: Obx(() {
+            final community = controller.foundCommunity.value;
+            
+            return AnimatedSize(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Handle
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: cs.onSurfaceVariant.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+
+                  if (community == null) ...[
+                    Text(
+                      'Join via Code',
+                      style: context.contextTheme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF1A334D),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Enter the secret code or slug to join a hidden community.',
+                      style: context.contextTheme.textTheme.bodyMedium?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    TextField(
+                      controller: codeController,
+                      autofocus: true,
+                      decoration: InputDecoration(
+                        labelText: 'Community Code',
+                        hintText: 'e.g., vip-members-2026',
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16)),
+                        prefixIcon: const Icon(Icons.key_rounded),
+                        filled: true,
+                        fillColor: cs.surfaceContainerHighest.withValues(alpha: 0.2),
+                      ),
+                      onChanged: (_) => controller.lookupError.value = '',
+                      onSubmitted: (_) => controller.lookupAndJoinCode(codeController.text),
+                    ),
+                    if (controller.lookupError.isNotEmpty) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Text(
+                          controller.lookupError.value,
+                          style: TextStyle(color: cs.error, fontSize: 12.sp, fontWeight: FontWeight.w600),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    AppButton(
+                      label: 'Lookup Community',
+                      isLoading: controller.isLookingUp.value,
+                      onPressed: () => controller.lookupAndJoinCode(codeController.text),
+                      variant: ButtonVariant.primary,
+                      isFullWidth: true,
+                    ),
+                  ] else ...[
+                    Text(
+                      'Community Found!',
+                      style: context.contextTheme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF1A334D),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    CommunityCard(
+                      community: community,
+                      onJoin: () {
+                        Get.back<void>();
+                        controller.joinCommunity(community);
+                      },
+                      onLeave: () => controller.leaveCommunity(community),
+                    ),
+                    const SizedBox(height: 8),
+                    AppButton(
+                      label: 'Try another code',
+                      variant: ButtonVariant.ghost,
+                      onPressed: () {
+                        controller.foundCommunity.value = null;
+                        codeController.clear();
+                      },
+                      isFullWidth: true,
+                    ),
+                  ],
+                  const SizedBox(height: 32),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Enter the secret code or slug to join a hidden community.',
-                style: context.contextTheme.textTheme.bodyMedium?.copyWith(
-                  color: cs.onSurfaceVariant,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              TextField(
-                controller: codeController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  labelText: 'Community Code',
-                  hintText: 'e.g., vip-members-2026',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  prefixIcon: const Icon(Icons.key_rounded),
-                ),
-              ),
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: () {
-                  Get.back<void>();
-                  controller.lookupAndJoinCode(codeController.text);
-                },
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                child: const Text('Lookup & Join'),
-              ),
-              const SizedBox(height: 32),
-            ],
-          ),
+            );
+          }),
         );
       },
     );

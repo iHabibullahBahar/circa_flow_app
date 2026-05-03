@@ -22,6 +22,9 @@ class CommunityController extends GetxController {
   final RxBool isLoadingAll = false.obs;
   final RxBool isLoadingMine = false.obs;
   final RxBool isJoining = false.obs;
+  final RxBool isLookingUp = false.obs;
+  final RxString lookupError = ''.obs;
+  final Rxn<CommunityModel> foundCommunity = Rxn<CommunityModel>();
 
   final RxString searchQuery = ''.obs;
   final Rx<CommunityTab> currentTab = CommunityTab.myCommunities.obs;
@@ -96,68 +99,28 @@ class CommunityController extends GetxController {
   Future<void> lookupAndJoinCode(String code) async {
     if (code.trim().isEmpty) return;
 
-    isJoining.value = true;
+    isLookingUp.value = true;
+    lookupError.value = '';
+    foundCommunity.value = null;
+    
     final lookupResult = await _repository.lookupCommunity(code.trim());
 
     lookupResult.fold(
       (failure) {
-        isJoining.value = false;
-        showGlobalToast(
-            message: 'No community is available with that code.', status: 'error');
+        isLookingUp.value = false;
+        lookupError.value = 'No community is available with that code.';
       },
       (community) async {
-        isJoining.value = false;
+        isLookingUp.value = false;
 
         // If already a member, just tell them.
         if (community.isMember || community.isPending) {
-          showGlobalToast(
-              message: 'You are already a member or have a pending request.',
-              status: 'success');
+          lookupError.value = 'You are already a member or have a pending request.';
           return;
         }
 
-        // Show Preview Bottom Sheet
-        Get.bottomSheet<void>(
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Get.theme.colorScheme.surface,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: Get.theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                Text(
-                  'Community Found!',
-                  style: Get.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF1A334D),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                CommunityCard(
-                  community: community,
-                  onJoin: () {
-                    Get.back<void>(); // close sheet
-                    joinCommunity(community);
-                  },
-                  onLeave: () {}, // Not applicable here
-                ),
-                const SizedBox(height: 20),
-              ],
-            ),
-          ),
-          isScrollControlled: true,
-        );
+        // Set found community - the UI will reactively show the preview
+        foundCommunity.value = community;
       },
     );
   }
@@ -188,13 +151,21 @@ class CommunityController extends GetxController {
     );
   }
 
-  /// Leave community
+  /// Leave or Withdraw request
   Future<void> leaveCommunity(CommunityModel community) async {
+    final isPending = community.isPending;
+    final title = isPending ? 'Withdraw Request' : 'Leave Community';
+    final description = isPending 
+        ? 'Are you sure you want to withdraw your join request for ${community.name}?'
+        : 'Are you sure you want to leave ${community.name}?';
+    final confirmLabel = isPending ? 'Withdraw' : 'Leave';
+    final successMessage = isPending ? 'Request withdrawn.' : 'Left community.';
+
     AppDialogs.showConfirm(
-      title: 'Leave Community',
-      description: 'Are you sure you want to leave ${community.name}?',
+      title: title,
+      description: description,
       confirmVariant: ButtonVariant.danger,
-      confirmLabel: 'Leave',
+      confirmLabel: confirmLabel,
       onConfirm: () async {
         isJoining.value = true;
         final result = await _repository.leaveCommunity(community.id);
@@ -204,7 +175,7 @@ class CommunityController extends GetxController {
           (failure) =>
               showGlobalToast(message: failure.message, status: 'error'),
           (_) {
-            showGlobalToast(message: 'Left community.', status: 'success');
+            showGlobalToast(message: successMessage, status: 'success');
             refreshData();
           },
         );

@@ -77,7 +77,8 @@ class AppConfig {
   }
 
   static String _getBaseUrl() {
-    return dotenv.get('API_BASE_URL',
+    final url = dotenv.get('API_BASE_URL',
         fallback: 'http://127.0.0.1:8000/api/v1');
+    return url.endsWith('/') ? url : '$url/';
   }
 }

@@ -4,6 +4,7 @@ import 'package:app_links/app_links.dart';
 import 'package:circa_flow_main/src/config/config_controller.dart';
 import 'package:circa_flow_main/src/imports/imports.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:circa_flow_main/src/features/communities/presentation/controllers/community_controller.dart';
 
 /// Handles all incoming deep links from two sources:
 ///   1. Universal Links / App Links — user taps a URL on app.circaflow.co.uk
@@ -105,7 +106,22 @@ class DeepLinkService {
     }
 
     final section = segments[0];
-    final id = int.tryParse(segments[1]);
+    final identifier = segments[1];
+
+    if (section == 'communities') {
+      // Communities use string slugs instead of numeric IDs
+      Get.toNamed<void>(AppRoutes.communities);
+      // Wait for binding to initialize, then lookup
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (Get.isRegistered<CommunityController>()) {
+          Get.find<CommunityController>().lookupAndJoinCode(identifier);
+        }
+      });
+      return;
+    }
+
+    // Other sections use numeric IDs
+    final id = int.tryParse(identifier);
 
     if (id == null) {
       _goHome();
@@ -119,9 +135,6 @@ class DeepLinkService {
         Get.toNamed<void>(AppRoutes.eventDetail, arguments: {'id': id});
       case 'documents':
         Get.toNamed<void>(AppRoutes.documentDetail, arguments: {'id': id});
-      // Future sections — add here:
-      // case 'chat':
-      //   Get.toNamed<void>(AppRoutes.chatConversation, arguments: {'conversationId': id});
       default:
         AppLogger.warning('DeepLinkService: unknown section "$section"');
         _goHome();

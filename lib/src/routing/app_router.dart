@@ -15,6 +15,8 @@ import 'package:circa_flow_main/src/features/posts/data/models/post_model.dart';
 import 'package:circa_flow_main/src/features/documents/presentation/screens/document_detail_screen.dart';
 import 'package:circa_flow_main/src/features/documents/data/models/document_model.dart';
 import 'package:circa_flow_main/src/shared/screens/webview_screen.dart';
+import 'package:circa_flow_main/src/features/communities/presentation/screens/communities_screen.dart';
+import 'package:circa_flow_main/src/features/communities/presentation/bindings/community_binding.dart';
 
 class AppRouter {
   static List<GetPage<dynamic>> get getPages => [
@@ -71,6 +73,11 @@ class AppRouter {
             final doc = Get.arguments as DocumentModel;
             return DocumentDetailScreen(doc: doc);
           },
+        ),
+        GetPage(
+          name: AppRoutes.communities,
+          page: () => const CommunitiesScreen(),
+          binding: CommunityBinding(),
         ),
       ];
 }

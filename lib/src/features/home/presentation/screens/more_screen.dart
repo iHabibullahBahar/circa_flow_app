@@ -114,6 +114,15 @@ class MoreScreen extends StatelessWidget {
             );
           }),
 
+          // --- Engagement Section ---
+          _buildSectionHeader(context, 'Engagement'),
+          _buildActionTile(
+            context,
+            label: 'Communities',
+            icon: Icons.groups_rounded,
+            onTap: () => Get.toNamed<void>(AppRoutes.communities),
+          ),
+
           // --- Account Section ---
           _buildSectionHeader(context, 'Account'),
           Obx(() {

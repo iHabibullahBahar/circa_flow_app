@@ -1,9 +1,9 @@
 import '../../../../imports/imports.dart';
 import '../../data/models/post_model.dart';
-import '../../data/models/comment_model.dart';
 import '../providers/posts_controller.dart';
 import '../providers/comments_controller.dart';
 import '../widgets/comment_item.dart';
+import '../widgets/comment_input_bar.dart';
 import 'post_comments_screen.dart';
 
 class PostDetailScreen extends StatefulWidget {
@@ -16,7 +16,9 @@ class PostDetailScreen extends StatefulWidget {
 
 class _PostDetailScreenState extends State<PostDetailScreen> {
   final TextEditingController _commentController = TextEditingController();
-  final Rx<CommentModel?> _replyingTo = Rx<CommentModel?>(null);
+  final Rx<ReplyContext?> _replyContext = Rx<ReplyContext?>(null);
+  final FocusNode _inputFocusNode = FocusNode();
+  int _previewLimit = 3;
 
   @override
   void dispose() {
@@ -239,7 +241,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                               Row(
                                 children: [
                                   Text(
-                                    'Comments (${commentsCtrl.totalComments.value})',
+                                    '${commentsCtrl.totalComments.value == 1 ? 'Comment' : 'Comments'} (${commentsCtrl.totalComments.value})',
                                     style: TextStyle(
                                       fontSize: 16.sp,
                                       fontWeight: FontWeight.w800,
@@ -269,18 +271,19 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                 ListView.separated(
                                   shrinkWrap: true,
                                   physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: commentsCtrl.comments.length > 3 ? 3 : commentsCtrl.comments.length,
                                   separatorBuilder: (_, __) => const Gap(24),
                                   itemBuilder: (ctx, i) => CommentItem(
                                     key: ValueKey(commentsCtrl.comments[i].id),
                                     comment: commentsCtrl.comments[i],
-                                    onReply: (parent, _) {
+                                    controller: commentsCtrl,
+                                    onReply: (parent, onReplySuccess) {
                                       setState(() {
-                                        _replyingTo.value = parent;
+                                        _replyContext.value = ReplyContext(parent, onReplySuccess);
                                       });
-                                      FocusScope.of(context).requestFocus(FocusNode()); // Optional: focus the textfield
+                                      _inputFocusNode.requestFocus();
                                     },
                                   ),
+                                  itemCount: commentsCtrl.comments.length > _previewLimit ? _previewLimit : commentsCtrl.comments.length,
                                 ),
                             ],
                           );
@@ -293,112 +296,20 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               ),
             ),
           ),
-          _buildStickyInputArea(commentsCtrl),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStickyInputArea(CommentsController commentsCtrl) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + context.mediaQueryViewPadding.bottom),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -5)),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Obx(() {
-            if (_replyingTo.value == null) return const SizedBox.shrink();
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Replying to ${_replyingTo.value!.author?.firstName ?? 'Comment'}',
-                      style: TextStyle(fontSize: 12.sp, color: Colors.black45, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () => _replyingTo.value = null,
-                    child: const Icon(Icons.close_rounded, size: 16, color: Colors.black26),
-                  ),
-                ],
-              ),
-            );
-          }),
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF5F7F9),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: TextField(
-                    controller: _commentController,
-                    autofocus: false,
-                    style: TextStyle(fontSize: 14.sp),
-                    decoration: InputDecoration(
-                      hintText: 'Share your thoughts...',
-                      hintStyle: TextStyle(color: Colors.black26, fontSize: 14.sp),
-                      border: InputBorder.none,
-                      isDense: true,
-                    ),
-                    maxLines: 4,
-                    minLines: 1,
-                  ),
-                ),
-              ),
-              const Gap(12),
-              Obx(() => InkWell(
-                onTap: commentsCtrl.isPosting.value ? null : () => _submitComment(commentsCtrl),
-                borderRadius: BorderRadius.circular(50),
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: commentsCtrl.isPosting.value 
-                      ? Colors.black.withValues(alpha: 0.05) 
-                      : context.contextTheme.colorScheme.primary,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.send_rounded, 
-                    size: 20, 
-                    color: Colors.white,
-                  ),
-                ),
-              )),
-            ],
+          CommentInputBar(
+            controller: commentsCtrl,
+            textController: _commentController,
+            replyingTo: _replyContext,
+            focusNode: _inputFocusNode,
+            onCommentPosted: () {
+              setState(() {
+                _previewLimit++;
+              });
+            },
           ),
         ],
       ),
     );
-  }
-
-  void _submitComment(CommentsController commentsCtrl) async {
-    final text = _commentController.text.trim();
-    if (text.isEmpty) return;
-    
-    if (_replyingTo.value != null) {
-      final reply = await commentsCtrl.postReply(_replyingTo.value!.id, text);
-      if (reply != null) {
-        _commentController.clear();
-        _replyingTo.value = null;
-        FocusScope.of(context).unfocus();
-      }
-    } else {
-      final success = await commentsCtrl.postComment(text);
-      if (success) {
-        _commentController.clear();
-        FocusScope.of(context).unfocus();
-      }
-    }
   }
 
   void _handleLink(PostLink link) {

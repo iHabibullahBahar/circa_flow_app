@@ -2,11 +2,23 @@ import 'package:circa_flow_main/src/imports/imports.dart';
 import '../../data/models/comment_model.dart';
 import '../providers/comments_controller.dart';
 
+class ReplyContext {
+  final CommentModel parent;
+  final void Function(CommentModel) onReplySuccess;
+  ReplyContext(this.parent, this.onReplySuccess);
+}
+
 class CommentItem extends StatefulWidget {
   final CommentModel comment;
+  final CommentsController controller;
   final void Function(CommentModel, void Function(CommentModel)) onReply;
 
-  const CommentItem({super.key, required this.comment, required this.onReply});
+  const CommentItem({
+    super.key,
+    required this.comment,
+    required this.controller,
+    required this.onReply,
+  });
 
   @override
   State<CommentItem> createState() => _CommentItemState();
@@ -74,12 +86,25 @@ class _CommentItemState extends State<CommentItem> {
                         ),
                         const Gap(16),
                         InkWell(
-                          onTap: () {
-                            // Placeholder for Like
-                          },
-                          child: Text(
-                            'Like',
-                            style: TextStyle(color: Colors.black54, fontWeight: FontWeight.w800, fontSize: 11.sp),
+                          onTap: () => widget.controller.toggleLike(widget.comment),
+                          child: Row(
+                            children: [
+                              Text(
+                                'Like',
+                                style: TextStyle(
+                                  color: widget.comment.isLiked ? context.contextTheme.colorScheme.primary : Colors.black54, 
+                                  fontWeight: FontWeight.w800, 
+                                  fontSize: 11.sp,
+                                ),
+                              ),
+                              if (widget.comment.likesCount > 0) ...[
+                                const Gap(4),
+                                Text(
+                                  '${widget.comment.likesCount}',
+                                  style: TextStyle(color: Colors.black45, fontSize: 11.sp, fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                         const Gap(16),
@@ -113,7 +138,7 @@ class _CommentItemState extends State<CommentItem> {
                             Container(width: 24, height: 1, color: Colors.black12),
                             const Gap(8),
                             Text(
-                              'View ${widget.comment.repliesCount} replies',
+                              'View ${widget.comment.repliesCount} ${widget.comment.repliesCount == 1 ? 'reply' : 'replies'}',
                               style: TextStyle(color: Colors.black45, fontWeight: FontWeight.w700, fontSize: 12.sp),
                             ),
                           ],
@@ -132,7 +157,18 @@ class _CommentItemState extends State<CommentItem> {
               ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
               : Column(
                   children: [
-                    ..._replies.map((r) => ReplyItem(reply: r)),
+                    ..._replies.map((r) => ReplyItem(
+                      reply: r, 
+                      controller: widget.controller,
+                      onLike: (isLiked, count) {
+                        setState(() {
+                          final idx = _replies.indexWhere((repl) => repl.id == r.id);
+                          if (idx != -1) {
+                            _replies[idx] = _replies[idx].copyWith(isLiked: isLiked, likesCount: count);
+                          }
+                        });
+                      },
+                    )),
                     if (_showReplies)
                       Align(
                         alignment: Alignment.centerLeft,
@@ -190,7 +226,7 @@ class _CommentItemState extends State<CommentItem> {
     });
 
     try {
-      final replies = await Get.find<CommentsController>(tag: widget.comment.id.toString()).fetchReplies(widget.comment.id);
+      final replies = await widget.controller.fetchReplies(widget.comment.id);
       
       setState(() {
         _replies = replies;
@@ -212,7 +248,15 @@ class _CommentItemState extends State<CommentItem> {
 
 class ReplyItem extends StatelessWidget {
   final CommentModel reply;
-  const ReplyItem({super.key, required this.reply});
+  final CommentsController controller;
+  final void Function(bool isLiked, int count)? onLike;
+  
+  const ReplyItem({
+    super.key, 
+    required this.reply, 
+    required this.controller,
+    this.onLike,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -257,9 +301,45 @@ class ReplyItem extends StatelessWidget {
                         style: TextStyle(color: Colors.black38, fontSize: 10.sp, fontWeight: FontWeight.w600),
                       ),
                       const Gap(12),
-                      Text(
-                        'Like',
-                        style: TextStyle(color: Colors.black54, fontWeight: FontWeight.w800, fontSize: 10.sp),
+                      InkWell(
+                        onTap: () async {
+                          // Optimistic update if needed or just wait for result
+                          // But controller.toggleLike updates the top-level list.
+                          // For replies, we need a way to update the local list in CommentItem.
+                          // We can call a custom method or handle it here.
+                          final _api = ApiService.instance;
+                          final result = await _api.post<Map<String, dynamic>>(
+                            '/comments/react',
+                            data: {'comment_id': reply.id, 'type': 'like'},
+                          );
+                          result.fold(
+                            (error) => AppToast.error(error.message),
+                            (data) {
+                              final status = data['status'] as String;
+                              final newCount = (data['reaction_count'] as num).toInt();
+                              onLike?.call(status == 'liked', newCount);
+                            },
+                          );
+                        },
+                        child: Row(
+                          children: [
+                            Text(
+                              'Like',
+                              style: TextStyle(
+                                color: reply.isLiked ? context.contextTheme.colorScheme.primary : Colors.black54, 
+                                fontWeight: FontWeight.w800, 
+                                fontSize: 10.sp,
+                              ),
+                            ),
+                            if (reply.likesCount > 0) ...[
+                              const Gap(4),
+                              Text(
+                                '${reply.likesCount}',
+                                style: TextStyle(color: Colors.black45, fontSize: 10.sp, fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
                     ],
                   ),

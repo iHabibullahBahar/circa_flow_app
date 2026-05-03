@@ -7,6 +7,8 @@ class CommentModel extends Equatable {
   final int? parentId;
   final CommentAuthor? author;
   final int repliesCount;
+  final int likesCount;
+  final bool isLiked;
   final bool isEdited;
   final DateTime createdAt;
 
@@ -17,6 +19,8 @@ class CommentModel extends Equatable {
     this.parentId,
     this.author,
     this.repliesCount = 0,
+    this.likesCount = 0,
+    this.isLiked = false,
     this.isEdited = false,
     required this.createdAt,
   });
@@ -29,6 +33,8 @@ class CommentModel extends Equatable {
       parentId: json['parent_id'] != null ? (json['parent_id'] as num).toInt() : null,
       author: json['author'] != null ? CommentAuthor.fromJson(json['author'] as Map<String, dynamic>) : null,
       repliesCount: (json['replies_count'] as num?)?.toInt() ?? 0,
+      likesCount: (json['reaction_count'] as num?)?.toInt() ?? 0,
+      isLiked: (json['is_liked'] as bool?) ?? false,
       isEdited: (json['is_edited'] as bool?) ?? false,
       createdAt: DateTime.parse(json['created_at'] as String).toLocal(),
     );
@@ -36,8 +42,34 @@ class CommentModel extends Equatable {
 
   bool get isReply => parentId != null;
 
+  CommentModel copyWith({
+    int? id,
+    int? userId,
+    String? content,
+    int? parentId,
+    CommentAuthor? author,
+    int? repliesCount,
+    int? likesCount,
+    bool? isLiked,
+    bool? isEdited,
+    DateTime? createdAt,
+  }) {
+    return CommentModel(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      content: content ?? this.content,
+      parentId: parentId ?? this.parentId,
+      author: author ?? this.author,
+      repliesCount: repliesCount ?? this.repliesCount,
+      likesCount: likesCount ?? this.likesCount,
+      isLiked: isLiked ?? this.isLiked,
+      isEdited: isEdited ?? this.isEdited,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
   @override
-  List<Object?> get props => [id, userId, content, parentId, author, repliesCount, isEdited, createdAt];
+  List<Object?> get props => [id, userId, content, parentId, author, repliesCount, likesCount, isLiked, isEdited, createdAt];
 }
 
 class CommentAuthor extends Equatable {

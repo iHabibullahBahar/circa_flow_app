@@ -76,6 +76,7 @@ class CommentsController extends GetxController {
         isPosting.value = false;
         final newComment = CommentModel.fromJson(data as Map<String, dynamic>);
         comments.insert(0, newComment);
+        totalComments.value++;
         return true;
       },
     );
@@ -117,7 +118,48 @@ class CommentsController extends GetxController {
         return null;
       },
       (data) {
-        return CommentModel.fromJson(data);
+        final newReply = CommentModel.fromJson(data);
+        
+        // Find parent and update count
+        final parentIndex = comments.indexWhere((c) => c.id == commentId);
+        if (parentIndex != -1) {
+          comments[parentIndex] = comments[parentIndex].copyWith(
+            repliesCount: comments[parentIndex].repliesCount + 1,
+          );
+        }
+        
+        totalComments.value++;
+        return newReply;
+      },
+    );
+  }
+
+  Future<void> toggleLike(CommentModel comment) async {
+    final _api = ApiService.instance;
+    final result = await _api.post<Map<String, dynamic>>(
+      '/comments/react',
+      data: {'comment_id': comment.id, 'type': 'like'},
+    );
+
+    result.fold(
+      (error) => AppToast.error(error.message),
+      (data) {
+        final status = data['status'] as String;
+        final newCount = (data['reaction_count'] as num).toInt();
+        final isLiked = status == 'liked';
+
+        // Update top-level comments list
+        final index = comments.indexWhere((c) => c.id == comment.id);
+        if (index != -1) {
+          comments[index] = comments[index].copyWith(
+            likesCount: newCount,
+            isLiked: isLiked,
+          );
+        }
+
+        // Note: For replies inside CommentItem, the CommentItem handles its own local list.
+        // We'll need to pass this update back or handle it via a global event.
+        // However, since we pass the controller to CommentItem, we can call it there.
       },
     );
   }

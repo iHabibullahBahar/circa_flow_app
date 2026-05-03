@@ -253,7 +253,12 @@ class CommunityCard extends StatelessWidget {
     if (community.isRejected) {
       return AppButton(
         label: 'Request Again',
-        onPressed: onJoin,
+        onPressed: () => AppGuard.check(
+          context,
+          action: 'join_community',
+          fallbackGuards: [GuardType.guest],
+          onPass: onJoin,
+        ),
         variant: ButtonVariant.primary,
         height: ButtonSize.small,
       );
@@ -261,7 +266,12 @@ class CommunityCard extends StatelessWidget {
 
     return AppButton(
       label: community.joinType == 'open' ? 'Join' : 'Request',
-      onPressed: onJoin,
+      onPressed: () => AppGuard.check(
+        context,
+        action: 'join_community',
+        fallbackGuards: [GuardType.guest],
+        onPass: onJoin,
+      ),
       variant: ButtonVariant.primary,
       height: ButtonSize.small,
     );

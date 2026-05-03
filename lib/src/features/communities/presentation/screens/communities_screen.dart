@@ -242,7 +242,12 @@ class CommunitiesScreen extends GetView<CommunityController> {
                         fillColor: cs.surfaceContainerHighest.withValues(alpha: 0.2),
                       ),
                       onChanged: (_) => controller.lookupError.value = '',
-                      onSubmitted: (_) => controller.lookupAndJoinCode(codeController.text),
+                      onSubmitted: (_) => AppGuard.check(
+                        context,
+                        action: 'join_community',
+                        fallbackGuards: [GuardType.guest],
+                        onPass: () => controller.lookupAndJoinCode(codeController.text),
+                      ),
                     ),
                     if (controller.lookupError.isNotEmpty) ...[
                       Padding(
@@ -258,7 +263,12 @@ class CommunitiesScreen extends GetView<CommunityController> {
                     AppButton(
                       label: 'Lookup Community',
                       isLoading: controller.isLookingUp.value,
-                      onPressed: () => controller.lookupAndJoinCode(codeController.text),
+                      onPressed: () => AppGuard.check(
+                        context,
+                        action: 'join_community',
+                        fallbackGuards: [GuardType.guest],
+                        onPass: () => controller.lookupAndJoinCode(codeController.text),
+                      ),
                       variant: ButtonVariant.primary,
                       isFullWidth: true,
                     ),

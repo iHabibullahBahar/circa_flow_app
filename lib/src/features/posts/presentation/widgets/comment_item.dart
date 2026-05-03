@@ -86,7 +86,12 @@ class _CommentItemState extends State<CommentItem> {
                         ),
                         const Gap(16),
                         InkWell(
-                          onTap: () => widget.controller.toggleLike(widget.comment),
+                          onTap: () => AppGuard.check(
+                            context,
+                            action: 'react_post',
+                            fallbackGuards: [GuardType.guest],
+                            onPass: () => widget.controller.toggleLike(widget.comment),
+                          ),
                           child: Row(
                             children: [
                               Text(
@@ -109,16 +114,21 @@ class _CommentItemState extends State<CommentItem> {
                         ),
                         const Gap(16),
                         InkWell(
-                          onTap: () => widget.onReply(widget.comment, (newReply) {
-                            setState(() {
-                              if (!_showReplies) {
-                                _showReplies = true;
-                              }
-                              if (!_replies.contains(newReply)) {
-                                _replies.add(newReply);
-                              }
-                            });
-                          }),
+                          onTap: () => AppGuard.check(
+                            context,
+                            action: 'reply_comment',
+                            fallbackGuards: [GuardType.guest],
+                            onPass: () => widget.onReply(widget.comment, (newReply) {
+                              setState(() {
+                                if (!_showReplies) {
+                                  _showReplies = true;
+                                }
+                                if (!_replies.contains(newReply)) {
+                                  _replies.add(newReply);
+                                }
+                              });
+                            }),
+                          ),
                           child: Text(
                             'Reply',
                             style: TextStyle(color: Colors.black54, fontWeight: FontWeight.w800, fontSize: 11.sp),
@@ -302,25 +312,26 @@ class ReplyItem extends StatelessWidget {
                       ),
                       const Gap(12),
                       InkWell(
-                        onTap: () async {
-                          // Optimistic update if needed or just wait for result
-                          // But controller.toggleLike updates the top-level list.
-                          // For replies, we need a way to update the local list in CommentItem.
-                          // We can call a custom method or handle it here.
-                          final _api = ApiService.instance;
-                          final result = await _api.post<Map<String, dynamic>>(
-                            '/comments/react',
-                            data: {'comment_id': reply.id, 'type': 'like'},
-                          );
-                          result.fold(
-                            (error) => AppToast.error(error.message),
-                            (data) {
-                              final status = data['status'] as String;
-                              final newCount = (data['reaction_count'] as num).toInt();
-                              onLike?.call(status == 'liked', newCount);
-                            },
-                          );
-                        },
+                        onTap: () => AppGuard.check(
+                          context,
+                          action: 'react_post',
+                          fallbackGuards: [GuardType.guest],
+                          onPass: () async {
+                            final _api = ApiService.instance;
+                            final result = await _api.post<Map<String, dynamic>>(
+                              '/comments/react',
+                              data: {'comment_id': reply.id, 'type': 'like'},
+                            );
+                            result.fold(
+                              (error) => AppToast.error(error.message),
+                              (data) {
+                                final status = data['status'] as String;
+                                final newCount = (data['reaction_count'] as num).toInt();
+                                onLike?.call(status == 'liked', newCount);
+                              },
+                            );
+                          },
+                        ),
                         child: Row(
                           children: [
                             Text(

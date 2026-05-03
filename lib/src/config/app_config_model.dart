@@ -197,6 +197,7 @@ class AppConfigModel {
   final List<OnboardingSlide> onboarding;
   final bool allowRegistration;
   final bool allowGuestAccess;
+  final Map<String, List<String>> actionGuards;
 
   const AppConfigModel({
     required this.organization,
@@ -209,6 +210,7 @@ class AppConfigModel {
     required this.onboarding,
     this.allowRegistration = false,
     this.allowGuestAccess = false,
+    this.actionGuards = const {},
   });
 
   factory AppConfigModel.fromJson(Map<String, dynamic> json) {
@@ -251,6 +253,10 @@ class AppConfigModel {
           const [],
       allowRegistration: data['allow_registration'] == true,
       allowGuestAccess: data['allow_guest_access'] == true,
+      actionGuards: (data['action_guards'] as Map<String, dynamic>?)?.map(
+            (key, value) => MapEntry(key, (value as List).cast<String>()),
+          ) ??
+          const {},
     );
   }
 
@@ -266,6 +272,7 @@ class AppConfigModel {
         onboarding: const [],
         allowRegistration: false,
         allowGuestAccess: false,
+        actionGuards: const {},
       );
 
   Map<String, dynamic> toJson() => {
@@ -313,6 +320,7 @@ class AppConfigModel {
           'onboarding': onboarding
               .map((s) => {'title': s.title, 'subtitle': s.subtitle})
               .toList(),
+          'action_guards': actionGuards,
         }
       };
 }

@@ -92,6 +92,15 @@ class CommentInputBar extends StatelessWidget {
                     controller: textController,
                     focusNode: focusNode,
                     autofocus: false,
+                    readOnly: !AppGuard.canProceed(action: 'comment_post', fallbackGuards: [GuardType.guest]),
+                    onTap: () {
+                      AppGuard.check(
+                        context,
+                        action: 'comment_post',
+                        fallbackGuards: [GuardType.guest],
+                        onPass: () {},
+                      );
+                    },
                     style: TextStyle(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w500,
@@ -167,25 +176,32 @@ class CommentInputBar extends StatelessWidget {
   }
 
   void _submit(BuildContext context) async {
-    final text = textController.text.trim();
-    if (text.isEmpty) return;
+    AppGuard.check(
+      context,
+      action: 'comment_post',
+      fallbackGuards: [GuardType.guest],
+      onPass: () async {
+        final text = textController.text.trim();
+        if (text.isEmpty) return;
 
-    if (replyingTo.value != null) {
-      final contextObj = replyingTo.value!;
-      final reply = await controller.postReply(contextObj.parent.id, text);
-      if (reply != null) {
-        contextObj.onReplySuccess(reply);
-        textController.clear();
-        replyingTo.value = null;
-        FocusScope.of(context).unfocus();
-      }
-    } else {
-      final success = await controller.postComment(text);
-      if (success) {
-        textController.clear();
-        FocusScope.of(context).unfocus();
-        onCommentPosted?.call();
-      }
-    }
+        if (replyingTo.value != null) {
+          final contextObj = replyingTo.value!;
+          final reply = await controller.postReply(contextObj.parent.id, text);
+          if (reply != null) {
+            contextObj.onReplySuccess(reply);
+            textController.clear();
+            replyingTo.value = null;
+            FocusScope.of(context).unfocus();
+          }
+        } else {
+          final success = await controller.postComment(text);
+          if (success) {
+            textController.clear();
+            FocusScope.of(context).unfocus();
+            onCommentPosted?.call();
+          }
+        }
+      },
+    );
   }
 }

@@ -141,7 +141,12 @@ class EventDetailScreen extends GetView<EventsController> {
                             : ButtonVariant.primary,
                         onPressed: event.isRegistered
                             ? () => _showCancelDialog(context, event)
-                            : () => controller.registerForEvent(event),
+                            : () => AppGuard.check(
+                                  context,
+                                  action: 'register_event',
+                                  fallbackGuards: [GuardType.guest],
+                                  onPass: () => controller.registerForEvent(event),
+                                ),
                       ),
                       const Gap(12),
                     ],

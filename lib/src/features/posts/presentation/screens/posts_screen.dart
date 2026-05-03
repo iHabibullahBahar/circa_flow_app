@@ -146,7 +146,12 @@ class _PostCard extends StatelessWidget {
                         label: '${post.reactionCount}',
                         isActive: post.isLiked,
                         activeColor: Colors.redAccent,
-                        onTap: () => controller.toggleReaction(post),
+                        onTap: () => AppGuard.check(
+                          context,
+                          action: 'react_post',
+                          fallbackGuards: [GuardType.guest],
+                          onPass: () => controller.toggleReaction(post),
+                        ),
                       ),
                       const Gap(20),
                       _ActionItem(

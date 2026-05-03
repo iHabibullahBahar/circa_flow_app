@@ -90,7 +90,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                               ),
                               const Spacer(),
                               InkWell(
-                                onTap: () => postCtrl.toggleReaction(currentPost),
+                                onTap: () => AppGuard.check(
+                                  context,
+                                  action: 'react_post',
+                                  fallbackGuards: [GuardType.guest],
+                                  onPass: () => postCtrl.toggleReaction(currentPost),
+                                ),
                                 borderRadius: BorderRadius.circular(12),
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

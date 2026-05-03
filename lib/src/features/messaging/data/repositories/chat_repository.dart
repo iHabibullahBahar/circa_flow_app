@@ -6,18 +6,19 @@ class ChatRepository {
   final ApiService _api = ApiService.instance;
 
   /// Fetch paginated messages for a conversation.
-  /// [beforeId] — load messages older than this ID (pagination cursor).
+  /// [oldestId] — load messages older than this ID (scroll-up pagination cursor).
+  /// [newestId] — catch-up: all messages newer than this ID.
   FutureEither<List<Map<String, dynamic>>> getMessages({
     required int conversationId,
-    int? beforeId,
-    int perPage = 30,
+    int? oldestId,
+    int? newestId,
   }) async {
     final result = await _api.post<Map<String, dynamic>>(
       zMessagingMessagesEndpoint,
       data: {
         'conversation_id': conversationId,
-        if (beforeId != null) 'before_id': beforeId,
-        'per_page': perPage,
+        if (oldestId != null) 'oldest_id': oldestId,
+        if (newestId != null) 'newest_id': newestId,
       },
     );
 
@@ -38,7 +39,7 @@ class ChatRepository {
       data: {
         'conversation_id': conversationId,
         'type': 'text',
-        'body': text,
+        'content': text, // backend field is 'content'
       },
     );
 
@@ -54,9 +55,9 @@ class ChatRepository {
     final result = await _api.uploadFile<Map<String, dynamic>>(
       zMessagingSendEndpoint,
       filePath: filePath,
-      fieldName: 'image',
+      fieldName: 'file', // backend expects 'file'
       extraData: {
-        'conversation_id': conversationId,
+        'conversation_id': conversationId.toString(),
         'type': 'image',
       },
     );

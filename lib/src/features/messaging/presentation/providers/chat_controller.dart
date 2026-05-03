@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:flutter_chat_core/flutter_chat_core.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -83,7 +85,7 @@ class ConversationController extends GetxController {
           await chatController.insertAllMessages(messages);
           _markRead(messages.last);
         }
-        hasMoreMessages.value = rawList.length >= 30;
+        hasMoreMessages.value = rawList.length >= 50; // backend initial limit = 50
         isLoading.value = false;
       },
     );
@@ -97,7 +99,7 @@ class ConversationController extends GetxController {
     isLoadingMore.value = true;
     final result = await _repository.getMessages(
       conversationId: conversation.id,
-      beforeId: _oldestMessageId,
+      oldestId: _oldestMessageId, // fixed: was beforeId
     );
 
     result.fold(
@@ -110,7 +112,7 @@ class ConversationController extends GetxController {
           final older =
               rawList.map(_mapToMessage).whereType<Message>().toList();
           await chatController.insertAllMessages(older, index: 0);
-          hasMoreMessages.value = rawList.length >= 30;
+          hasMoreMessages.value = rawList.length >= 20;
         }
         isLoadingMore.value = false;
       },
@@ -153,30 +155,93 @@ class ConversationController extends GetxController {
     );
   }
 
-  /// Pick an image from gallery and send it.
+  /// Show a bottom sheet to pick an image from gallery or camera, then send.
   Future<void> pickAndSendImage() async {
+    final source = await _showImageSourceSheet();
+    if (source == null) return;
+
     final picked = await _picker.pickImage(
-      source: ImageSource.gallery,
+      source: source,
       imageQuality: 80,
+      maxWidth: 1920,
     );
     if (picked == null) return;
 
     isSending.value = true;
+
+    // Optimistic image preview using local file path
+    final optimistic = _optimisticImageMessage(picked.path);
+    await chatController.insertMessage(optimistic);
+
     final result = await _repository.sendImage(
       conversationId: conversation.id,
       filePath: picked.path,
     );
 
     result.fold(
-      (failure) => isSending.value = false,
+      (failure) async {
+        await chatController.updateMessage(
+          optimistic,
+          optimistic.copyWith(status: MessageStatus.error),
+        );
+        isSending.value = false;
+      },
       (raw) async {
-        final msg = _mapToMessage(raw);
-        if (msg != null) {
-          await chatController.insertMessage(msg);
-          _markRead(msg);
+        // Replace optimistic local preview with server CDN URL
+        final confirmed = _mapToMessage(raw);
+        if (confirmed != null) {
+          await chatController.updateMessage(optimistic, confirmed);
+          _markRead(confirmed);
         }
         isSending.value = false;
       },
+    );
+  }
+
+  Future<ImageSource?> _showImageSourceSheet() async {
+    return Get.bottomSheet<ImageSource>(
+      Container(
+        decoration: BoxDecoration(
+          color: Get.theme.colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Get.theme.colorScheme.outlineVariant,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Get.theme.colorScheme.primaryContainer,
+                  child: Icon(Icons.photo_library_rounded,
+                      color: Get.theme.colorScheme.onPrimaryContainer),
+                ),
+                title: const Text('Choose from Gallery'),
+                onTap: () => Get.back<ImageSource>(result: ImageSource.gallery),
+              ),
+              ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Get.theme.colorScheme.secondaryContainer,
+                  child: Icon(Icons.camera_alt_rounded,
+                      color: Get.theme.colorScheme.onSecondaryContainer),
+                ),
+                title: const Text('Take a Photo'),
+                onTap: () => Get.back<ImageSource>(result: ImageSource.camera),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -235,16 +300,22 @@ class ConversationController extends GetxController {
         .any((m) => m.id == messageId.toString());
     if (alreadyExists) return;
 
+    // Fetch 1 newest message using newestId - 1 workaround for single-message fetch
     final result = await _repository.getMessages(
       conversationId: conversation.id,
-      perPage: 1,
+      newestId: messageId - 1, // gets messages newer than (messageId-1) → includes messageId
     );
 
     result.fold(
       (failure) => null,
       (rawList) async {
         if (rawList.isEmpty) return;
-        final msg = _mapToMessage(rawList.last);
+        // Find the specific message
+        final targetRaw = rawList.firstWhere(
+          (r) => (r['id'] as num?)?.toInt() == messageId,
+          orElse: () => rawList.last,
+        );
+        final msg = _mapToMessage(targetRaw);
         if (msg != null &&
             !chatController.messages.any((m) => m.id == msg.id)) {
           await chatController.insertMessage(msg);
@@ -271,19 +342,21 @@ class ConversationController extends GetxController {
           : null;
 
       if (type == 'image') {
+        // Backend returns full image URL in 'content' field for image messages
         return Message.image(
           id: id,
           authorId: authorId,
-          source: (raw['image_url'] as String?) ?? '',
+          source: (raw['content'] as String?) ?? '',
           createdAt: createdAt,
           status: MessageStatus.sent,
         );
       }
 
+      // Text messages: 'content' field contains the message body
       return Message.text(
         id: id,
         authorId: authorId,
-        text: (raw['body'] as String?) ?? '',
+        text: (raw['content'] as String?) ?? '',
         createdAt: createdAt,
         status: MessageStatus.sent,
       );
@@ -299,6 +372,21 @@ class ConversationController extends GetxController {
       id: 'opt_${DateTime.now().millisecondsSinceEpoch}',
       authorId: currentUserId,
       text: text,
+      createdAt: DateTime.now(),
+      status: MessageStatus.sending,
+    );
+  }
+
+  /// Optimistic image message using local file path as the source.
+  /// The flutter_chat_ui Image widget checks if source is a valid URL;
+  /// for local files we use the `file://` scheme via File.uri.toString().
+  Message _optimisticImageMessage(String localPath) {
+    final currentUserId =
+        Get.find<SessionController>().user.value?.id ?? 'me';
+    return Message.image(
+      id: 'opt_img_${DateTime.now().millisecondsSinceEpoch}',
+      authorId: currentUserId,
+      source: File(localPath).uri.toString(), // file:// URI for local display
       createdAt: DateTime.now(),
       status: MessageStatus.sending,
     );

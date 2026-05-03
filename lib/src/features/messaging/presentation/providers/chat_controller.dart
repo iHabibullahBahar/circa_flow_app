@@ -343,30 +343,43 @@ class ConversationController extends GetxController {
   Message? _mapToMessage(Map<String, dynamic> raw) {
     try {
       final id = (raw['id'] as num).toInt().toString();
-      final authorId = (raw['sender_id'] as num).toInt().toString();
+      // Panel messages (sent_from_panel = true) may have sender_id = null
+      final rawSenderId = raw['sender_id'];
+      final authorId = rawSenderId != null
+          ? (rawSenderId as num).toInt().toString()
+          : 'panel'; // panel-sent messages get a virtual 'panel' author
       final type = (raw['type'] as String?) ?? 'text';
       final createdAt = raw['created_at'] != null
           ? DateTime.tryParse(raw['created_at'] as String)
           : null;
 
+      // Store panel badge info in metadata for the message bubble builder
+      final metaRaw = (raw['metadata'] as Map<String, dynamic>?) ?? {};
+      final metadata = <String, dynamic>{
+        if (raw['sender_name'] != null) 'sender_name': raw['sender_name'],
+        if (raw['sender_panel_role'] != null)
+          'sender_panel_role': raw['sender_panel_role'],
+        if (metaRaw['sent_from_panel'] == true) 'sent_from_panel': true,
+      };
+
       if (type == 'image') {
-        // Backend returns full image URL in 'content' field for image messages
         return Message.image(
           id: id,
           authorId: authorId,
           source: (raw['content'] as String?) ?? '',
           createdAt: createdAt,
           status: MessageStatus.sent,
+          metadata: metadata.isNotEmpty ? metadata : null,
         );
       }
 
-      // Text messages: 'content' field contains the message body
       return Message.text(
         id: id,
         authorId: authorId,
         text: (raw['content'] as String?) ?? '',
         createdAt: createdAt,
         status: MessageStatus.sent,
+        metadata: metadata.isNotEmpty ? metadata : null,
       );
     } catch (_) {
       return null;

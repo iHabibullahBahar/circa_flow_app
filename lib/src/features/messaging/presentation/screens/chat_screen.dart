@@ -114,6 +114,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 onAttachmentTap: _convCtrl.pickAndSendImage,
                 builders: Builders(
                   loadMoreBuilder: _buildLoadMore,
+                  textMessageBuilder: _buildTextMessage,
                 ),
               ),
             ),
@@ -127,6 +128,110 @@ class _ChatScreenState extends State<ChatScreen> {
           ],
         );
       }),
+    );
+  }
+
+  // ── Text message builder with panel badge ────────────────────────────────
+
+  /// Uses the package's natural textMessageBuilder.
+  /// For panel messages (owner/staff), prepends a badge above the default bubble.
+  Widget _buildTextMessage(
+    BuildContext context,
+    TextMessage message,
+    int index, {
+    required bool isSentByMe,
+    MessageGroupStatus? groupStatus,
+  }) {
+    final panelRole = message.metadata?['sender_panel_role'] as String?;
+    final senderName = message.metadata?['sender_name'] as String?;
+
+    // Delegate to package's default rendering for normal member messages
+    final bubble = SimpleTextMessage(
+      message: message,
+      index: index,
+    );
+
+    if (panelRole == null) return bubble;
+
+    // Panel message: show badge above bubble
+    return Column(
+      crossAxisAlignment:
+          isSentByMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(
+            left: isSentByMe ? 0 : 12,
+            right: isSentByMe ? 12 : 0,
+            bottom: 2,
+          ),
+          child: _PanelBadge(role: panelRole, name: senderName),
+        ),
+        bubble,
+      ],
+    );
+  }
+
+}
+
+// ── Panel Badge widget ────────────────────────────────────────────────────────
+
+/// Renders a role badge (👑 Owner or ⭐ Staff) for messages sent from
+/// the Filament org/admin panel. Displayed above the message bubble.
+class _PanelBadge extends StatelessWidget {
+  final String role;  // 'owner' | 'staff'
+  final String? name;
+
+  const _PanelBadge({required this.role, this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    final isOwner = role == 'owner';
+    final cs = Theme.of(context).colorScheme;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: isOwner
+                ? const Color(0xFFFEF3C7) // amber-100
+                : const Color(0xFFEDE9FE), // violet-100
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                isOwner ? '👑' : '⭐',
+                style: const TextStyle(fontSize: 10),
+              ),
+              const SizedBox(width: 3),
+              Text(
+                isOwner ? 'Owner' : 'Staff',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: isOwner
+                      ? const Color(0xFFB45309) // amber-700
+                      : const Color(0xFF6D28D9), // violet-700
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (name != null) ...[
+          const SizedBox(width: 5),
+          Text(
+            name!,
+            style: TextStyle(
+              fontSize: 11,
+              color: cs.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

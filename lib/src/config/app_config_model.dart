@@ -1,6 +1,8 @@
 // Typed models for the /api/v1/config response.
 // All fields are nullable to be resilient against backend evolution.
 
+import 'app_config.dart';
+
 class OrganizationConfig {
   final int id;
   final String name;
@@ -146,8 +148,24 @@ class WebSocketConfig {
 
   factory WebSocketConfig.fromJson(dynamic json) {
     if (json is! Map) return const WebSocketConfig();
+
+    String host = (json['host'] as String?) ?? 'localhost';
+
+    // In local dev the backend often has REVERB_HOST=localhost, which a
+    // physical device or emulator can't reach.  If the config returns
+    // 'localhost' / '127.0.0.1', swap it with the real API server host so
+    // WebSocket connects to the same machine that served the config.
+    if (host == 'localhost' || host == '127.0.0.1') {
+      try {
+        final apiUri = Uri.tryParse(AppConfig.baseUrl);
+        if (apiUri != null && apiUri.host.isNotEmpty) {
+          host = apiUri.host;
+        }
+      } catch (_) {}
+    }
+
     return WebSocketConfig(
-      host: (json['host'] as String?) ?? 'localhost',
+      host: host,
       port: (json['port'] as num?)?.toInt() ?? 8080,
       key: (json['key'] as String?) ?? '',
       useTls: json['use_tls'] == true,
@@ -161,6 +179,7 @@ class WebSocketConfig {
 
   factory WebSocketConfig.fallback() => const WebSocketConfig();
 }
+
 
 class CustomLink {
   final int id;
@@ -309,10 +328,14 @@ class AppConfigModel {
           const [],
       allowRegistration: data['allow_registration'] == true,
       allowGuestAccess: data['allow_guest_access'] == true,
-      actionGuards: (data['action_guards'] as Map<String, dynamic>?)?.map(
-            (key, value) => MapEntry(key, (value as List).cast<String>()),
-          ) ??
-          const {},
+      // action_guards: PHP empty array encodes as [] (List), not {} (Map).
+      // Must guard against both null and List before casting.
+      actionGuards: (data['action_guards'] is Map<String, dynamic>)
+          ? (data['action_guards'] as Map<String, dynamic>).map(
+                (key, value) =>
+                    MapEntry(key, (value as List).cast<String>()),
+              )
+          : const {},
       messaging: MessagingConfig.fromJson(data['messaging']),
       websocket: WebSocketConfig.fromJson(data['websocket']),
     );

@@ -115,13 +115,43 @@ class MoreScreen extends StatelessWidget {
           }),
 
           // --- Engagement Section ---
-          _buildSectionHeader(context, 'Engagement'),
-          _buildActionTile(
-            context,
-            label: 'Communities',
-            icon: Icons.groups_rounded,
-            onTap: () => Get.toNamed<void>(AppRoutes.communities),
-          ),
+          Obx(() {
+            final hasDocuments = configCtrl.isModuleEnabled('documents');
+            final hasMessaging = configCtrl.isModuleEnabled('messaging');
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSectionHeader(context, 'Engagement'),
+
+                _buildActionTile(
+                  context,
+                  label: 'Communities',
+                  icon: Icons.groups_rounded,
+                  onTap: () => Get.toNamed<void>(AppRoutes.communities),
+                ),
+
+                // Documents — now here instead of a nav bar tab
+                if (hasDocuments)
+                  _buildActionTile(
+                    context,
+                    label: 'Documents',
+                    icon: Icons.folder_outlined,
+                    onTap: () => Get.toNamed<void>(AppRoutes.documents),
+                  ),
+
+                // Messaging shortcut — available as secondary entry even
+                // when the tab is already in the nav bar
+                if (hasMessaging && !session.isAuthenticated == false)
+                  _buildActionTile(
+                    context,
+                    label: 'Messages',
+                    icon: Icons.chat_bubble_outline_rounded,
+                    onTap: () => Get.toNamed<void>(AppRoutes.inbox),
+                  ),
+              ],
+            );
+          }),
 
           // --- Account Section ---
           _buildSectionHeader(context, 'Account'),

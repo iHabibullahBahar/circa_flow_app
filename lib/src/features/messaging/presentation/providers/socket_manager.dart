@@ -36,6 +36,31 @@ class SocketManager extends GetxService {
 
   final isConnected = false.obs;
 
+  // ── Lifecycle ───────────────────────────────────────────────────────────────
+
+  @override
+  void onReady() {
+    super.onReady();
+    // Watch for the config to finish loading from the network.
+    // At app startup, _connectSocket() fires while config.value still has the
+    // cached config (which may have an empty WS key). Once the fresh config
+    // arrives (status → ready), retry the connection if:
+    //   • we have a real WS key now
+    //   • the user is authenticated
+    //   • we are not already connected
+    final configCtrl = Get.find<ConfigController>();
+    ever(configCtrl.status, (ConfigStatus status) {
+      if (status != ConfigStatus.ready) return;
+      final wsKey = configCtrl.config.value.websocket.key;
+      if (wsKey.isEmpty) return;
+      final session = Get.find<SessionController>();
+      if (!session.isAuthenticated) return;
+      if (isConnected.value) return;  // already up — nothing to do
+      _log.i('[WS] Config ready with key — retrying connect');
+      connect();
+    });
+  }
+
   // ── Connection ─────────────────────────────────────────────────────────────
 
   void connect() {
@@ -207,7 +232,8 @@ class SocketManager extends GetxService {
     if (_socketId == null) return;
 
     try {
-      // Call the Laravel broadcasting/auth endpoint
+      // POST /api/v1/broadcasting/auth — explicit route with auth:member guard.
+      // Dio's baseUrl is /api/v1/ so the relative path resolves correctly.
       final result = await ApiService.instance.post<Map<String, dynamic>>(
         'broadcasting/auth',
         data: {
@@ -236,6 +262,7 @@ class SocketManager extends GetxService {
       _log.e('[WS] Auth error for $channel: $e');
     }
   }
+
 
   // ── Event dispatch ─────────────────────────────────────────────────────────
 

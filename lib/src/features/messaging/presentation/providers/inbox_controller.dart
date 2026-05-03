@@ -18,6 +18,10 @@ class InboxController extends GetxController {
   final isLoading = true.obs;
   final isRefreshing = false.obs;
 
+  /// Total unread count across all conversations — drives the nav badge.
+  int get totalUnread =>
+      sortedInbox.fold(0, (sum, c) => sum + c.unreadCount);
+
   String? _lastSyncTime;
   Timer? _debounceTimer;
 

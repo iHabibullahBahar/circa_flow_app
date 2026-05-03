@@ -3,11 +3,12 @@ import 'package:circa_flow_main/src/config/config_controller.dart';
 import 'package:circa_flow_main/src/features/home/presentation/screens/dashboard_screen.dart';
 import 'package:circa_flow_main/src/features/posts/presentation/screens/posts_screen.dart';
 import 'package:circa_flow_main/src/features/events/presentation/screens/events_screen.dart';
-import 'package:circa_flow_main/src/features/documents/presentation/screens/documents_screen.dart';
 import 'package:circa_flow_main/src/features/home/presentation/screens/more_screen.dart';
+import 'package:circa_flow_main/src/features/messaging/presentation/screens/inbox_screen.dart';
+import 'package:circa_flow_main/src/features/messaging/presentation/providers/inbox_controller.dart';
+import 'package:circa_flow_main/src/features/messaging/data/repositories/inbox_repository.dart';
 import 'package:circa_flow_main/src/features/posts/presentation/providers/posts_controller.dart' as import_posts;
 import 'package:circa_flow_main/src/features/events/presentation/providers/events_controller.dart' as import_events;
-import 'package:circa_flow_main/src/features/documents/presentation/providers/documents_controller.dart' as import_docs;
 import 'package:circa_flow_main/src/features/home/presentation/providers/dashboard_controller.dart';
 
 class HomeShellController extends GetxController {
@@ -26,6 +27,8 @@ class HomeShellController extends GetxController {
     final configCtrl = Get.find<ConfigController>();
     final items = <TabItem>[];
 
+    // ── Always visible ─────────────────────────────────────────────────────────
+
     // Home (Dashboard)
     items.add(TabItem(
       label: 'Home',
@@ -42,6 +45,8 @@ class HomeShellController extends GetxController {
       screen: const PostsScreen(),
     ));
 
+    // ── Module-gated tabs ──────────────────────────────────────────────────────
+
     // Events
     if (configCtrl.isModuleEnabled('events')) {
       items.add(TabItem(
@@ -52,17 +57,34 @@ class HomeShellController extends GetxController {
       ));
     }
 
-    // Documents
-    if (configCtrl.isModuleEnabled('documents')) {
+    // Messaging — shows in nav bar with unread badge when module is enabled.
+    // Documents is moved to the More screen so messaging can sit in the bar.
+    if (configCtrl.isModuleEnabled('messaging')) {
+      // Register InboxController eagerly here because InboxScreen lives in
+      // an IndexedStack (built immediately), not via route navigation.
+      // InboxBinding would only run on Get.toNamed(AppRoutes.inbox) which
+      // no longer happens for the tab variant.
+      if (!Get.isRegistered<InboxController>(tag: 'inbox_controller')) {
+        Get.put<InboxRepository>(InboxRepository(), permanent: true);
+        Get.put<InboxController>(
+          InboxController(repository: Get.find<InboxRepository>()),
+          tag: 'inbox_controller',
+          permanent: true,
+        );
+      }
+
       items.add(TabItem(
-        label: 'Documents',
-        icon: Icons.folder_outlined,
-        selectedIcon: Icons.folder_rounded,
-        screen: const DocumentsScreen(),
+        label: 'Messages',
+        icon: Icons.chat_bubble_outline_rounded,
+        selectedIcon: Icons.chat_bubble_rounded,
+        screen: const InboxScreen(),
+        badgeBuilder: _buildMessagesBadge,
       ));
     }
 
-    // More
+    // ── Always visible ─────────────────────────────────────────────────────────
+
+    // More (Documents, Communities, Links, Account, etc.)
     items.add(TabItem(
       label: 'More',
       icon: Icons.menu_rounded,
@@ -71,6 +93,33 @@ class HomeShellController extends GetxController {
     ));
 
     tabs = items;
+  }
+
+  /// Builds the unread messages badge widget for the Messages tab.
+  /// Returns null (no badge) when count is zero.
+  Widget? _buildMessagesBadge() {
+    if (!Get.isRegistered<InboxController>(tag: 'inbox_controller')) return null;
+    final inbox = Get.find<InboxController>(tag: 'inbox_controller');
+    final count = inbox.sortedInbox.fold(0, (sum, c) => sum + c.unreadCount);
+    if (count == 0) return null;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+      decoration: BoxDecoration(
+        color: Colors.red,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+      child: Text(
+        count > 99 ? '99+' : count.toString(),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 9,
+          fontWeight: FontWeight.bold,
+          height: 1.3,
+        ),
+        textAlign: TextAlign.center,
+      ),
+    );
   }
 
   void changeTab(int index) {
@@ -82,7 +131,8 @@ class HomeShellController extends GetxController {
   }
 
   void changeTabByLabel(String label) {
-    final index = tabs.indexWhere((t) => t.label.toLowerCase() == label.toLowerCase());
+    final index = tabs.indexWhere(
+        (t) => t.label.toLowerCase() == label.toLowerCase());
     if (index != -1) {
       _currentIndex.value = index;
       _triggerRefresh(tabs[index].label);
@@ -107,9 +157,9 @@ class HomeShellController extends GetxController {
             Get.find<import_events.EventsController>().refreshData();
           }
           break;
-        case 'documents':
-          if (Get.isRegistered<import_docs.DocumentsController>()) {
-            Get.find<import_docs.DocumentsController>().refreshData();
+        case 'messages':
+          if (Get.isRegistered<InboxController>(tag: 'inbox_controller')) {
+            Get.find<InboxController>(tag: 'inbox_controller').refresh();
           }
           break;
       }
@@ -125,10 +175,15 @@ class TabItem {
   final IconData selectedIcon;
   final Widget screen;
 
+  /// Optional builder that returns a badge widget to overlay on the tab icon.
+  /// If null or returns null, no badge is shown.
+  final Widget? Function()? badgeBuilder;
+
   const TabItem({
     required this.label,
     required this.icon,
     required this.selectedIcon,
     required this.screen,
+    this.badgeBuilder,
   });
 }

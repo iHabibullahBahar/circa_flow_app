@@ -42,19 +42,41 @@ class HomeShell extends StatelessWidget {
             unselectedFontSize: 11,
             selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
             unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
-            items: tabs
-                .map((t) => BottomNavigationBarItem(
-                      icon: Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
-                        child: Icon(t.icon, size: 24),
+            items: tabs.map((t) {
+              // Build icon with optional badge overlay.
+              // No inner Obx needed — the outer Obx on the Scaffold tracks
+              // every observable read here (including inbox.sortedInbox via
+              // badgeBuilder), so the full nav bar rebuilds on any change.
+              Widget buildIcon(IconData iconData) {
+                final badge = t.badgeBuilder?.call();
+                if (badge == null) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Icon(iconData, size: 24),
+                  );
+                }
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Icon(iconData, size: 24),
+                      Positioned(
+                        top: -4,
+                        right: -8,
+                        child: badge,
                       ),
-                      activeIcon: Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
-                        child: Icon(t.selectedIcon, size: 24),
-                      ),
-                      label: t.label,
-                    ))
-                .toList(),
+                    ],
+                  ),
+                );
+              }
+
+              return BottomNavigationBarItem(
+                icon: buildIcon(t.icon),
+                activeIcon: buildIcon(t.selectedIcon),
+                label: t.label,
+              );
+            }).toList(),
           ),
         ),
       );

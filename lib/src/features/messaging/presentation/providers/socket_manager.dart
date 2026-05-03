@@ -7,6 +7,7 @@ import 'package:circa_flow_main/src/config/app_config_model.dart';
 import 'package:circa_flow_main/src/config/config_controller.dart';
 import 'package:circa_flow_main/src/features/auth/presentation/providers/session_controller.dart';
 import 'package:circa_flow_main/src/features/messaging/presentation/providers/inbox_controller.dart';
+import 'package:circa_flow_main/src/features/messaging/presentation/providers/chat_controller.dart';
 import 'package:circa_flow_main/src/services/api_service.dart';
 import 'package:logger/logger.dart';
 
@@ -276,11 +277,10 @@ class SocketManager extends GetxService {
   }
 
   // ignore: avoid_annotating_with_dynamic
-  dynamic _findChatController(dynamic conversationId) {
+  ConversationController? _findChatController(dynamic conversationId) {
     if (conversationId == null) return null;
     try {
-      // ChatController is registered with tag 'chat_{id}' — looked up dynamically
-      return Get.find<dynamic>(tag: 'chat_$conversationId');
+      return Get.find<ConversationController>(tag: 'chat_$conversationId');
     } catch (_) {
       return null;
     }

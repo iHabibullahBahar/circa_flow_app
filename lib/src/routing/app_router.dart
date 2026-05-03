@@ -19,6 +19,7 @@ import 'package:circa_flow_main/src/features/communities/presentation/screens/co
 import 'package:circa_flow_main/src/features/communities/presentation/bindings/community_binding.dart';
 import 'package:circa_flow_main/src/features/messaging/presentation/screens/inbox_screen.dart';
 import 'package:circa_flow_main/src/features/messaging/presentation/bindings/inbox_binding.dart';
+import 'package:circa_flow_main/src/features/messaging/presentation/screens/chat_screen.dart';
 import 'package:circa_flow_main/src/features/messaging/data/models/conversation_model.dart';
 
 class AppRouter {
@@ -91,13 +92,8 @@ class AppRouter {
         GetPage(
           name: AppRoutes.chat,
           page: () {
-            // ChatScreen will be created in Phase 1D
-            // Placeholder until Phase 1D
             final conv = Get.arguments as ConversationModel;
-            return Scaffold(
-              appBar: AppBar(title: Text(conv.name)),
-              body: const Center(child: Text('Chat screen — coming in Phase 1D')),
-            );
+            return ChatScreen(conversation: conv);
           },
         ),
       ];

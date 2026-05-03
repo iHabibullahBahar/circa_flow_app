@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:circa_flow_main/src/imports/packages_imports.dart';
 import 'package:circa_flow_main/src/features/auth/domain/entities/user.dart';
 import 'package:circa_flow_main/src/features/auth/domain/repositories/auth_repository.dart';
+import 'package:circa_flow_main/src/features/messaging/presentation/providers/socket_manager.dart';
 
 enum SessionStatus { unknown, authenticated, unauthenticated }
 
@@ -31,6 +32,7 @@ class SessionController extends GetxController {
           user.value = u;
           _updateOneSignalTag(u);
           status.value = SessionStatus.authenticated;
+          _connectSocket();
         } else {
           status.value = SessionStatus.unauthenticated;
         }
@@ -42,11 +44,13 @@ class SessionController extends GetxController {
         user.value = u;
         _updateOneSignalTag(u);
         status.value = SessionStatus.authenticated;
+        _connectSocket();
       } else {
         user.value = null;
         OneSignal.User.removeTag("org_id");
         OneSignal.logout();
         status.value = SessionStatus.unauthenticated;
+        _disconnectSocket();
       }
     });
   }
@@ -66,6 +70,19 @@ class SessionController extends GetxController {
     OneSignal.User.removeTag("org_id");
     OneSignal.logout();
     status.value = SessionStatus.unauthenticated;
+    _disconnectSocket();
+  }
+
+  void _connectSocket() {
+    try {
+      Get.find<SocketManager>().connect();
+    } catch (_) {}
+  }
+
+  void _disconnectSocket() {
+    try {
+      Get.find<SocketManager>().disconnect();
+    } catch (_) {}
   }
 
   @override

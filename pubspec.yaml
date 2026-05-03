@@ -18,6 +18,10 @@ dependencies:
   internet_connection_checker_plus: ^2.9.1+2
   dio: ^5.9.2
 
+  # Real-time & Messaging
+  flutter_chat_ui: ^2.11.1
+  web_socket_channel: ^3.0.1
+
   # State Management
   fpdart: ^1.2.0
   equatable: ^2.0.7

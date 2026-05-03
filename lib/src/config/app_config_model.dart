@@ -78,12 +78,14 @@ class ModulesConfig {
   final bool events;
   final bool documents;
   final bool notifications;
+  final bool messaging;
 
   const ModulesConfig({
     this.posts = false,
     this.events = false,
     this.documents = false,
     this.notifications = false,
+    this.messaging = false,
   });
 
   factory ModulesConfig.fromJson(dynamic json) {
@@ -94,6 +96,7 @@ class ModulesConfig {
       events: flag('events'),
       documents: flag('documents'),
       notifications: flag('notifications'),
+      messaging: flag('messaging'),
     );
   }
 
@@ -103,11 +106,60 @@ class ModulesConfig {
       'events' => events,
       'documents' => documents,
       'notifications' => notifications,
+      'messaging' => messaging,
       _ => false,
     };
   }
 
   factory ModulesConfig.fallback() => const ModulesConfig();
+}
+
+/// Messaging-specific configuration (allow_member_dm, etc.)
+class MessagingConfig {
+  final bool allowMemberDm;
+
+  const MessagingConfig({this.allowMemberDm = true});
+
+  factory MessagingConfig.fromJson(dynamic json) {
+    if (json is! Map) return const MessagingConfig();
+    return MessagingConfig(
+      allowMemberDm: json['allow_member_dm'] == true,
+    );
+  }
+
+  factory MessagingConfig.fallback() => const MessagingConfig();
+}
+
+/// WebSocket connection parameters provided by the Config API.
+class WebSocketConfig {
+  final String host;
+  final int port;
+  final String key;
+  final bool useTls;
+
+  const WebSocketConfig({
+    this.host = 'localhost',
+    this.port = 8080,
+    this.key = '',
+    this.useTls = false,
+  });
+
+  factory WebSocketConfig.fromJson(dynamic json) {
+    if (json is! Map) return const WebSocketConfig();
+    return WebSocketConfig(
+      host: (json['host'] as String?) ?? 'localhost',
+      port: (json['port'] as num?)?.toInt() ?? 8080,
+      key: (json['key'] as String?) ?? '',
+      useTls: json['use_tls'] == true,
+    );
+  }
+
+  String get wsUrl {
+    final scheme = useTls ? 'wss' : 'ws';
+    return '$scheme://$host:$port/app/$key';
+  }
+
+  factory WebSocketConfig.fallback() => const WebSocketConfig();
 }
 
 class CustomLink {
@@ -198,6 +250,8 @@ class AppConfigModel {
   final bool allowRegistration;
   final bool allowGuestAccess;
   final Map<String, List<String>> actionGuards;
+  final MessagingConfig messaging;
+  final WebSocketConfig websocket;
 
   const AppConfigModel({
     required this.organization,
@@ -211,6 +265,8 @@ class AppConfigModel {
     this.allowRegistration = false,
     this.allowGuestAccess = false,
     this.actionGuards = const {},
+    this.messaging = const MessagingConfig(),
+    this.websocket = const WebSocketConfig(),
   });
 
   factory AppConfigModel.fromJson(Map<String, dynamic> json) {
@@ -257,6 +313,8 @@ class AppConfigModel {
             (key, value) => MapEntry(key, (value as List).cast<String>()),
           ) ??
           const {},
+      messaging: MessagingConfig.fromJson(data['messaging']),
+      websocket: WebSocketConfig.fromJson(data['websocket']),
     );
   }
 
@@ -273,6 +331,8 @@ class AppConfigModel {
         allowRegistration: false,
         allowGuestAccess: false,
         actionGuards: const {},
+        messaging: MessagingConfig.fallback(),
+        websocket: WebSocketConfig.fallback(),
       );
 
   Map<String, dynamic> toJson() => {

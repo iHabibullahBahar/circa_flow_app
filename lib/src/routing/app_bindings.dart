@@ -8,6 +8,7 @@ import 'package:circa_flow_main/src/features/posts/presentation/providers/posts_
 import 'package:circa_flow_main/src/features/events/presentation/providers/events_controller.dart';
 import 'package:circa_flow_main/src/features/documents/presentation/providers/documents_controller.dart';
 import 'package:circa_flow_main/src/services/deep_link_service.dart';
+import 'package:circa_flow_main/src/features/messaging/presentation/providers/socket_manager.dart';
 
 /// AppBindings is passed to GetMaterialApp as a fallback safety net.
 /// In normal operation, controllers are already registered in main() before
@@ -46,6 +47,11 @@ class AppBindings implements Bindings {
     // Deep linking — permanent singleton, initialized after session resolves
     if (!Get.isRegistered<DeepLinkService>()) {
       Get.put<DeepLinkService>(DeepLinkService(), permanent: true);
+    }
+
+    // WebSocket manager — permanent singleton, connect/disconnect driven by SessionController
+    if (!Get.isRegistered<SocketManager>()) {
+      Get.put<SocketManager>(SocketManager(), permanent: true);
     }
   }
 }

@@ -54,3 +54,16 @@ const String zNotificationsUnreadCountEndpoint = 'notifications/unread-count';
 const String zNotificationsReadEndpoint = 'notifications/read';
 const String zNotificationsReadAllEndpoint = 'notifications/read-all';
 const String zNotificationsDeleteEndpoint = 'notifications/delete';
+
+// Messaging
+const String zMessagingInboxEndpoint = 'messaging/inbox';
+const String zMessagingConvShowEndpoint = 'messaging/conversations/show';
+const String zMessagingDirectEndpoint = 'messaging/conversations/direct';
+const String zMessagingGroupEndpoint = 'messaging/conversations/group';
+const String zMessagingMembersEndpoint = 'messaging/conversations/members';
+const String zMessagingMessagesEndpoint = 'messaging/messages';
+const String zMessagingSendEndpoint = 'messaging/messages/send';
+const String zMessagingReadEndpoint = 'messaging/messages/read';
+const String zMessagingTypingEndpoint = 'messaging/typing';
+const String zMessagingDmSettingEndpoint = 'messaging/dm-setting';
+const String zBroadcastingAuthEndpoint = 'broadcasting/auth';

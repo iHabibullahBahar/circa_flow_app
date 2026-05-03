@@ -17,6 +17,9 @@ import 'package:circa_flow_main/src/features/documents/data/models/document_mode
 import 'package:circa_flow_main/src/shared/screens/webview_screen.dart';
 import 'package:circa_flow_main/src/features/communities/presentation/screens/communities_screen.dart';
 import 'package:circa_flow_main/src/features/communities/presentation/bindings/community_binding.dart';
+import 'package:circa_flow_main/src/features/messaging/presentation/screens/inbox_screen.dart';
+import 'package:circa_flow_main/src/features/messaging/presentation/bindings/inbox_binding.dart';
+import 'package:circa_flow_main/src/features/messaging/data/models/conversation_model.dart';
 
 class AppRouter {
   static List<GetPage<dynamic>> get getPages => [
@@ -78,6 +81,24 @@ class AppRouter {
           name: AppRoutes.communities,
           page: () => const CommunitiesScreen(),
           binding: CommunityBinding(),
+        ),
+        // ── Messaging ────────────────────────────────────────────────────────
+        GetPage(
+          name: AppRoutes.inbox,
+          page: () => const InboxScreen(),
+          binding: InboxBinding(),
+        ),
+        GetPage(
+          name: AppRoutes.chat,
+          page: () {
+            // ChatScreen will be created in Phase 1D
+            // Placeholder until Phase 1D
+            final conv = Get.arguments as ConversationModel;
+            return Scaffold(
+              appBar: AppBar(title: Text(conv.name)),
+              body: const Center(child: Text('Chat screen — coming in Phase 1D')),
+            );
+          },
         ),
       ];
 }

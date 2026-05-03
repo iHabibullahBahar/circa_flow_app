@@ -19,4 +19,8 @@ abstract final class AppRoutes {
   static const String documentDetail = '/documents/detail';
   static const String notifications = '/notifications';
   static const String communities = '/communities';
+
+  // Messaging
+  static const String inbox = '/messaging/inbox';
+  static const String chat  = '/messaging/chat';
 }

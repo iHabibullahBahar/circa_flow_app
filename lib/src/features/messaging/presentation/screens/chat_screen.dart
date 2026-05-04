@@ -296,10 +296,10 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
               CircleAvatar(
                 radius: 18,
                 backgroundColor: cs.primaryContainer,
-                backgroundImage: conversation.avatarUrl != null
+                backgroundImage: (conversation.avatarUrl != null && conversation.avatarUrl!.isNotEmpty)
                     ? NetworkImage(conversation.avatarUrl!)
                     : null,
-                child: conversation.avatarUrl == null
+                child: (conversation.avatarUrl == null || conversation.avatarUrl!.isEmpty)
                     ? Icon(_typeIcon(conversation.type),
                         size: 18, color: cs.onPrimaryContainer)
                     : null,
@@ -336,8 +336,8 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 // Presence subtitle
-                Obx(() {
-                  if (conversation.isDirect) {
+                if (conversation.isDirect)
+                  Obx(() {
                     if (convCtrl.isOtherOnline.value) {
                       return Text('Online',
                           style: tt.labelSmall
@@ -362,13 +362,13 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                     return Text('Offline',
                         style: tt.labelSmall
                             ?.copyWith(color: cs.onSurfaceVariant));
-                  }
-                  return Text(
+                  })
+                else
+                  Text(
                     '${conversation.isCommunity ? 'Community' : 'Group'} chat',
                     style:
                         tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
-                  );
-                }),
+                  ),
               ],
             ),
           ),

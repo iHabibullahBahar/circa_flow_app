@@ -227,20 +227,12 @@ class _ComposerRow extends StatelessWidget {
           ),
         ),
 
-        // ── send / mic button ─────────────────────────────────────────────────
+        // ── send button ──────────────────────────────────────────────────────
         const SizedBox(width: 8),
         ValueListenableBuilder<bool>(
           valueListenable: hasText,
-          builder: (_, hasT, __) {
-            return AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              transitionBuilder: (child, anim) =>
-                  ScaleTransition(scale: anim, child: child),
-              child: hasT
-                  ? _SendButton(key: const ValueKey('send'), onTap: onSend)
-                  : _MicButton(key: const ValueKey('mic')),
-            );
-          },
+          builder: (_, hasT, __) =>
+              _SendIconButton(hasText: hasT, onTap: onSend),
         ),
       ],
     );
@@ -282,63 +274,43 @@ class _PlusButton extends StatelessWidget {
   }
 }
 
-// ─── Send button (gradient circle) ────────────────────────────────────────────
+// ─── Send icon button ────────────────────────────────────────────────────────
 
-class _SendButton extends StatelessWidget {
-  const _SendButton({super.key, required this.onTap});
+/// Always-visible send icon. When [hasText] is false the icon is muted gray;
+/// when true it smoothly animates to the theme primary color.
+/// Tapping while [hasText] is false is a no-op.
+class _SendIconButton extends StatelessWidget {
+  const _SendIconButton({required this.hasText, required this.onTap});
+  final bool hasText;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final muted =
+        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.30);
+
     return GestureDetector(
-      onTap: onTap,
-      child: Container(
+      onTap: hasText ? onTap : null,
+      child: SizedBox(
         width: 44,
         height: 44,
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-            colors: [Color(0xFF4A00E0), Color(0xFF8E2DE2)],
+        child: Center(
+          child: TweenAnimationBuilder<Color?>(
+            tween: ColorTween(
+              begin: hasText ? muted : primary,
+              end: hasText ? primary : muted,
+            ),
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            builder: (_, color, __) => Image.asset(
+              'assets/icons/send-icon.png',
+              height: 36,
+              color: color,
+              colorBlendMode: BlendMode.srcIn,
+            ),
           ),
         ),
-        child: const Icon(
-          Icons.arrow_forward_ios_rounded,
-          color: Colors.white,
-          size: 18,
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Mic / placeholder button ─────────────────────────────────────────────────
-
-class _MicButton extends StatelessWidget {
-  const _MicButton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF2B2B35) : cs.surfaceContainerHigh,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.12)
-              : cs.outline.withValues(alpha: 0.3),
-          width: 1.2,
-        ),
-      ),
-      child: Icon(
-        Icons.mic_none_rounded,
-        color: cs.onSurface.withValues(alpha: 0.7),
-        size: 24,
       ),
     );
   }

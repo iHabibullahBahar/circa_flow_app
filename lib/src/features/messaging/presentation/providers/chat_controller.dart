@@ -33,14 +33,11 @@ class ConversationController extends GetxController {
   final isSending = false.obs;
   final isLoadingMore = false.obs;
   final hasMoreMessages = true.obs;
-  final typingMemberName = Rx<String?>(null);
 
   /// Presence: whether any other participant in this conversation is currently online.
   final isOtherOnline = false.obs;
   final otherLastSeenAt = Rx<String?>(null);
 
-  Timer? _typingTimer;
-  Timer? _typingClearTimer;
   Timer? _presenceTimer;
   int? _oldestMessageId;
   List<int> _otherMemberIds = []; // cached after first members fetch
@@ -63,8 +60,6 @@ class ConversationController extends GetxController {
 
   @override
   void onClose() {
-    _typingTimer?.cancel();
-    _typingClearTimer?.cancel();
     _presenceTimer?.cancel();
     chatController.dispose();
 
@@ -132,7 +127,6 @@ class ConversationController extends GetxController {
   Future<void> onMessageSend(String text) async {
     if (text.trim().isEmpty) return;
     isSending.value = true;
-    _stopTypingIndicator();
 
     // Optimistic insert
     final optimistic = _optimisticTextMessage(text);
@@ -253,24 +247,6 @@ class ConversationController extends GetxController {
     );
   }
 
-  // ── Typing ─────────────────────────────────────────────────────────────────
-
-  void onInputChanged(String _) {
-    _sendTypingIndicator(isTyping: true);
-    _typingTimer?.cancel();
-    _typingTimer =
-        Timer(const Duration(seconds: 3), _stopTypingIndicator);
-  }
-
-  void _sendTypingIndicator({required bool isTyping}) {
-    _repository.sendTyping(
-        conversationId: conversation.id, isTyping: isTyping);
-  }
-
-  void _stopTypingIndicator() {
-    _typingTimer?.cancel();
-    _sendTypingIndicator(isTyping: false);
-  }
 
   // ── WS Event handlers ─────────────────────────────────────────────────────
 
@@ -284,22 +260,6 @@ class ConversationController extends GetxController {
     // Phase 2: update seenAt on individual messages
   }
 
-  void onSocketTyping(Map<String, dynamic> payload) {
-    final currentUserId = Get.find<SessionController>().user.value?.id;
-    final senderId = payload['member_id']?.toString();
-    if (senderId == currentUserId) return;
-
-    final isTyping = payload['is_typing'] == true;
-    if (isTyping) {
-      typingMemberName.value = payload['member_name'] as String?;
-      _typingClearTimer?.cancel();
-      _typingClearTimer = Timer(
-          const Duration(seconds: 4), () => typingMemberName.value = null);
-    } else {
-      _typingClearTimer?.cancel();
-      typingMemberName.value = null;
-    }
-  }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 

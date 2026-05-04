@@ -289,9 +289,6 @@ class SocketManager extends GetxService {
         _log.d('[WS] message.read');
         _findChatController(payload['conversation_id'])?.onSocketMessageRead(payload);
 
-      case r'App\Events\TypingEvent':
-      case 'typing':
-        _findChatController(payload['conversation_id'])?.onSocketTyping(payload);
     }
   }
 

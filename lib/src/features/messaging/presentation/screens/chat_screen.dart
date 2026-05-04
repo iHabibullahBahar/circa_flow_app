@@ -118,13 +118,6 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               ),
             ),
-
-            // ── Typing indicator banner ──────────────────────────────────
-            Obx(() {
-              final name = _convCtrl.typingMemberName.value;
-              if (name == null) return const SizedBox.shrink();
-              return _TypingBanner(name: name, cs: cs);
-            }),
           ],
         );
       }),
@@ -310,16 +303,6 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                 // Presence subtitle
                 Obx(() {
                   if (conversation.isDirect) {
-                    // Typing takes priority
-                    if (convCtrl.typingMemberName.value != null) {
-                      return Text(
-                        'typing…',
-                        style: tt.labelSmall?.copyWith(
-                          color: cs.primary,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      );
-                    }
                     if (convCtrl.isOtherOnline.value) {
                       return Text('Online',
                           style: tt.labelSmall
@@ -379,89 +362,3 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
 }
 
 
-// ── Typing indicator banner ────────────────────────────────────────────────────
-
-class _TypingBanner extends StatelessWidget {
-  final String name;
-  final ColorScheme cs;
-  const _TypingBanner({required this.name, required this.cs});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      color: cs.surfaceContainerHighest,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Row(
-        children: [
-          _DotsAnimation(color: cs.primary),
-          const SizedBox(width: 8),
-          Text(
-            '$name is typing...',
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: cs.onSurfaceVariant,
-                  fontStyle: FontStyle.italic,
-                ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Animated typing dots ───────────────────────────────────────────────────────
-
-class _DotsAnimation extends StatefulWidget {
-  final Color color;
-  const _DotsAnimation({required this.color});
-
-  @override
-  State<_DotsAnimation> createState() => _DotsAnimationState();
-}
-
-class _DotsAnimationState extends State<_DotsAnimation>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 900))
-      ..repeat();
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _ctrl,
-      builder: (_, __) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: List.generate(3, (i) {
-          final delay = i * 0.3;
-          final opacity = ((_ctrl.value - delay).clamp(0.0, 0.6) / 0.6);
-          return Padding(
-            padding: const EdgeInsets.only(right: 3),
-            child: Opacity(
-              opacity: opacity.toDouble(),
-              child: Container(
-                width: 5,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: widget.color,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-}

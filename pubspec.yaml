@@ -88,6 +88,7 @@ dependencies:
   onesignal_flutter: ^5.5.2
   timeago: ^3.7.0
   gap: ^3.0.1
+  flyer_chat_image_message: ^2.3.0
 
 dev_dependencies:
   flutter_test:

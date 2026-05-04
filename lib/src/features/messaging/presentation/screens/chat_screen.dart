@@ -126,11 +126,11 @@ class _ChatScreenState extends State<ChatScreen> {
                   // last message is never hidden behind our input bar
                   chatAnimatedListBuilder: (ctx, itemBuilder) =>
                       ChatAnimatedListReversed(
-                        itemBuilder: itemBuilder,
-                        bottomPadding: 12,
-                        topPadding: 8,
-                        handleSafeArea: false,
-                      ),
+                    itemBuilder: itemBuilder,
+                    bottomPadding: 12,
+                    topPadding: 8,
+                    handleSafeArea: false,
+                  ),
                   loadMoreBuilder: _buildLoadMore,
                   textMessageBuilder: (ctx, message, index,
                       {required isSentByMe, groupStatus}) {
@@ -159,12 +159,11 @@ class _ChatScreenState extends State<ChatScreen> {
                       children: [
                         Padding(
                           padding: EdgeInsets.only(
-                            left: isSentByMe ? 0 : 50,
+                            left: isSentByMe ? 0 : 32,
                             right: isSentByMe ? 12 : 0,
                             bottom: 2,
                           ),
-                          child: _PanelBadge(
-                              role: panelRole, name: senderName),
+                          child: _PanelBadge(role: panelRole, name: senderName),
                         ),
                         bubble,
                       ],
@@ -199,7 +198,6 @@ class _ChatScreenState extends State<ChatScreen> {
       }),
     );
   }
-
 }
 
 // ── Panel Badge widget ────────────────────────────────────────────────────────
@@ -207,7 +205,7 @@ class _ChatScreenState extends State<ChatScreen> {
 /// Renders a role badge (👑 Owner or ⭐ Staff) for messages sent from
 /// the Filament org/admin panel. Displayed above the message bubble.
 class _PanelBadge extends StatelessWidget {
-  final String role;  // 'owner' | 'staff'
+  final String role; // 'owner' | 'staff'
   final String? name;
 
   const _PanelBadge({required this.role, this.name});
@@ -232,12 +230,7 @@ class _PanelBadge extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                isOwner ? '👑' : '⭐',
-                style: const TextStyle(fontSize: 10),
-              ),
-              const SizedBox(width: 3),
-              Text(
-                isOwner ? 'Owner' : 'Staff',
+                "Admin",
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
@@ -296,10 +289,12 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
               CircleAvatar(
                 radius: 18,
                 backgroundColor: cs.primaryContainer,
-                backgroundImage: (conversation.avatarUrl != null && conversation.avatarUrl!.isNotEmpty)
+                backgroundImage: (conversation.avatarUrl != null &&
+                        conversation.avatarUrl!.isNotEmpty)
                     ? NetworkImage(conversation.avatarUrl!)
                     : null,
-                child: (conversation.avatarUrl == null || conversation.avatarUrl!.isEmpty)
+                child: (conversation.avatarUrl == null ||
+                        conversation.avatarUrl!.isEmpty)
                     ? Icon(_typeIcon(conversation.type),
                         size: 18, color: cs.onPrimaryContainer)
                     : null,
@@ -340,8 +335,7 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                   Obx(() {
                     if (convCtrl.isOtherOnline.value) {
                       return Text('Online',
-                          style: tt.labelSmall
-                              ?.copyWith(color: Colors.green));
+                          style: tt.labelSmall?.copyWith(color: Colors.green));
                     }
                     final raw = convCtrl.otherLastSeenAt.value;
                     if (raw != null) {
@@ -366,8 +360,7 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                 else
                   Text(
                     '${conversation.isCommunity ? 'Community' : 'Group'} chat',
-                    style:
-                        tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+                    style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
               ],
             ),
@@ -395,5 +388,3 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
         _ => Icons.person_rounded,
       };
 }
-
-

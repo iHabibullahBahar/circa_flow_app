@@ -54,8 +54,7 @@ class ImageMessageBubble extends StatelessWidget {
       !uri.startsWith('http://') && !uri.startsWith('https://');
 
   List<String> _imageUris() {
-    final grouped =
-        message.metadata?['groupedImageUris'] as List<dynamic>?;
+    final grouped = message.metadata?['groupedImageUris'] as List<dynamic>?;
     if (grouped != null && grouped.isNotEmpty) {
       return grouped.map((e) => e.toString()).toList();
     }
@@ -122,11 +121,9 @@ class ImageMessageBubble extends StatelessWidget {
           initialIndex: 0,
         ),
         child: ConstrainedBox(
-          constraints:
-              BoxConstraints(maxWidth: maxWidth, maxHeight: maxHeight),
+          constraints: BoxConstraints(maxWidth: maxWidth, maxHeight: maxHeight),
           child: ClipRRect(
-            borderRadius:
-                BorderRadius.circular(_twoImageBorderRadius),
+            borderRadius: BorderRadius.circular(_twoImageBorderRadius),
             child: _isLocalFile(uri)
                 ? Image.file(
                     File(uri),
@@ -146,8 +143,8 @@ class ImageMessageBubble extends StatelessWidget {
                       child: Container(
                         decoration: BoxDecoration(
                           color: Colors.grey.shade900,
-                          borderRadius: BorderRadius.circular(
-                              _twoImageBorderRadius),
+                          borderRadius:
+                              BorderRadius.circular(_twoImageBorderRadius),
                         ),
                       ),
                     ),
@@ -192,8 +189,8 @@ class ImageMessageBubble extends StatelessWidget {
             child: GestureDetector(
               onTap: () => ChatImageGallery.open(context,
                   imageUrls: uris, initialIndex: 0),
-              child: _clippedImage(context, uris[0], imgSize,
-                  shadowOpacity: 0.3),
+              child:
+                  _clippedImage(context, uris[0], imgSize, shadowOpacity: 0.3),
             ),
           ),
         ],
@@ -242,9 +239,7 @@ class ImageMessageBubble extends StatelessWidget {
             Positioned(
               top: (imgSize - overlap) * i,
               right: isSentByMe ? (i == 1 ? null : 0) : null,
-              left: isSentByMe
-                  ? (i == 1 ? 0 : null)
-                  : (i == 1 ? null : 0),
+              left: isSentByMe ? (i == 1 ? 0 : null) : (i == 1 ? null : 0),
               child: GestureDetector(
                 onTap: () => ChatImageGallery.open(context,
                     imageUrls: uris, initialIndex: i),
@@ -284,7 +279,8 @@ class ImageMessageBubble extends StatelessWidget {
     );
   }
 
-  Widget _tapImage(BuildContext context, List<String> uris, int i, double size) {
+  Widget _tapImage(
+      BuildContext context, List<String> uris, int i, double size) {
     return GestureDetector(
       onTap: () =>
           ChatImageGallery.open(context, imageUrls: uris, initialIndex: i),
@@ -314,8 +310,7 @@ class ImageMessageBubble extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.6),
-                    borderRadius:
-                        BorderRadius.circular(_twoImageBorderRadius),
+                    borderRadius: BorderRadius.circular(_twoImageBorderRadius),
                   ),
                   child: Center(
                     child: Text(
@@ -397,7 +392,8 @@ class ImageMessageBubble extends StatelessWidget {
             child: Padding(
               padding: EdgeInsets.only(
                 left: 12,
-                right: 12,
+                right:
+                    0, // Always 12, sent messages don't have avatars on the right
                 top: _isFirstInGroup ? 8 : 1,
                 bottom: _isLastInGroup ? 8 : 1,
               ),

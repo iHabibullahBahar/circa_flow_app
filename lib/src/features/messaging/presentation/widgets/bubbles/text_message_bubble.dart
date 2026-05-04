@@ -291,13 +291,8 @@ class TextMessageBubble extends StatelessWidget {
       onLongPress: onMessageLongPress,
       child: Container(
         constraints: BoxConstraints(maxWidth: maxBubbleWidth),
-        margin: EdgeInsets.only(
-          // Leave room for avatar on received side
-          left: isSentByMe ? 12 : 4,
-          right: 12,
-          top: _isFirstInGroup ? 6 : 1,
-          bottom: _isLastInGroup ? 6 : 1,
-        ),
+        // Vertical margins moved to the outer wrapper so the avatar aligns
+        // with the visible bubble bottom, not the margin bottom.
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: isSentByMe ? null : receivedBubbleColor,
@@ -326,24 +321,29 @@ class TextMessageBubble extends StatelessWidget {
         _buildTimestampRow(onSurface),
         _buildReplyPreview(),
         // Row: avatar + bubble (received) OR just bubble (sent)
-        if (!isSentByMe)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              // ── Small contact avatar ───────────────────────────────────
-              if (_isLastInGroup)
-                _ContactAvatar(
-                  name: contactName,
-                  avatarUrl: resolvedContactAvatarUrl ?? contactAvatarUrl,
-                )
-              else
-                const SizedBox(width: 28), // exact match: CircleAvatar(radius:14) = 28px
-              const SizedBox(width: 4),
-              bubble,
-            ],
-          )
-        else
-          bubble,
+        Padding(
+          padding: EdgeInsets.only(
+            top: _isFirstInGroup ? 8 : 1,
+            bottom: _isLastInGroup ? 8 : 1,
+          ),
+          child: isSentByMe
+              ? bubble
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    // ── Small contact avatar ───────────────────────────────────
+                    if (_isLastInGroup)
+                      _ContactAvatar(
+                        name: contactName,
+                        avatarUrl: resolvedContactAvatarUrl ?? contactAvatarUrl,
+                      )
+                    else
+                      const SizedBox(width: 28), // exact match: CircleAvatar(radius:14) = 28px
+                    const SizedBox(width: 4),
+                    bubble,
+                  ],
+                ),
+        ),
         _buildStatusIndicator(),
       ],
     );

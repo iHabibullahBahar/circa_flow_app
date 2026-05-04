@@ -158,10 +158,22 @@ class ConversationController extends GetxController {
   }
 
   /// Show a bottom sheet to pick an image from gallery or camera, then send.
+  /// Legacy entry-point used by the default attachment tap callback.
   Future<void> pickAndSendImage() async {
     final source = await _showImageSourceSheet();
     if (source == null) return;
+    await _sendImageFromSource(source);
+  }
 
+  /// Pick from device gallery and send.
+  Future<void> pickFromGallery() async =>
+      _sendImageFromSource(ImageSource.gallery);
+
+  /// Capture with camera and send.
+  Future<void> pickFromCamera() async =>
+      _sendImageFromSource(ImageSource.camera);
+
+  Future<void> _sendImageFromSource(ImageSource source) async {
     final picked = await _picker.pickImage(
       source: source,
       imageQuality: 80,
@@ -189,7 +201,6 @@ class ConversationController extends GetxController {
         isSending.value = false;
       },
       (raw) async {
-        // Replace optimistic local preview with server CDN URL
         final confirmed = _mapToMessage(raw);
         if (confirmed != null) {
           await chatController.updateMessage(optimistic, confirmed);

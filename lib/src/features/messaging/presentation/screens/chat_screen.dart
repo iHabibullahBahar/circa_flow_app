@@ -5,6 +5,8 @@ import 'package:get/get.dart';
 import 'package:circa_flow_main/src/features/auth/presentation/providers/session_controller.dart';
 import 'package:circa_flow_main/src/features/messaging/data/models/conversation_model.dart';
 import '../providers/chat_controller.dart';
+import '../widgets/chat_composer.dart';
+import '../widgets/chat_message_builder.dart';
 
 /// Full-screen chat screen powered by flutter_chat_ui.
 ///
@@ -52,7 +54,12 @@ class _ChatScreenState extends State<ChatScreen> {
         imageSource: me.photoUrl,
       );
     }
-    return User(id: userId);
+    // Any other sender → the contact in this conversation
+    return User(
+      id: userId,
+      name: widget.conversation.name,
+      imageSource: widget.conversation.avatarUrl,
+    );
   }
 
   // ── Load more builder ──────────────────────────────────────────────────────
@@ -103,7 +110,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 backgroundColor: cs.surfaceContainerHighest,
               ),
 
-            // ── Chat list ────────────────────────────────────────────────
+            // ── Chat list (no built-in composer; we own the bottom bar) ──
             Expanded(
               child: Chat(
                 currentUserId: me?.id ?? '',
@@ -113,55 +120,83 @@ class _ChatScreenState extends State<ChatScreen> {
                 onMessageSend: _convCtrl.onMessageSend,
                 onAttachmentTap: _convCtrl.pickAndSendImage,
                 builders: Builders(
+                  // LazyChat pattern: hide the internal slot
+                  composerBuilder: (_) => const SizedBox.shrink(),
+                  // Use ChatAnimatedListReversed with bottomPadding so the
+                  // last message is never hidden behind our input bar
+                  chatAnimatedListBuilder: (ctx, itemBuilder) =>
+                      ChatAnimatedListReversed(
+                        itemBuilder: itemBuilder,
+                        bottomPadding: 12,
+                        topPadding: 8,
+                        handleSafeArea: false,
+                      ),
                   loadMoreBuilder: _buildLoadMore,
-                  textMessageBuilder: _buildTextMessage,
+                  textMessageBuilder: (ctx, message, index,
+                      {required isSentByMe, groupStatus}) {
+                    final panelRole =
+                        message.metadata?['sender_panel_role'] as String?;
+                    final senderName =
+                        message.metadata?['sender_name'] as String?;
+                    final bubble = TextMessageBubble(
+                      message: message,
+                      isSentByMe: isSentByMe,
+                      groupStatus: groupStatus,
+                      contactName: widget.conversation.name,
+                      resolvedContactAvatarUrl: widget.conversation.avatarUrl,
+                    );
+                    if (panelRole == null) return bubble;
+                    // Only show the badge on the FIRST message of a group,
+                    // not on every subsequent bubble from the same sender.
+                    final isFirstInGroup =
+                        groupStatus == null || groupStatus.isFirst;
+                    if (!isFirstInGroup) return bubble;
+                    return Column(
+                      crossAxisAlignment: isSentByMe
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(
+                            left: isSentByMe ? 0 : 50,
+                            right: isSentByMe ? 12 : 0,
+                            bottom: 2,
+                          ),
+                          child: _PanelBadge(
+                              role: panelRole, name: senderName),
+                        ),
+                        bubble,
+                      ],
+                    );
+                  },
+                  imageMessageBuilder: ChatBubbleBuilder.imageBuilder(
+                    contactName: widget.conversation.name,
+                  ),
+                  audioMessageBuilder: ChatBubbleBuilder.audioBuilder(
+                    contactName: widget.conversation.name,
+                  ),
+                  videoMessageBuilder: ChatBubbleBuilder.videoBuilder(
+                    contactName: widget.conversation.name,
+                  ),
+                  fileMessageBuilder: ChatBubbleBuilder.fileBuilder(
+                    contactName: widget.conversation.name,
+                  ),
+                  unsupportedMessageBuilder:
+                      ChatBubbleBuilder.unsupportedBuilder(),
                 ),
               ),
+            ),
+
+            // ── Input bar sits BELOW the Chat, never overlaps ─────────────
+            ChatComposer(
+              onSend: _convCtrl.onMessageSend,
+              onGallery: _convCtrl.pickFromGallery,
+              onCamera: _convCtrl.pickFromCamera,
             ),
           ],
         );
       }),
-    );
-  }
-
-  // ── Text message builder with panel badge ────────────────────────────────
-
-  /// Uses the package's natural textMessageBuilder.
-  /// For panel messages (owner/staff), prepends a badge above the default bubble.
-  Widget _buildTextMessage(
-    BuildContext context,
-    TextMessage message,
-    int index, {
-    required bool isSentByMe,
-    MessageGroupStatus? groupStatus,
-  }) {
-    final panelRole = message.metadata?['sender_panel_role'] as String?;
-    final senderName = message.metadata?['sender_name'] as String?;
-
-    // Delegate to package's default rendering for normal member messages
-    final bubble = SimpleTextMessage(
-      message: message,
-      index: index,
-    );
-
-    if (panelRole == null) return bubble;
-
-    // Panel message: show badge above bubble
-    return Column(
-      crossAxisAlignment:
-          isSentByMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Padding(
-          padding: EdgeInsets.only(
-            left: isSentByMe ? 0 : 12,
-            right: isSentByMe ? 12 : 0,
-            bottom: 2,
-          ),
-          child: _PanelBadge(role: panelRole, name: senderName),
-        ),
-        bubble,
-      ],
     );
   }
 

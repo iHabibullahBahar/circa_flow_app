@@ -62,6 +62,12 @@ dependencies:
 
   # Media
   image_picker: ^1.2.1
+  just_audio: ^0.9.40
+  video_player: ^2.9.2
+  shimmer: ^3.0.0
+  photo_view: ^0.15.0
+  ffmpeg_kit_flutter_new: ^4.1.0
+  http: ^1.2.2
 
   # WebView for custom links
   webview_flutter: ^4.10.0

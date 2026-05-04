@@ -24,17 +24,36 @@ class InboxController extends GetxController {
 
   String? _lastSyncTime;
   Timer? _debounceTimer;
+  Worker? _authWorker;
 
   static const _syncKey = 'messaging_last_sync';
 
   @override
   void onInit() {
     super.onInit();
-    _loadLastSyncTime().then((_) => loadInbox());
+    final session = Get.find<SessionController>();
+
+    // Initial load only if authenticated
+    if (session.isAuthenticated) {
+      _loadLastSyncTime().then((_) => loadInbox());
+    } else {
+      isLoading.value = false;
+    }
+
+    // Reactive listener for auth changes
+    _authWorker = ever(session.status, (status) {
+      if (status == SessionStatus.authenticated) {
+        _loadLastSyncTime().then((_) => loadInbox());
+      } else if (status == SessionStatus.unauthenticated) {
+        conversations.clear();
+        sortedInbox.clear();
+      }
+    });
   }
 
   @override
   void onClose() {
+    _authWorker?.dispose();
     _debounceTimer?.cancel();
     super.onClose();
   }

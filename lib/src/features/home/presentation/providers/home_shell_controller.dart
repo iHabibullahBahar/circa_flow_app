@@ -1,4 +1,5 @@
 import 'package:circa_flow_main/src/imports/imports.dart';
+import 'package:circa_flow_main/src/features/auth/presentation/providers/session_controller.dart';
 import 'package:circa_flow_main/src/config/config_controller.dart';
 import 'package:circa_flow_main/src/features/home/presentation/screens/dashboard_screen.dart';
 import 'package:circa_flow_main/src/features/posts/presentation/screens/posts_screen.dart';
@@ -99,6 +100,8 @@ class HomeShellController extends GetxController {
   /// Returns null (no badge) when count is zero.
   Widget? _buildMessagesBadge() {
     if (!Get.isRegistered<InboxController>(tag: 'inbox_controller')) return null;
+    if (!Get.find<SessionController>().isAuthenticated) return null;
+
     final inbox = Get.find<InboxController>(tag: 'inbox_controller');
     final count = inbox.sortedInbox.fold(0, (sum, c) => sum + c.unreadCount);
     if (count == 0) return null;
@@ -158,7 +161,8 @@ class HomeShellController extends GetxController {
           }
           break;
         case 'messages':
-          if (Get.isRegistered<InboxController>(tag: 'inbox_controller')) {
+          if (Get.isRegistered<InboxController>(tag: 'inbox_controller') &&
+              Get.find<SessionController>().isAuthenticated) {
             Get.find<InboxController>(tag: 'inbox_controller').refresh();
           }
           break;

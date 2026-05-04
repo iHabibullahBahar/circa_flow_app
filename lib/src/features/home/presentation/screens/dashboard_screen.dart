@@ -8,6 +8,7 @@ import 'package:circa_flow_main/src/features/events/data/models/event_model.dart
 import 'package:circa_flow_main/src/shared/widgets/app_cached_image.dart';
 
 import 'package:circa_flow_main/src/features/notifications/presentation/providers/notification_controller.dart';
+import 'package:circa_flow_main/src/features/auth/presentation/providers/session_controller.dart';
 import 'package:circa_flow_main/src/features/documents/presentation/providers/documents_controller.dart';
 import 'package:circa_flow_main/src/features/documents/data/models/document_model.dart';
 
@@ -32,7 +33,9 @@ class DashboardScreen extends StatelessWidget {
             child: RefreshIndicator(
               onRefresh: () async {
                 await dashCtrl.refreshData();
-                await notificationCtrl.refreshNotifications();
+                if (Get.find<SessionController>().isAuthenticated) {
+                  await notificationCtrl.refreshNotifications();
+                }
               },
               child: CustomScrollView(
                 slivers: [
@@ -82,6 +85,13 @@ class DashboardScreen extends StatelessWidget {
                                   onPressed: () => Get.toNamed<void>(
                                       AppRoutes.notifications),
                                   icon: Obx(() {
+                                    if (!Get.find<SessionController>()
+                                        .isAuthenticated) {
+                                      return Icon(
+                                          Icons.notifications_none_rounded,
+                                          color: cs.onSurface,
+                                          size: 22);
+                                    }
                                     final count =
                                         notificationCtrl.unreadCount.value;
                                     return Badge(

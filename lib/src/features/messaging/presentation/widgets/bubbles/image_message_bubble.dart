@@ -79,8 +79,9 @@ class ImageMessageBubble extends StatelessWidget {
   Widget _networkOrFile(BuildContext context, String uri,
       {BoxFit fit = BoxFit.cover}) {
     if (_isLocalFile(uri)) {
+      final path = uri.startsWith('file://') ? Uri.parse(uri).path : uri;
       return Image.file(
-        File(uri),
+        File(path),
         fit: fit,
         errorBuilder: (_, __, ___) => _errorWidget(context),
       );
@@ -126,7 +127,9 @@ class ImageMessageBubble extends StatelessWidget {
             borderRadius: BorderRadius.circular(_twoImageBorderRadius),
             child: _isLocalFile(uri)
                 ? Image.file(
-                    File(uri),
+                    File(uri.startsWith('file://')
+                        ? Uri.parse(uri).path
+                        : uri),
                     fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) => _errorWidget(context),
                   )

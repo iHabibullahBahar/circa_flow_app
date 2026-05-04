@@ -26,6 +26,12 @@
 		<string>$(FLUTTER_BUILD_NUMBER)</string>
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>We need access to your photo library to select and upload images.</string>
+		<key>NSCameraUsageDescription</key>
+		<string>We need access to your camera to capture and upload images.</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>We need access to your microphone to capture videos with audio.</string>
 		<key>OneSignal_app_groups_key</key>
 		<string>group.com.circaflow.app.onesignal</string>
 		<key>UIBackgroundModes</key>

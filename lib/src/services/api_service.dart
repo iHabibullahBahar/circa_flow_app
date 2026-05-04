@@ -124,4 +124,31 @@ class ApiService {
       return response.data as T;
     }, requiresNetwork: true);
   }
+
+  /// Uploads multiple files using multipart/form-data.
+  FutureEither<T> uploadFiles<T>(
+    String path, {
+    required List<String> filePaths,
+    required String fieldName,
+    Map<String, dynamic>? extraData,
+  }) async {
+    return runTask(() async {
+      final multipartFiles = await Future.wait(
+        filePaths.map((fp) => MultipartFile.fromFile(fp)),
+      );
+
+      final Map<String, dynamic> formDataMap = {
+        fieldName: multipartFiles,
+      };
+
+      if (extraData != null) {
+        formDataMap.addAll(extraData);
+      }
+
+      final formData = FormData.fromMap(formDataMap);
+
+      final response = await _dio.post<T>(path, data: formData);
+      return response.data as T;
+    }, requiresNetwork: true);
+  }
 }

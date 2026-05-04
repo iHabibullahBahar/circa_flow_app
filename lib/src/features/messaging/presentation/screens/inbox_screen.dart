@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:circa_flow_main/src/routing/app_routes.dart';
+import 'package:circa_flow_main/src/features/auth/presentation/providers/session_controller.dart';
+import 'package:circa_flow_main/src/shared/widgets/app_empty_state.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../data/models/conversation_model.dart';
 import '../providers/inbox_controller.dart';
 import 'widgets/inbox_item.dart';
@@ -28,14 +31,30 @@ class InboxScreen extends StatelessWidget {
           style: tt.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit_note_rounded),
-            tooltip: 'New conversation',
-            onPressed: () => _showNewConversationSheet(context, controller),
-          ),
+          Obx(() {
+            if (!Get.find<SessionController>().isAuthenticated) {
+              return const SizedBox.shrink();
+            }
+            return IconButton(
+              icon: const Icon(Icons.edit_note_rounded),
+              tooltip: 'New conversation',
+              onPressed: () => _showNewConversationSheet(context, controller),
+            );
+          }),
         ],
       ),
       body: Obx(() {
+        final session = Get.find<SessionController>();
+        if (!session.isAuthenticated) {
+          return AppEmptyState(
+            icon: HugeIcons.strokeRoundedLockPassword,
+            title: 'Login Required',
+            subtitle: 'Please log in to use the messaging features.',
+            actionLabel: 'Login Now',
+            onAction: () => Get.toNamed<void>(AppRoutes.login),
+          );
+        }
+
         final loading = controller.isLoading.value;
         final inbox = controller.sortedInbox;
 

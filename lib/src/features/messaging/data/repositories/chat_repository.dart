@@ -48,17 +48,17 @@ class ChatRepository {
         (response['data'] as Map<String, dynamic>?) ?? {});
   }
 
-  /// Send an image message. [filePath] is the local file path.
+  /// Send multiple image messages. [filePaths] is a list of local file paths.
   FutureEither<Map<String, dynamic>> sendImage({
     required int conversationId,
-    required String filePath,
+    required List<String> filePaths,
   }) async {
-    final result = await _api.uploadFile<Map<String, dynamic>>(
+    final result = await _api.uploadFiles<Map<String, dynamic>>(
       zMessagingSendEndpoint,
-      filePath: filePath,
-      fieldName: 'file', // backend expects 'file'
+      filePaths: filePaths,
+      fieldName: 'attachments[]', // backend expects 'attachments[]' array
       extraData: {
-        'conversation_id': conversationId.toString(),
+        'conversation_id': conversationId, // send as int
         'type': 'image',
       },
     );

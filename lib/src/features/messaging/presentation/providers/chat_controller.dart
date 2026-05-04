@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:circa_flow_main/src/features/auth/presentation/providers/session_controller.dart';
 import 'package:circa_flow_main/src/features/messaging/data/repositories/chat_repository.dart';
 import 'package:circa_flow_main/src/features/messaging/presentation/providers/socket_manager.dart';
+import 'package:circa_flow_main/src/features/messaging/presentation/widgets/inline_gallery_sheet.dart';
 import '../../data/models/conversation_model.dart';
 
 /// GetxController that backs a single chat screen.
@@ -162,34 +163,45 @@ class ConversationController extends GetxController {
   Future<void> pickAndSendImage() async {
     final source = await _showImageSourceSheet();
     if (source == null) return;
-    await _sendImageFromSource(source);
+    if (source == ImageSource.gallery) {
+      await pickFromGallery();
+    } else {
+      await pickFromCamera();
+    }
   }
 
-  /// Pick from device gallery and send.
-  Future<void> pickFromGallery() async =>
-      _sendImageFromSource(ImageSource.gallery);
+  /// Pick from device gallery using the new inline gallery sheet and send.
+  Future<void> pickFromGallery() async {
+    final List<String>? paths = await InlineGallerySheet.show(maxCount: 10);
+    if (paths != null && paths.isNotEmpty) {
+      await _sendImages(paths);
+    }
+  }
 
   /// Capture with camera and send.
-  Future<void> pickFromCamera() async =>
-      _sendImageFromSource(ImageSource.camera);
-
-  Future<void> _sendImageFromSource(ImageSource source) async {
+  Future<void> pickFromCamera() async {
     final picked = await _picker.pickImage(
-      source: source,
+      source: ImageSource.camera,
       imageQuality: 80,
       maxWidth: 1920,
     );
-    if (picked == null) return;
+    if (picked != null) {
+      await _sendImages([picked.path]);
+    }
+  }
+
+  Future<void> _sendImages(List<String> filePaths) async {
+    if (filePaths.isEmpty) return;
 
     isSending.value = true;
 
-    // Optimistic image preview using local file path
-    final optimistic = _optimisticImageMessage(picked.path);
+    // Optimistic image preview using local file paths
+    final optimistic = _optimisticImageMessage(filePaths);
     await chatController.insertMessage(optimistic);
 
     final result = await _repository.sendImage(
       conversationId: conversation.id,
-      filePath: picked.path,
+      filePaths: filePaths,
     );
 
     result.fold(
@@ -327,10 +339,10 @@ class ConversationController extends GetxController {
       // Store panel badge info in metadata for the message bubble builder
       final metaRaw = (raw['metadata'] as Map<String, dynamic>?) ?? {};
       final metadata = <String, dynamic>{
+        ...metaRaw,
         if (raw['sender_name'] != null) 'sender_name': raw['sender_name'],
         if (raw['sender_panel_role'] != null)
           'sender_panel_role': raw['sender_panel_role'],
-        if (metaRaw['sent_from_panel'] == true) 'sent_from_panel': true,
       };
 
       if (type == 'image') {
@@ -369,18 +381,23 @@ class ConversationController extends GetxController {
     );
   }
 
-  /// Optimistic image message using local file path as the source.
+  /// Optimistic image message using local file paths.
   /// The flutter_chat_ui Image widget checks if source is a valid URL;
   /// for local files we use the `file://` scheme via File.uri.toString().
-  Message _optimisticImageMessage(String localPath) {
+  Message _optimisticImageMessage(List<String> localPaths) {
     final currentUserId =
         Get.find<SessionController>().user.value?.id ?? 'me';
+    final uris = localPaths.map((p) => File(p).uri.toString()).toList();
+    
     return Message.image(
       id: 'opt_img_${DateTime.now().millisecondsSinceEpoch}',
       authorId: currentUserId,
-      source: File(localPath).uri.toString(), // file:// URI for local display
+      source: uris.first, // fallback
       createdAt: DateTime.now(),
       status: MessageStatus.sending,
+      metadata: {
+        'groupedImageUris': uris,
+      },
     );
   }
 

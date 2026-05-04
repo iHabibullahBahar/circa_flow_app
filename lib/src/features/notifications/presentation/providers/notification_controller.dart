@@ -1,5 +1,6 @@
 import 'package:circa_flow_main/src/imports/core_imports.dart';
 import 'package:circa_flow_main/src/imports/packages_imports.dart';
+import 'package:circa_flow_main/src/features/auth/presentation/providers/session_controller.dart';
 import '../../data/models/notification_model.dart';
 import '../../data/repositories/notification_repository.dart';
 
@@ -11,12 +12,27 @@ class NotificationController extends GetxController {
   final unreadCount = 0.obs;
   final currentPage = 1.obs;
   final hasMore = true.obs;
+  Worker? _authWorker;
 
   @override
   void onInit() {
     super.onInit();
-    refreshNotifications();
-    fetchUnreadCount();
+    final session = Get.find<SessionController>();
+
+    if (session.isAuthenticated) {
+      refreshNotifications();
+      fetchUnreadCount();
+    }
+
+    _authWorker = ever(session.status, (status) {
+      if (status == SessionStatus.authenticated) {
+        refreshNotifications();
+        fetchUnreadCount();
+      } else if (status == SessionStatus.unauthenticated) {
+        notifications.clear();
+        unreadCount.value = 0;
+      }
+    });
   }
 
   Future<void> fetchUnreadCount() async {
@@ -124,5 +140,11 @@ class NotificationController extends GetxController {
         fetchUnreadCount();
       },
     );
+  }
+
+  @override
+  void onClose() {
+    _authWorker?.dispose();
+    super.onClose();
   }
 }
